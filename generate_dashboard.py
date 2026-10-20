@@ -8,7 +8,7 @@ import os
 import json
 import datetime
 
-def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=None):
+def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=None, total_scanned=651):
     """
     Renders a futuristic dark-mode HTML dashboard with embedded JSON data,
     TradingView mini widgets, search/filter controls, and statistics.
@@ -21,7 +21,7 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
     track_b_json = json.dumps(pre_breakout_squeezes, indent=2)
     bench_json = json.dumps(benchmark_indices or [], indent=2)
     
-    total_scanned = 40
+    total_scanned = total_scanned or 651
     track_a_count = len(active_breakouts)
     track_b_count = len(pre_breakout_squeezes)
 
@@ -345,6 +345,19 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
       border: 1px solid rgba(56, 189, 248, 0.3);
     }}
 
+    .bucket-badge {{
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(168, 85, 247, 0.15);
+      color: var(--accent-purple);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      margin-left: 6px;
+      vertical-align: middle;
+    }}
+
     /* Metrics Grid inside card */
     .metrics-row {{
       display: grid;
@@ -499,6 +512,7 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
       <div class="stat-card">
         <div class="stat-label">Candidate Universe</div>
         <div class="stat-val">{total_scanned} <span class="stat-sub">Stocks Monitored</span></div>
+        <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Nifty Mid 150 + Small 250 + Micro 250</div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-purple);">
         <div class="stat-label">Track B: Squeeze Leaderboard</div>
@@ -568,7 +582,7 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
         <div class="card" data-symbol="${{stock.symbol}}" data-name="${{stock.name}}" data-sector="${{stock.sector}}">
           <div class="card-head">
             <div>
-              <div class="stock-sym">${{stock.symbol}} <span style="font-size: 13px; color: var(--text-dim); font-weight: 500;">· ${{stock.sector}}</span></div>
+              <div class="stock-sym">${{stock.symbol}} <span style="font-size: 13px; color: var(--text-dim); font-weight: 500;">· ${{stock.sector}}</span> ${{stock.bucket ? `<span class="bucket-badge">${{stock.bucket}}</span>` : ''}}</div>
               <div class="stock-name">${{stock.name}}</div>
             </div>
             <div class="score-badge ${{stock.halo_score >= 80 ? 'score-high' : 'score-mid'}}">
@@ -660,7 +674,7 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
         <div class="card" data-symbol="${{stock.symbol}}" data-name="${{stock.name}}" data-sector="${{stock.sector}}">
           <div class="card-head">
             <div>
-              <div class="stock-sym">${{stock.symbol}} <span style="font-size: 13px; color: var(--text-dim); font-weight: 500;">· ${{stock.sector}}</span></div>
+              <div class="stock-sym">${{stock.symbol}} <span style="font-size: 13px; color: var(--text-dim); font-weight: 500;">· ${{stock.sector}}</span> ${{stock.bucket ? `<span class="bucket-badge">${{stock.bucket}}</span>` : ''}}</div>
               <div class="stock-name">${{stock.name}}</div>
             </div>
             <div class="score-badge score-high">
@@ -777,12 +791,12 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
 </html>"""
     return html_content
 
-def save_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=None, output_dir=None):
+def save_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=None, output_dir=None, total_scanned=651):
     """Saves generated dashboard to docs/index.html and root dashboard.html."""
     if output_dir is None:
         output_dir = os.path.dirname(os.path.abspath(__file__))
     
-    html = generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices)
+    html = generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices, total_scanned=total_scanned)
     
     # 1. Save to docs/index.html for GitHub Pages
     docs_path = os.path.join(output_dir, "docs", "index.html")

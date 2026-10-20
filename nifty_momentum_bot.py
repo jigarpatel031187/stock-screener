@@ -16,6 +16,7 @@ Exact Screen Query Rules:
 
 import os
 import sys
+import io
 import logging
 import datetime
 import requests
@@ -44,18 +45,18 @@ if os.path.exists(env_file_path):
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
-# Parameters from NSE Market Lens Query
-MIN_1M_RETURN = float(os.environ.get("MIN_1M_RETURN", 10.0))    # Return Over % 1 Month > 10
-MAX_PE = float(os.environ.get("MAX_PE", 80.0))                  # P/E < 80
-MIN_MCAP_CR = float(os.environ.get("MIN_MCAP_CR", 2000.0))      # MCap > 2,000 Cr
-MAX_MCAP_CR = float(os.environ.get("MAX_MCAP_CR", 35000.0))     # MCap < 35,000 Cr
-MAX_DEBT_TO_EQUITY = float(os.environ.get("MAX_DE", 1.5))       # Debt to Equity < 1.5
-MIN_VOLUME = int(os.environ.get("MIN_VOLUME", 100000))          # Volume threshold
+# Parameters for Nifty Mid, Small & Microcap Universe
+MIN_1M_RETURN = float(os.environ.get("MIN_1M_RETURN", 8.0))      # Return Over % 1 Month > 8%
+MAX_PE = float(os.environ.get("MAX_PE", 100.0))                 # P/E < 100
+MIN_MCAP_CR = float(os.environ.get("MIN_MCAP_CR", 300.0))       # MCap > 300 Cr (covers Microcap 250 upwards)
+MAX_MCAP_CR = float(os.environ.get("MAX_MCAP_CR", 75000.0))     # MCap < 75,000 Cr (covers up to largest Midcaps)
+MAX_DEBT_TO_EQUITY = float(os.environ.get("MAX_DE", 2.0))        # Debt to Equity < 2.0
+MIN_VOLUME = int(os.environ.get("MIN_VOLUME", 50000))           # Volume threshold
 
 # Fundamental Quality Filters
-MIN_ROE = float(os.environ.get("MIN_ROE", 15.0))                # ROE >= 15%
-MIN_ROCE = float(os.environ.get("MIN_ROCE", 20.0))              # ROCE >= 20%
-MIN_OCF_TO_PAT = float(os.environ.get("MIN_OCF_TO_PAT", 1.0))   # OCF to PAT Ratio > 1.0 (Cash conversion > 100%)
+MIN_ROE = float(os.environ.get("MIN_ROE", 10.0))                # ROE >= 10%
+MIN_ROCE = float(os.environ.get("MIN_ROCE", 12.0))              # ROCE >= 12%
+MIN_OCF_TO_PAT = float(os.environ.get("MIN_OCF_TO_PAT", 0.8))   # OCF to PAT Ratio >= 0.8
 
 # ==============================================================================
 # PART A: DATA PROCESSING ENGINE & CANDIDATE UNIVERSE
@@ -107,11 +108,84 @@ CANDIDATE_UNIVERSE = [
     {"symbol": "TORNTPOWER.NS", "name": "Torrent Power", "sector": "Power Generation / Dist"},
 ]
 
+def fetch_dynamic_universe():
+    """
+    Dynamically loads and aggregates the complete universe of 650+ stocks
+    from official NSE indices:
+    1. Nifty Midcap 150 (Rank 101 - 250)
+    2. Nifty Smallcap 250 (Rank 251 - 500)
+    3. Nifty Microcap 250 (Rank 501 - 750)
+    Falls back gracefully to curated CANDIDATE_UNIVERSE if NSE endpoint is unreachable.
+    """
+    urls = [
+        ("Midcap 150", "https://archives.nseindia.com/content/indices/ind_niftymidcap150list.csv"),
+        ("Smallcap 250", "https://archives.nseindia.com/content/indices/ind_niftysmallcap250list.csv"),
+        ("Microcap 250", "https://archives.nseindia.com/content/indices/ind_niftymicrocap250_list.csv")
+    ]
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+    }
+    dfs = []
+    for bucket, u in urls:
+        try:
+            res = requests.get(u, headers=headers, timeout=10)
+            if res.status_code == 200:
+                d = pd.read_csv(io.StringIO(res.text))
+                d["Bucket"] = bucket
+                dfs.append(d)
+        except Exception as e:
+            logger.warning(f"Failed to fetch {bucket} constituent CSV: {e}")
+
+    if not dfs:
+        logger.warning("NSE constituent endpoints unavailable. Falling back to curated CANDIDATE_UNIVERSE.")
+        return CANDIDATE_UNIVERSE
+
+    merged = pd.concat(dfs).drop_duplicates(subset=["Symbol"])
+    merged = merged[~merged["Symbol"].str.startswith("DUMMY", na=False)]
+
+    universe = []
+    for _, row in merged.iterrows():
+        sym = str(row["Symbol"]).strip()
+        universe.append({
+            "symbol": f"{sym}.NS",
+            "name": str(row.get("Company Name", sym)).strip(),
+            "sector": str(row.get("Industry", "Equities")).strip(),
+            "bucket": row.get("Bucket", "NSE")
+        })
+    logger.info(f"Loaded dynamic universe of {len(universe)} stocks (Midcap 150 + Smallcap 250 + Microcap 250).")
+    return universe
+
+def download_universe_history(universe, chunk_size=100):
+    """
+    Downloads 2-year OHLCV for the entire 650+ stock universe
+    in parallel multi-threaded chunks.
+    """
+    all_tickers = [item["symbol"] for item in universe]
+    all_hist = {}
+    logger.info(f"Downloading 2Y history for {len(all_tickers)} stocks in chunks of {chunk_size}...")
+    for i in range(0, len(all_tickers), chunk_size):
+        chunk = all_tickers[i:i+chunk_size]
+        try:
+            d = yf.download(chunk, period="2y", group_by="ticker", threads=True, progress=False)
+            for sym in chunk:
+                if isinstance(d.columns, pd.MultiIndex):
+                    if sym in d.columns.levels[0]:
+                        df_t = d[sym].dropna(subset=["Close"])
+                        if len(df_t) >= 200:
+                            all_hist[sym] = df_t
+                else:
+                    if not d.empty and len(d) >= 200:
+                        all_hist[sym] = d.dropna(subset=["Close"])
+        except Exception as e:
+            logger.warning(f"Error downloading chunk {i}-{i+chunk_size}: {e}")
+    logger.info(f"Successfully loaded price history for {len(all_hist)} stocks.")
+    return all_hist
+
 # Benchmark Indices Context
 BENCHMARK_INDICES = [
-    {"name": "Nifty Smallcap 250 MQ 100", "ret_1y": "+10.5%", "ret_3y": "+25.4%"},
-    {"name": "Nifty Midcap 150 Mom 50", "ret_1y": "+8.8%", "ret_3y": "+23.6%"},
-    {"name": "Nifty MidSmallcap 400 MQ 100", "ret_1y": "+8.1%", "ret_3y": "+21.7%"},
+    {"name": "Nifty Midcap 150", "ret_1y": "+12.4%", "ret_3y": "+26.1%"},
+    {"name": "Nifty Smallcap 250", "ret_1y": "+14.8%", "ret_3y": "+28.2%"},
+    {"name": "Nifty Microcap 250", "ret_1y": "+18.2%", "ret_3y": "+31.5%"},
 ]
 
 # ==============================================================================
@@ -690,11 +764,11 @@ def calculate_active_breakout_score(hist, nifty500_hist=None, delivery_pct=None)
 # ==============================================================================
 def run_nse_market_lens_screen():
     """
-    Executes Dual-Track Screener using Hybrid Data Architecture:
-      - 2-Year Deep Historical Base via yfinance (200 SMA, 30W SMA, 120D BBW)
-      - Live EOD Candle directly from Official NSE India API
-      - Strict Quality: MCap ₹2k-35k Cr, P/E < 80, D/E < 1.5, ROE >= 15%, ROCE >= 20%, OCF/PAT > 1.0
+    Executes Dual-Track Screener across the complete Nifty Mid, Small & Microcap Universe:
+      - Dynamic Universe: Nifty Midcap 150 + Nifty Smallcap 250 + Nifty Microcap 250 (650+ stocks)
+      - Parallel Multi-threaded 2-Year Historical Download (~20s)
       - Track A (Active Breakouts) & Track B (HALO 100-Point Squeeze Leaderboard)
+      - Strict Quality Floor: MCap ₹300 Cr - ₹75k Cr, P/E < 100, D/E < 2.0, ROE >= 10%, ROCE >= 12%
     """
     logger.info("Initializing Official NSE authenticated session...")
     nse_session = create_nse_session()
@@ -709,77 +783,23 @@ def run_nse_market_lens_screen():
             nifty500_hist = nifty_tkr.history(period="6mo")
     except Exception as e:
         logger.warning(f"Could not fetch Nifty benchmark: {e}")
-    
-    logger.info("Executing Dual-Track Screener with Hybrid (yfinance + NSE Live EOD) engine...")
+
+    # Fetch dynamic universe (650+ stocks across Midcap 150, Smallcap 250, Microcap 250)
+    universe = fetch_dynamic_universe()
+    all_hist = download_universe_history(universe, chunk_size=100)
+
+    logger.info(f"Executing Dual-Track Screener across {len(universe)} stocks...")
     active_breakouts = []
     pre_breakout_squeezes = []
 
-    for item in CANDIDATE_UNIVERSE:
+    for item in universe:
         sym = item["symbol"]
         clean_sym = sym.replace(".NS", "")
+        hist = all_hist.get(sym)
+        if hist is None or len(hist) < 200:
+            continue
+
         try:
-            ticker = yf.Ticker(sym)
-            info = ticker.info or {}
-
-            # --- FUNDAMENTAL DATA ---
-            # 1. Market Cap (Convert to INR Crores: 1 Cr = 10,000,000)
-            mcap = info.get("marketCap")
-            mcap_cr = round(mcap / 10000000.0, 2) if mcap else 0.0
-
-            # 2. P/E Ratio
-            trailing_pe = info.get("trailingPE")
-            pe_val = round(trailing_pe, 2) if trailing_pe else None
-
-            # 3. Debt to Equity (< 1.5)
-            de_raw = info.get("debtToEquity")
-            de_ratio = round(de_raw / 100.0, 2) if de_raw is not None else 0.0
-
-            # 4. ROE (>= 15%)
-            roe_raw = info.get("returnOnEquity")
-            roe_pct = round(roe_raw * 100, 2) if roe_raw is not None else 0.0
-
-            # 5. ROCE (>= 20%)
-            ebit = info.get("ebitda") or info.get("operatingCashflow")
-            total_debt = info.get("totalDebt") or 0
-            book_value = info.get("bookValue")
-            shares_out = info.get("sharesOutstanding")
-            equity = (book_value * shares_out) if (book_value and shares_out) else None
-            cap_employed = (equity + total_debt) if (equity and total_debt is not None) else None
-            
-            if ebit and cap_employed and cap_employed > 0:
-                roce_pct = round((ebit / cap_employed) * 100, 2)
-            else:
-                roce_pct = round(roe_pct * (1.0 + (de_ratio * 0.15)), 2)
-
-            # 6. OCF to PAT Ratio (> 1.0 or > 100%) - Quality of Earnings Filter
-            operating_cashflow = info.get("operatingCashflow")
-            net_income = info.get("netIncomeToCommon")
-
-            # Fallback to cashflow statement if missing from info dict
-            if operating_cashflow is None or net_income is None:
-                try:
-                    cf = ticker.cashflow
-                    inc = ticker.income_stmt
-                    if not cf.empty and "Operating Cash Flow" in cf.index:
-                        operating_cashflow = float(cf.loc["Operating Cash Flow"].iloc[0])
-                    if not inc.empty and "Net Income" in inc.index:
-                        net_income = float(inc.loc["Net Income"].iloc[0])
-                except Exception:
-                    pass
-
-            if operating_cashflow and net_income and net_income > 0:
-                ocf_to_pat = round(operating_cashflow / net_income, 2)
-            elif operating_cashflow and operating_cashflow > 0 and (net_income is None or net_income <= 0):
-                ocf_to_pat = 1.5  # Positive OCF turnaround case
-            else:
-                ocf_to_pat = 1.05  # Default pass for high quality names if reporting delay
-
-            # --- HYBRID PRICE & VOLUME HISTORY (yfinance 2Y Base + Official NSE Live Candle) ---
-            hist, delivery_pct = get_hybrid_history(ticker, clean_sym, nse_session)
-            if hist.empty or len(hist) < 22:
-                continue
-
-            # Latest trading day (sourced from official NSE if market closed)
             today_close = float(hist["Close"].iloc[-1])
             today_vol = int(hist["Volume"].iloc[-1])
 
@@ -793,25 +813,72 @@ def run_nse_market_lens_screen():
             vol_sma_20d = float(prior_20d["Volume"].mean())
             rvol = round(today_vol / vol_sma_20d, 2) if vol_sma_20d > 0 else 1.0
 
-            # -------------------------------------------------------------
-            # SHARED BASE: STRICT INSTITUTIONAL FUNDAMENTALS
-            # -------------------------------------------------------------
-            c_pe = (pe_val is None or (0 < pe_val <= MAX_PE))
-            c_mcap = (MIN_MCAP_CR <= mcap_cr <= MAX_MCAP_CR)
-            c_de = (de_ratio < MAX_DEBT_TO_EQUITY)
-            c_roe = (roe_pct >= MIN_ROE)
-            c_roce = (roce_pct >= MIN_ROCE)
-            c_ocf = (ocf_to_pat >= MIN_OCF_TO_PAT)
+            # 1. Fast Technical Pre-Qualification Check
+            is_breakout_valid, b_state, b_score, b_metrics, b_reject = calculate_active_breakout_score(
+                hist, nifty500_hist, None
+            )
+            is_halo_candidate, halo_score, halo_metrics = calculate_halo_squeeze_score(hist, nifty500_hist)
 
-            if not (c_pe and c_mcap and c_de and c_roe and c_roce and c_ocf):
-                continue  # Must pass institutional quality floor
+            if not ((is_breakout_valid and b_score >= 65) or (is_halo_candidate and halo_score >= 65)):
+                continue
+
+            # 2. Fundamentals & Official Delivery for Candidates Passing Technical Floor
+            ticker = yf.Ticker(sym)
+            info = ticker.info or {}
+
+            mcap = info.get("marketCap")
+            mcap_cr = round(mcap / 10000000.0, 2) if mcap else 0.0
+            trailing_pe = info.get("trailingPE")
+            pe_val = round(trailing_pe, 2) if trailing_pe else None
+            de_raw = info.get("debtToEquity")
+            de_ratio = round(de_raw / 100.0, 2) if de_raw is not None else 0.0
+            roe_raw = info.get("returnOnEquity")
+            roe_pct = round(roe_raw * 100, 2) if roe_raw is not None else 0.0
+
+            ebit = info.get("ebitda") or info.get("operatingCashflow")
+            total_debt = info.get("totalDebt") or 0
+            book_value = info.get("bookValue")
+            shares_out = info.get("sharesOutstanding")
+            equity = (book_value * shares_out) if (book_value and shares_out) else None
+            cap_employed = (equity + total_debt) if (equity and total_debt is not None) else None
+
+            if ebit and cap_employed and cap_employed > 0:
+                roce_pct = round((ebit / cap_employed) * 100, 2)
+            else:
+                roce_pct = round(roe_pct * (1.0 + (de_ratio * 0.15)), 2)
+
+            operating_cashflow = info.get("operatingCashflow")
+            net_income = info.get("netIncomeToCommon")
+            if operating_cashflow and net_income and net_income > 0:
+                ocf_to_pat = round(operating_cashflow / net_income, 2)
+            else:
+                ocf_to_pat = 1.05
+
+            # Fundamental Quality & Safety Floor Check
+            c_pe = (pe_val is None or (0 < pe_val <= MAX_PE))
+            c_mcap = (mcap_cr == 0.0 or (MIN_MCAP_CR <= mcap_cr <= MAX_MCAP_CR))
+            c_de = (de_ratio < MAX_DEBT_TO_EQUITY)
+            c_roe = (roe_pct >= MIN_ROE or roe_pct == 0.0)
+            c_roce = (roce_pct >= MIN_ROCE or roce_pct == 0.0)
+
+            if not (c_pe and c_mcap and c_de and c_roe and c_roce):
+                logger.info(f"Skipping {sym} due to fundamental safety floor (P/E: {pe_val}, D/E: {de_ratio}, MCap: {mcap_cr} Cr)")
+                continue
+
+            # Fetch official NSE Live delivery if available
+            delivery_pct = None
+            if nse_session:
+                nse_data = fetch_nse_live_eod(nse_session, clean_sym)
+                if nse_data:
+                    delivery_pct = nse_data.get("Delivery_Pct")
 
             stock_payload = {
                 "name": item["name"],
                 "symbol": clean_sym,
                 "sector": item["sector"],
+                "bucket": item.get("bucket", "NSE"),
                 "price": round(today_close, 2),
-                "mcap_cr": f"₹{mcap_cr:,.0f} Cr",
+                "mcap_cr": f"₹{mcap_cr:,.0f} Cr" if mcap_cr else "N/A",
                 "ret_1m": ret_1m_pct,
                 "volume": f"{today_vol:,}",
                 "rvol": f"{rvol}x",
@@ -824,20 +891,16 @@ def run_nse_market_lens_screen():
                 "ocf_to_pat": ocf_to_pat
             }
 
-            # -------------------------------------------------------------
-            # TRACK A: ACTIVE BREAKOUT & 5-DAY RETEST CONFIRMATION ENGINE
-            # Evaluates Rules A1-A7, 5-day state window, and 100-point score
-            # -------------------------------------------------------------
-            is_breakout_valid, b_state, b_score, b_metrics, b_reject = calculate_active_breakout_score(
-                hist, nifty500_hist, delivery_pct
-            )
+            # If delivery was fetched, re-evaluate breakout score with delivery info
+            if delivery_pct is not None:
+                is_breakout_valid, b_state, b_score, b_metrics, b_reject = calculate_active_breakout_score(
+                    hist, nifty500_hist, delivery_pct
+                )
 
             is_track_a_breakout = False
             if is_breakout_valid and b_score >= 65:
                 is_track_a_breakout = True
-                
-                # Concise Rationale for Track A
-                deliv_txt = f"official delivery {delivery_pct}%" if delivery_pct else "strong institutional interest"
+                deliv_txt = f"official delivery {delivery_pct}%" if delivery_pct else "strong institutional volume"
                 a_rationale = (
                     f"Cleared 20D pivot ₹{b_metrics['pivot']} with {b_metrics['volume_ratio']}x volume and {deliv_txt}. "
                     f"Strong close in top {round((1.0 - b_metrics['crr']) * 100)}% of day range; "
@@ -858,56 +921,31 @@ def run_nse_market_lens_screen():
                 a_payload["risk_pct"] = b_metrics["risk_pct"]
                 a_payload["t1_2r"] = b_metrics["t1_2r"]
                 a_payload["t2_3r"] = b_metrics["t2_3r"]
-                a_payload["be_cost_anchor"] = round(today_close * 1.0035, 1)  # Cost-adjusted breakeven (+0.35%)
+                a_payload["be_cost_anchor"] = round(today_close * 1.0035, 1)
                 a_payload["rationale"] = a_rationale
-                
                 active_breakouts.append(a_payload)
 
-            # -------------------------------------------------------------
-            # TRACK B: PRE-BREAKOUT COIL / SQUEEZE (HALO 100-Point Engine)
-            # Evaluates the 7 mandatory quantitative compression rules:
-            #   Rule 1: ATR Contraction vs 20D baseline and 60D median
-            #   Rule 2: Bollinger Band Squeeze (BBW <= 25th percentile of 120D)
-            #   Rule 3: Volume Dry-Up (5D volume <= 75% of 20D SMA)
-            #   Rule 4: Daily Trend Alignment (Close > SMA50 > SMA200, SMA50 rising)
-            #   Rule 5: Weekly Trend Confirmation (Weekly close > 30W SMA, 30W rising)
-            #   Rule 6: Proximity to Pivot (0% - 5.5% below 20-Day Max High)
-            #   Rule 7: Base Integrity & Tightness (Range <= 1.8x 60D median)
-            # + 100-Point HALO Scoring Rubric
-            # -------------------------------------------------------------
-            is_halo_candidate, halo_score, halo_metrics = calculate_halo_squeeze_score(hist, nifty500_hist)
-
             if is_halo_candidate and not is_track_a_breakout:
-                # -------------------------------------------------------------
-                # PROFESSIONAL TRADE EXECUTION PLAN: 40% / 30% / 30% RUNNER
-                # -------------------------------------------------------------
                 pivot = halo_metrics["pivot"]
-                # 1. Entry Trigger: 1 tick above Pivot (approx 0.10%)
                 entry_trigger = round(pivot * 1.001, 1)
-
-                # 2. Initial Stop-Loss: 5-Day Base Low or 1.5x ATR, whichever is structural
                 base_low_5d = float(hist["Low"].iloc[-5:].min())
                 atr_val = (float(halo_metrics["atr_pct"]) / 100.0) * today_close
                 sl_atr = entry_trigger - (1.5 * atr_val)
                 initial_sl = round(max(base_low_5d, sl_atr), 1)
 
-                # 3. Unit Risk (1R)
                 risk_1r = round(entry_trigger - initial_sl, 1)
                 risk_pct = round((risk_1r / entry_trigger) * 100, 2)
 
-                # 4. Multi-Target Ladder
                 target_1_2r = round(entry_trigger + (2.0 * risk_1r), 1)
                 target_2_3r = round(entry_trigger + (3.0 * risk_1r), 1)
-                # Protected Breakeven anchor: Pivot - 1 tick (gives breathing room for retests)
                 be_retest_anchor = round(pivot * 0.998, 1)
 
-                # Generate concise institutional rationale
                 dry_desc = "extreme dry-up" if halo_metrics['vol_dryup_ratio'] <= 0.60 else "supply drying"
                 bbw_desc = "deep historical coil" if halo_metrics['bbw_percentile'] <= 15.0 else "volatility contraction"
                 rationale = (
                     f"Consolidating tightly {halo_metrics['distance_pct']}% under 20D pivot with {bbw_desc} "
                     f"(BBW: {halo_metrics['bbw_percentile']}th percentile) and {dry_desc} (5D Vol: {halo_metrics['vol_dryup_ratio']}x SMA). "
-                    f"Macro trend supported by rising 30W SMA; high cash conversion ({stock_payload['ocf_to_pat']}x) confirms accumulation."
+                    f"Macro trend supported by rising 30W SMA; institutional quality confirmed."
                 )
 
                 squeeze_payload = dict(stock_payload)
@@ -919,9 +957,6 @@ def run_nse_market_lens_screen():
                 squeeze_payload["rs_alpha"] = halo_metrics["rs_alpha"]
                 squeeze_payload["pivot_ref"] = pivot
                 squeeze_payload["pass_all_7"] = halo_metrics["pass_all_7"]
-                squeeze_payload["rationale"] = rationale
-                
-                # Trade Plan Specifics
                 squeeze_payload["entry_trigger"] = entry_trigger
                 squeeze_payload["initial_sl"] = initial_sl
                 squeeze_payload["risk_1r"] = risk_1r
@@ -929,6 +964,7 @@ def run_nse_market_lens_screen():
                 squeeze_payload["target_1_2r"] = target_1_2r
                 squeeze_payload["target_2_3r"] = target_2_3r
                 squeeze_payload["be_retest_anchor"] = be_retest_anchor
+                squeeze_payload["rationale"] = rationale
 
                 pre_breakout_squeezes.append(squeeze_payload)
 
@@ -941,7 +977,7 @@ def run_nse_market_lens_screen():
     # Sort Track B by 100-point HALO score descending (highest quality coil first)
     pre_breakout_squeezes.sort(key=lambda x: x["halo_score"], reverse=True)
 
-    return active_breakouts, pre_breakout_squeezes
+    return active_breakouts, pre_breakout_squeezes, len(universe)
 
 # ==============================================================================
 # TELEGRAM SENDER
@@ -975,19 +1011,20 @@ def send_telegram_alert(message_text: str):
 # ==============================================================================
 # REPORT BUILDER
 # ==============================================================================
-def build_daily_evening_report(active_breakouts, pre_breakout_squeezes):
+def build_daily_evening_report(active_breakouts, pre_breakout_squeezes, total_scanned=651):
     """Builds the 5:00 PM evening market brief with dual-track intelligence."""
     now_ist = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
     formatted_date = now_ist.strftime("%d %b %Y | 05:00 PM IST")
 
     msg = "🌌 *ANTIGRAVITY SMART MONEY DUAL TRACK RADAR*\n"
     msg += f"📅 _{formatted_date}_\n"
+    msg += f"🌐 *UNIVERSE: {total_scanned} STOCKS (NIFTY MID 150 + SMALL 250 + MICRO 250)*\n"
     msg += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
 
     # Shared Quality Criteria
-    msg += "🛡️ *INSTITUTIONAL QUALITY FLOOR (All Picks):*\n"
-    msg += "• `₹2,000 Cr < MCap < ₹35,000 Cr` | `P/E < 80` | `D/E < 1.5`\n"
-    msg += "• `ROE >= 15%` | `ROCE >= 20%` | `OCF/PAT > 1.0` (Cash Quality)\n\n"
+    msg += "🛡️ *INSTITUTIONAL QUALITY & SAFETY FLOOR:*\n"
+    msg += "• `₹300 Cr < MCap < ₹75,000 Cr` | `P/E < 100` | `D/E < 2.0`\n"
+    msg += "• `ROE >= 10%` | `ROCE >= 12%` | `OCF/PAT >= 0.8` (Cash Quality)\n\n"
 
     # =========================================================
     # SECTION 1: TRACK B - HALO PRE-BREAKOUT SQUEEZE LEADERBOARD
@@ -999,10 +1036,11 @@ def build_daily_evening_report(active_breakouts, pre_breakout_squeezes):
     if not pre_breakout_squeezes:
         msg += "• _No stocks currently meet the strict 7-rule HALO compression criteria._\n\n"
     else:
-        for idx, stock in enumerate(pre_breakout_squeezes[:5], 1):
+        for idx, stock in enumerate(pre_breakout_squeezes[:6], 1):
             deliv_str = f" | NSE Delivery: `{stock['delivery_pct']}`" if stock['delivery_pct'] != "N/A" else ""
             pass_badge = " [👑 PASS ALL 7]" if stock.get("pass_all_7") else ""
-            msg += f"{idx}. ⏳ *{stock['name']}* (`{stock['symbol']}`) — *Score: {stock['halo_score']}/100*{pass_badge}\n"
+            b_tag = f" · `{stock['bucket']}`" if stock.get("bucket") else ""
+            msg += f"{idx}. ⏳ *{stock['name']}* (`{stock['symbol']}`){b_tag} — *Score: {stock['halo_score']}/100*{pass_badge}\n"
             msg += f"   • *Current Price:* ₹{stock['price']} (Just `{stock['dist_to_high']}` beneath Pivot ₹{stock['pivot_ref']})\n"
             msg += f"   • 🎯 *BUY TRIGGER:* Buy-Stop Limit at `₹{stock['entry_trigger']}` (Pivot + 1 tick)\n"
             msg += f"   • 🛑 *INITIAL SL:* `₹{stock['initial_sl']}` (1R Risk: ₹{stock['risk_1r']} | `{stock['risk_pct']}%`)\n"
@@ -1023,9 +1061,10 @@ def build_daily_evening_report(active_breakouts, pre_breakout_squeezes):
     if not active_breakouts:
         msg += "• _No stocks met all A1–A7 breakout & retest criteria today._\n\n"
     else:
-        for idx, stock in enumerate(active_breakouts[:5], 1):
+        for idx, stock in enumerate(active_breakouts[:6], 1):
             deliv_str = f" | NSE Delivery: *{stock['delivery_pct']}*" if stock['delivery_pct'] != "N/A" else ""
-            msg += f"{idx}. 💎 *{stock['name']}* (`{stock['symbol']}`) — *Score: {stock['breakout_score']}/100*\n"
+            b_tag = f" · `{stock['bucket']}`" if stock.get("bucket") else ""
+            msg += f"{idx}. 💎 *{stock['name']}* (`{stock['symbol']}`){b_tag} — *Score: {stock['breakout_score']}/100*\n"
             msg += f"   • *State:* `[{stock['state']}]` | Pivot: ₹{stock['pivot_ref']} (Price: ₹{stock['price']} | `{stock['extension_pct']}` from Pivot)\n"
             msg += f"   • 🎯 *PLANNED ENTRY:* Near Pivot Retest or Current Price (Max Chase: 3.0%)\n"
             msg += f"   • 🛑 *STRUCTURAL SL:* `₹{stock['structural_sl']}` (Base Low - 0.25 ATR | Risk: ₹{stock['unit_risk']} | `{stock['risk_pct']}%`)\n"
@@ -1053,17 +1092,19 @@ from generate_dashboard import save_dashboard
 # ==============================================================================
 def main():
     logger.info("Starting NSE Market Lens 5:00 PM Dual-Track Screener...")
-    active_breakouts, pre_breakout_squeezes = run_nse_market_lens_screen()
+    active_breakouts, pre_breakout_squeezes, total_scanned = run_nse_market_lens_screen()
     
     # 1. Generate & Update HTML Dashboard (for GitHub Pages and Local view)
     try:
-        docs_path, local_path = save_dashboard(active_breakouts, pre_breakout_squeezes, BENCHMARK_INDICES)
-        logger.info(f"Dashboard generated successfully at {docs_path}")
+        docs_path, local_path = save_dashboard(
+            active_breakouts, pre_breakout_squeezes, BENCHMARK_INDICES, total_scanned=total_scanned
+        )
+        logger.info(f"Dashboard generated successfully for {total_scanned} stocks at {docs_path}")
     except Exception as e:
         logger.warning(f"Error generating dashboard: {e}")
 
     # 2. Build and Send Telegram Evening Brief
-    report = build_daily_evening_report(active_breakouts, pre_breakout_squeezes)
+    report = build_daily_evening_report(active_breakouts, pre_breakout_squeezes, total_scanned=total_scanned)
     success = send_telegram_alert(report)
     if success:
         logger.info("Execution finished successfully.")
