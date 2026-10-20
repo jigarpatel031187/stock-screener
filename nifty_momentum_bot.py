@@ -1042,8 +1042,11 @@ def build_daily_evening_report(active_breakouts, pre_breakout_squeezes):
         msg += f"• *{b['name']}:* 1Y: `{b['ret_1y']}` | 3Y: `{b['ret_3y']}`\n"
     msg += "\n"
 
-    msg += "⚡ _Automated daily at 5:00 PM IST via GitHub Actions_"
+    msg += "⚡ _Automated daily at 5:00 PM IST via GitHub Actions_\n"
+    msg += "🌐 [Open Live Web Dashboard](https://jigarpatel031187.github.io/stock-screener/)"
     return msg
+
+from generate_dashboard import save_dashboard
 
 # ==============================================================================
 # MAIN EXECUTION ENTRYPOINT
@@ -1051,6 +1054,15 @@ def build_daily_evening_report(active_breakouts, pre_breakout_squeezes):
 def main():
     logger.info("Starting NSE Market Lens 5:00 PM Dual-Track Screener...")
     active_breakouts, pre_breakout_squeezes = run_nse_market_lens_screen()
+    
+    # 1. Generate & Update HTML Dashboard (for GitHub Pages and Local view)
+    try:
+        docs_path, local_path = save_dashboard(active_breakouts, pre_breakout_squeezes, BENCHMARK_INDICES)
+        logger.info(f"Dashboard generated successfully at {docs_path}")
+    except Exception as e:
+        logger.warning(f"Error generating dashboard: {e}")
+
+    # 2. Build and Send Telegram Evening Brief
     report = build_daily_evening_report(active_breakouts, pre_breakout_squeezes)
     success = send_telegram_alert(report)
     if success:

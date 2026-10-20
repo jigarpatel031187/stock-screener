@@ -9,6 +9,8 @@ on:
 jobs:
   run-screener-alert:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Code Repository
@@ -25,9 +27,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Execute 5:00 PM NSE Market Lens Screener
+      - name: Execute 5:00 PM NSE Market Lens Screener & Generate Dashboard
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           python nifty_momentum_bot.py
+
+      - name: Commit & Publish Updated Web Dashboard
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          git add docs/index.html dashboard.html
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update live radar dashboard [skip ci]" && git push)

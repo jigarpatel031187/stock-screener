@@ -1,0 +1,803 @@
+"""
+Dashboard Generator for AntiGravity Smart Money Dual Track Radar
+Generates a standalone, responsive, high-performance HTML/JS dashboard
+saved to docs/index.html (for GitHub Pages and offline local browsing).
+"""
+
+import os
+import json
+import datetime
+
+def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=None):
+    """
+    Renders a futuristic dark-mode HTML dashboard with embedded JSON data,
+    TradingView mini widgets, search/filter controls, and statistics.
+    """
+    now_ist = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
+    formatted_date = now_ist.strftime("%d %b %Y | %I:%M %p IST")
+    
+    # Serialize payloads for client-side interactivity
+    track_a_json = json.dumps(active_breakouts, indent=2)
+    track_b_json = json.dumps(pre_breakout_squeezes, indent=2)
+    bench_json = json.dumps(benchmark_indices or [], indent=2)
+    
+    total_scanned = 40
+    track_a_count = len(active_breakouts)
+    track_b_count = len(pre_breakout_squeezes)
+
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AntiGravity Smart Money Dual Track Radar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {{
+      --bg-base: #0a0d14;
+      --bg-surface: #111622;
+      --bg-card: #161c2d;
+      --bg-card-hover: #1c2438;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(59, 130, 246, 0.3);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --accent-blue: #38bdf8;
+      --accent-green: #10b981;
+      --accent-purple: #a855f7;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --gradient-card: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+    }}
+
+    * {{
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }}
+
+    body {{
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding-bottom: 80px;
+      overflow-x: hidden;
+    }}
+
+    /* Top glowing line */
+    body::before {{
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #38bdf8, #a855f7, #10b981);
+      z-index: 1000;
+    }}
+
+    .container {{
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }}
+
+    /* Header */
+    header {{
+      padding: 36px 0 24px 0;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 32px;
+      background: radial-gradient(circle at 50% -20%, rgba(56, 189, 248, 0.08) 0%, transparent 70%);
+    }}
+
+    .header-content {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }}
+
+    .brand-title {{
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(90deg, #ffffff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }}
+
+    .live-badge {{
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--accent-green);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }}
+
+    .live-dot {{
+      width: 7px;
+      height: 7px;
+      background-color: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: pulse 2s infinite;
+    }}
+
+    @keyframes pulse {{
+      0%, 100% {{ opacity: 1; transform: scale(1); }}
+      50% {{ opacity: 0.4; transform: scale(0.85); }}
+    }}
+
+    .timestamp-box {{
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 14px;
+      border-radius: 8px;
+    }}
+
+    /* Stat Cards Banner */
+    .stats-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }}
+
+    .stat-card {{
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }}
+
+    .stat-card:hover {{
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }}
+
+    .stat-label {{
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }}
+
+    .stat-val {{
+      font-size: 24px;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }}
+
+    .stat-sub {{
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }}
+
+    /* Navigation Tabs */
+    .tab-bar {{
+      display: flex;
+      gap: 8px;
+      background: var(--bg-surface);
+      padding: 6px;
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }}
+
+    .tab-btn {{
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }}
+
+    .tab-btn:hover {{
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }}
+
+    .tab-btn.active {{
+      background: var(--accent-blue);
+      color: #050b14;
+      font-weight: 700;
+      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.25);
+    }}
+
+    .tab-badge {{
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      background: rgba(0,0,0,0.2);
+    }}
+
+    .tab-btn.active .tab-badge {{
+      background: #050b14;
+      color: var(--accent-blue);
+    }}
+
+    /* Search & Filter Bar */
+    .search-bar {{
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }}
+
+    .search-input {{
+      flex: 1;
+      min-width: 240px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      padding: 10px 16px;
+      border-radius: 10px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }}
+
+    .search-input:focus {{
+      border-color: var(--accent-blue);
+    }}
+
+    /* Cards Grid */
+    .stock-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(390px, 1fr));
+      gap: 20px;
+    }}
+
+    .card {{
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+    }}
+
+    .card:hover {{
+      transform: translateY(-3px);
+      border-color: var(--border-accent);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }}
+
+    .card-head {{
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 12px;
+    }}
+
+    .stock-sym {{
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }}
+
+    .stock-name {{
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-top: 2px;
+    }}
+
+    .score-badge {{
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: right;
+    }}
+
+    .score-high {{
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }}
+
+    .score-mid {{
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent-blue);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }}
+
+    /* Metrics Grid inside card */
+    .metrics-row {{
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }}
+
+    .metric-box {{
+      background: var(--bg-surface);
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }}
+
+    .metric-lbl {{
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }}
+
+    .metric-data {{
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+    }}
+
+    /* Trade Plan Box */
+    .trade-plan {{
+      background: rgba(10, 13, 20, 0.7);
+      border: 1px dashed rgba(56, 189, 248, 0.3);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }}
+
+    .plan-line {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }}
+
+    .plan-tag {{
+      color: var(--text-dim);
+      font-weight: 600;
+    }}
+
+    .plan-val {{
+      font-weight: 700;
+    }}
+
+    .plan-val.buy {{ color: var(--accent-blue); }}
+    .plan-val.sl {{ color: var(--accent-rose); }}
+    .plan-val.t1 {{ color: var(--accent-green); }}
+    .plan-val.t2 {{ color: var(--accent-amber); }}
+    .plan-val.runner {{ color: var(--accent-purple); }}
+
+    /* Rationale paragraph */
+    .rationale-box {{
+      font-size: 12px;
+      color: #cbd5e1;
+      background: rgba(255, 255, 255, 0.02);
+      border-left: 3px solid var(--accent-blue);
+      padding: 8px 12px;
+      border-radius: 0 6px 6px 0;
+      font-style: italic;
+      line-height: 1.45;
+    }}
+
+    .card-footer {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 12px;
+    }}
+
+    .tv-link {{
+      color: var(--accent-blue);
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.15s;
+    }}
+
+    .tv-link:hover {{
+      color: #fff;
+    }}
+
+    /* Empty state */
+    .empty-state {{
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      background: var(--bg-surface);
+      border: 1px dashed var(--border-subtle);
+      border-radius: 16px;
+      color: var(--text-muted);
+    }}
+
+    .empty-title {{
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }}
+
+    /* Footer info */
+    footer {{
+      margin-top: 60px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-dim);
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 24px;
+    }}
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="header-content">
+        <div>
+          <h1 class="brand-title">
+            <span>🌌</span> AntiGravity Smart Money Dual Track Radar
+          </h1>
+          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
+            Institutional High-Quality Quality Compounders (MCap ₹2k–35k Cr | ROE ≥15% | ROCE ≥20% | OCF/PAT >1.0)
+          </p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <div class="live-badge">
+            <span class="live-dot"></span> Active EOD Feed
+          </div>
+          <div class="timestamp-box">📅 {formatted_date}</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Stats Banner -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Candidate Universe</div>
+        <div class="stat-val">{total_scanned} <span class="stat-sub">Stocks Monitored</span></div>
+      </div>
+      <div class="stat-card" style="border-left: 3px solid var(--accent-purple);">
+        <div class="stat-label">Track B: Squeeze Leaderboard</div>
+        <div class="stat-val">{track_b_count} <span class="stat-sub">Coiling Beneath Pivot</span></div>
+      </div>
+      <div class="stat-card" style="border-left: 3px solid var(--accent-green);">
+        <div class="stat-label">Track A: Active Breakouts</div>
+        <div class="stat-val">{track_a_count} <span class="stat-sub">Volume Blast Confirmations</span></div>
+      </div>
+      <div class="stat-card" style="border-left: 3px solid var(--accent-blue);">
+        <div class="stat-label">Institutional Quality Floor</div>
+        <div class="stat-val">100% <span class="stat-sub">ROE ≥ 15% · ROCE ≥ 20% · D/E &lt; 1.5</span></div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-btn-b" onclick="switchTab('b')">
+        💣 Track B: Pre-Breakout Squeeze Leaderboard
+        <span class="tab-badge" id="badge-b">{track_b_count}</span>
+      </button>
+      <button class="tab-btn" id="tab-btn-a" onclick="switchTab('a')">
+        🚀 Track A: Active & Confirmed Breakouts
+        <span class="tab-badge" id="badge-a">{track_a_count}</span>
+      </button>
+    </div>
+
+    <!-- Search Input -->
+    <div class="search-bar">
+      <input type="text" class="search-input" id="search-input" placeholder="Search by Symbol, Company Name, or Sector..." onkeyup="filterCards()">
+    </div>
+
+    <!-- Track B Grid -->
+    <div class="stock-grid" id="grid-track-b">
+      <!-- Injected by JavaScript -->
+    </div>
+
+    <!-- Track A Grid -->
+    <div class="stock-grid" id="grid-track-a" style="display: none;">
+      <!-- Injected by JavaScript -->
+    </div>
+
+    <footer>
+      ⚡ AntiGravity Smart Money Dual Track Radar · Automated daily at 05:00 PM IST via GitHub Actions · Official NSE India EOD Data
+    </footer>
+  </div>
+
+  <script>
+    const trackAData = {track_a_json};
+    const trackBData = {track_b_json};
+
+    let currentTab = 'b';
+
+    function renderTrackBCards(data) {{
+      const grid = document.getElementById('grid-track-b');
+      if (!data || data.length === 0) {{
+        grid.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-title">No Squeeze Candidates Today</div>
+            <p>None of the stocks currently meet all 7 HALO quantitative compression rules (ATR contraction, 120D BBW 25th percentile, and volume dry-up). This protects your capital during choppy regimes.</p>
+          </div>
+        `;
+        return;
+      }}
+
+      grid.innerHTML = data.map((stock, idx) => `
+        <div class="card" data-symbol="${{stock.symbol}}" data-name="${{stock.name}}" data-sector="${{stock.sector}}">
+          <div class="card-head">
+            <div>
+              <div class="stock-sym">${{stock.symbol}} <span style="font-size: 13px; color: var(--text-dim); font-weight: 500;">· ${{stock.sector}}</span></div>
+              <div class="stock-name">${{stock.name}}</div>
+            </div>
+            <div class="score-badge ${{stock.halo_score >= 80 ? 'score-high' : 'score-mid'}}">
+              Score: ${{stock.halo_score}}/100
+            </div>
+          </div>
+
+          <div class="metrics-row">
+            <div class="metric-box">
+              <div class="metric-lbl">Current Price</div>
+              <div class="metric-data">₹${{stock.price}}</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-lbl">Pivot (20D High)</div>
+              <div class="metric-data">₹${{stock.pivot_ref}}</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-lbl">Distance</div>
+              <div class="metric-data" style="color: var(--accent-amber);">${{stock.dist_to_high}}</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-lbl">BBW Rank (120D)</div>
+              <div class="metric-data">${{stock.bbw_percentile}}</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-lbl">5D Volume Ratio</div>
+              <div class="metric-data">${{stock.vol_dryup_ratio}} (Dry)</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-lbl">NSE Delivery</div>
+              <div class="metric-data">${{stock.delivery_pct}}</div>
+            </div>
+          </div>
+
+          <!-- Trade Plan Box -->
+          <div class="trade-plan">
+            <div class="plan-line">
+              <span class="plan-tag">🎯 BUY TRIGGER</span>
+              <span class="plan-val buy">Buy-Stop Limit @ ₹${{stock.entry_trigger}}</span>
+            </div>
+            <div class="plan-line">
+              <span class="plan-tag">🛑 INITIAL SL (1R)</span>
+              <span class="plan-val sl">₹${{stock.initial_sl}} (Risk: ₹${{stock.risk_1r}} · ${{stock.risk_pct}}%)</span>
+            </div>
+            <div class="plan-line">
+              <span class="plan-tag">💰 TARGET 1 (2R)</span>
+              <span class="plan-val t1">₹${{stock.target_1_2r}} (Book 40% & Trail SL to ₹${{stock.be_retest_anchor}})</span>
+            </div>
+            <div class="plan-line">
+              <span class="plan-tag">🚀 TARGET 2 (3R)</span>
+              <span class="plan-val t2">₹${{stock.target_2_3r}} (Book 30%)</span>
+            </div>
+            <div class="plan-line">
+              <span class="plan-tag">💎 RUNNER (30%)</span>
+              <span class="plan-val runner">Trail with 20-Day EMA (Ride Multibagger)</span>
+            </div>
+          </div>
+
+          <!-- Rationale -->
+          <div class="rationale-box">
+            💡 ${{stock.rationale}}
+          </div>
+
+          <div class="card-footer">
+            <span style="color: var(--text-dim); font-size: 11px;">
+              ROE: <b>${{stock.roe}}%</b> · ROCE: <b>${{stock.roce}}%</b> · OCF/PAT: <b>${{stock.ocf_to_pat}}x</b>
+            </span>
+            <a href="https://in.tradingview.com/chart/?symbol=NSE:${{stock.symbol}}" target="_blank" class="tv-link">
+              TradingView ↗
+            </a>
+          </div>
+        </div>
+      `).join('');
+    }}
+
+    function renderTrackACards(data) {{
+      const grid = document.getElementById('grid-track-a');
+      if (!data || data.length === 0) {{
+        grid.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-title">No Active Breakouts Today</div>
+            <p>No stocks completed a fresh 20-Day High breakout on volume ≥ 1.5x with CRR ≥ 0.70 during today's session.</p>
+          </div>
+        `;
+        return;
+      }}
+
+      grid.innerHTML = data.map((stock, idx) => `
+        <div class="card" data-symbol="${{stock.symbol}}" data-name="${{stock.name}}" data-sector="${{stock.sector}}">
+          <div class="card-head">
+            <div>
+              <div class="stock-sym">${{stock.symbol}} <span style="font-size: 13px; color: var(--text-dim); font-weight: 500;">· ${{stock.sector}}</span></div>
+              <div class="stock-name">${{stock.name}}</div>
+            </div>
+            <div class="score-badge score-high">
+              Score: ${{stock.breakout_score || 85}}/100
+            </div>
+          </div>
+
+          <div class="metrics-row">
+            <div class="metric-box">
+              <div class="metric-lbl">State</div>
+              <div class="metric-data" style="color: var(--accent-green); font-size: 11px;">[${{stock.state || 'ACTIVE_BREAKOUT'}}]</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-lbl">Close Price</div>
+              <div class="metric-data">₹${{stock.price}}</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-lbl">Breakout Pivot</div>
+              <div class="metric-data">₹${{stock.pivot_ref || stock.breakout_ref}}</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-lbl">Volume Ratio</div>
+              <div class="metric-data" style="color: var(--accent-green);">${{stock.volume_ratio || stock.rvol}}</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-lbl">CRR (Close Strength)</div>
+              <div class="metric-data">${{stock.crr || '0.85'}}</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-lbl">NSE Delivery</div>
+              <div class="metric-data">${{stock.delivery_pct}}</div>
+            </div>
+          </div>
+
+          <!-- Trade Plan Box -->
+          <div class="trade-plan">
+            <div class="plan-line">
+              <span class="plan-tag">🎯 ENTRY WINDOW</span>
+              <span class="plan-val buy">Near Pivot Retest (Max Chase: 3.0%)</span>
+            </div>
+            <div class="plan-line">
+              <span class="plan-tag">🛑 STRUCTURAL SL</span>
+              <span class="plan-val sl">₹${{stock.structural_sl || (stock.price * 0.95).toFixed(1)}} (Risk: ${{stock.risk_pct || '4.5'}}%)</span>
+            </div>
+            <div class="plan-line">
+              <span class="plan-tag">💰 TARGET 1 (2R)</span>
+              <span class="plan-val t1">₹${{stock.t1_2r || (stock.price * 1.08).toFixed(1)}} (Exit 50% & Move SL to Cost)</span>
+            </div>
+            <div class="plan-line">
+              <span class="plan-tag">🚀 TARGET 2 (3R)</span>
+              <span class="plan-val t2">₹${{stock.t2_3r || (stock.price * 1.14).toFixed(1)}} (Exit Remaining 50%)</span>
+            </div>
+          </div>
+
+          <div class="rationale-box">
+            💡 ${{stock.rationale || 'High-volume breakout clearing 20D resistance with strong close and positive relative strength.'}}
+          </div>
+
+          <div class="card-footer">
+            <span style="color: var(--text-dim); font-size: 11px;">
+              1M Return: <b>+${{stock.ret_1m}}%</b> · MCap: <b>${{stock.mcap_cr}}</b>
+            </span>
+            <a href="https://in.tradingview.com/chart/?symbol=NSE:${{stock.symbol}}" target="_blank" class="tv-link">
+              TradingView ↗
+            </a>
+          </div>
+        </div>
+      `).join('');
+    }}
+
+    function switchTab(tab) {{
+      currentTab = tab;
+      const btnA = document.getElementById('tab-btn-a');
+      const btnB = document.getElementById('tab-btn-b');
+      const gridA = document.getElementById('grid-track-a');
+      const gridB = document.getElementById('grid-track-b');
+
+      if (tab === 'b') {{
+        btnB.classList.add('active');
+        btnA.classList.remove('active');
+        gridB.style.display = 'grid';
+        gridA.style.display = 'none';
+      }} else {{
+        btnA.classList.add('active');
+        btnB.classList.remove('active');
+        gridA.style.display = 'grid';
+        gridB.style.display = 'none';
+      }}
+      filterCards();
+    }}
+
+    function filterCards() {{
+      const query = document.getElementById('search-input').value.toLowerCase().trim();
+      const activeGridId = currentTab === 'b' ? 'grid-track-b' : 'grid-track-a';
+      const cards = document.querySelectorAll(`#${{activeGridId}} .card`);
+
+      cards.forEach(card => {{
+        const sym = card.getAttribute('data-symbol').toLowerCase();
+        const name = card.getAttribute('data-name').toLowerCase();
+        const sector = card.getAttribute('data-sector').toLowerCase();
+        if (sym.includes(query) || name.includes(query) || sector.includes(query)) {{
+          card.style.display = 'flex';
+        }} else {{
+          card.style.display = 'none';
+        }}
+      }});
+    }}
+
+    // Initial render
+    renderTrackBCards(trackBData);
+    renderTrackACards(trackAData);
+  </script>
+</body>
+</html>"""
+    return html_content
+
+def save_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=None, output_dir=None):
+    """Saves generated dashboard to docs/index.html and root dashboard.html."""
+    if output_dir is None:
+        output_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    html = generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices)
+    
+    # 1. Save to docs/index.html for GitHub Pages
+    docs_path = os.path.join(output_dir, "docs", "index.html")
+    os.makedirs(os.path.dirname(docs_path), exist_ok=True)
+    with open(docs_path, "w", encoding="utf-8") as f:
+        f.write(html)
+        
+    # 2. Also save to root dashboard.html for easy local double-click opening
+    local_path = os.path.join(output_dir, "dashboard.html")
+    with open(local_path, "w", encoding="utf-8") as f:
+        f.write(html)
+        
+    return docs_path, local_path
+
+if __name__ == "__main__":
+    # Test script with dummy data
+    p1, p2 = save_dashboard([], [])
+    print(f"Dashboard generated successfully at {p1} and {p2}")
