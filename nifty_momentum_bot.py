@@ -47,15 +47,15 @@ TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
 # Parameters for Nifty Mid, Small & Microcap Universe
 MIN_1M_RETURN = float(os.environ.get("MIN_1M_RETURN", 8.0))      # Return Over % 1 Month > 8%
-MAX_PE = float(os.environ.get("MAX_PE", 100.0))                 # P/E < 100
-MIN_MCAP_CR = float(os.environ.get("MIN_MCAP_CR", 300.0))       # MCap > 300 Cr (covers Microcap 250 upwards)
-MAX_MCAP_CR = float(os.environ.get("MAX_MCAP_CR", 75000.0))     # MCap < 75,000 Cr (covers up to largest Midcaps)
-MAX_DEBT_TO_EQUITY = float(os.environ.get("MAX_DE", 2.0))        # Debt to Equity < 2.0
+MAX_PE = float(os.environ.get("MAX_PE", 80.0))                   # P/E < 80.0
+MIN_MCAP_CR = float(os.environ.get("MIN_MCAP_CR", 2000.0))       # MCap > 2,000 Cr
+MAX_MCAP_CR = float(os.environ.get("MAX_MCAP_CR", 35000.0))      # MCap < 35,000 Cr
+MAX_DEBT_TO_EQUITY = float(os.environ.get("MAX_DE", 1.5))        # Debt to Equity < 1.5
 MIN_VOLUME = int(os.environ.get("MIN_VOLUME", 50000))           # Volume threshold
 
 # Fundamental Quality Filters
-MIN_ROE = float(os.environ.get("MIN_ROE", 10.0))                # ROE >= 10%
-MIN_ROCE = float(os.environ.get("MIN_ROCE", 12.0))              # ROCE >= 12%
+MIN_ROE = float(os.environ.get("MIN_ROE", 15.0))                # ROE >= 15%
+MIN_ROCE = float(os.environ.get("MIN_ROCE", 20.0))              # ROCE >= 20%
 MIN_OCF_TO_PAT = float(os.environ.get("MIN_OCF_TO_PAT", 0.8))   # OCF to PAT Ratio >= 0.8
 
 # ==============================================================================
@@ -856,13 +856,14 @@ def run_nse_market_lens_screen():
 
             # Fundamental Quality & Safety Floor Check
             c_pe = (pe_val is None or (0 < pe_val <= MAX_PE))
-            c_mcap = (mcap_cr == 0.0 or (MIN_MCAP_CR <= mcap_cr <= MAX_MCAP_CR))
-            c_de = (de_ratio < MAX_DEBT_TO_EQUITY)
+            c_mcap = (MIN_MCAP_CR <= mcap_cr <= MAX_MCAP_CR)
+            c_de = (de_ratio <= MAX_DEBT_TO_EQUITY)
             c_roe = (roe_pct >= MIN_ROE or roe_pct == 0.0)
             c_roce = (roce_pct >= MIN_ROCE or roce_pct == 0.0)
+            c_ocf = (ocf_to_pat >= MIN_OCF_TO_PAT)
 
-            if not (c_pe and c_mcap and c_de and c_roe and c_roce):
-                logger.info(f"Skipping {sym} due to fundamental safety floor (P/E: {pe_val}, D/E: {de_ratio}, MCap: {mcap_cr} Cr)")
+            if not (c_pe and c_mcap and c_de and c_roe and c_roce and c_ocf):
+                logger.info(f"Skipping {sym} due to fundamental safety floor (P/E: {pe_val}, D/E: {de_ratio}, MCap: {mcap_cr} Cr, ROE: {roe_pct}%, ROCE: {roce_pct}%, OCF/PAT: {ocf_to_pat})")
                 continue
 
             # Fetch official NSE Live delivery if available
@@ -1023,8 +1024,8 @@ def build_daily_evening_report(active_breakouts, pre_breakout_squeezes, total_sc
 
     # Shared Quality Criteria
     msg += "🛡️ *INSTITUTIONAL QUALITY & SAFETY FLOOR:*\n"
-    msg += "• `₹300 Cr < MCap < ₹75,000 Cr` | `P/E < 100` | `D/E < 2.0`\n"
-    msg += "• `ROE >= 10%` | `ROCE >= 12%` | `OCF/PAT >= 0.8` (Cash Quality)\n\n"
+    msg += "• `₹2,000 Cr < MCap < ₹35,000 Cr` | `P/E < 80` | `D/E < 1.5`\n"
+    msg += "• `ROE >= 15%` | `ROCE >= 20%` | `OCF/PAT >= 0.8` (Cash Quality)\n\n"
 
     # =========================================================
     # SECTION 1: TRACK B - HALO PRE-BREAKOUT SQUEEZE LEADERBOARD

@@ -524,7 +524,7 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-blue);">
         <div class="stat-label">Institutional Quality Floor</div>
-        <div class="stat-val">100% <span class="stat-sub">ROE ≥ 15% · ROCE ≥ 20% · D/E &lt; 1.5</span></div>
+        <div class="stat-val">100% <span class="stat-sub">₹2k-35k Cr · P/E &lt; 80 · D/E &lt; 1.5 · ROE ≥ 15% · ROCE ≥ 20% · OCF/PAT ≥ 0.8</span></div>
       </div>
     </div>
 
