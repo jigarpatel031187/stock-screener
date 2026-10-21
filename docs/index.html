@@ -475,7 +475,7 @@
           <div class="live-badge">
             <span class="live-dot"></span> Active EOD Feed
           </div>
-          <div class="timestamp-box">📅 20 Oct 2026 | 09:13 PM IST</div>
+          <div class="timestamp-box">📅 21 Oct 2026 | 09:30 PM IST</div>
         </div>
       </div>
     </header>
@@ -489,11 +489,11 @@
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-purple);">
         <div class="stat-label">Track B: Squeeze Leaderboard</div>
-        <div class="stat-val">1 <span class="stat-sub">Coiling Beneath Pivot</span></div>
+        <div class="stat-val">2 <span class="stat-sub">Coiling Beneath Pivot</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-green);">
         <div class="stat-label">Track A: Active Breakouts</div>
-        <div class="stat-val">1 <span class="stat-sub">Volume Blast Confirmations</span></div>
+        <div class="stat-val">0 <span class="stat-sub">Volume Blast Confirmations</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-blue);">
         <div class="stat-label">Institutional Quality Floor</div>
@@ -505,11 +505,11 @@
     <div class="tab-bar">
       <button class="tab-btn active" id="tab-btn-b" onclick="switchTab('b')">
         💣 Track B: Pre-Breakout Squeeze Leaderboard
-        <span class="tab-badge" id="badge-b">1</span>
+        <span class="tab-badge" id="badge-b">2</span>
       </button>
       <button class="tab-btn" id="tab-btn-a" onclick="switchTab('a')">
         🚀 Track A: Active & Confirmed Breakouts
-        <span class="tab-badge" id="badge-a">1</span>
+        <span class="tab-badge" id="badge-a">0</span>
       </button>
     </div>
 
@@ -534,75 +534,75 @@
   </div>
 
   <script>
-    const trackAData = [
-  {
-    "name": "Jayaswal Neco Industries Ltd.",
-    "symbol": "JAYNECOIND",
-    "sector": "Capital Goods",
-    "bucket": "Microcap 250",
-    "price": 97.98,
-    "mcap_cr": "\u20b99,514 Cr",
-    "ret_1m": 10.16,
-    "volume": "10,417,654",
-    "rvol": "2.72x",
-    "delivery_pct": "N/A",
-    "breakout_ref": 103.9,
-    "pe": 13.82,
-    "de": 0.75,
-    "roe": 0.0,
-    "roce": 28.41,
-    "ocf_to_pat": 1.05,
-    "state": "CONFIRMED_RETEST",
-    "breakout_score": 70,
-    "pivot_ref": 96.38,
-    "extension_pct": "+1.66%",
-    "volume_ratio": "2.72x",
-    "crr": 0.25,
-    "range_ratio": "1.78x",
-    "rs_spread": "+14.1%",
-    "structural_sl": 91.8,
-    "unit_risk": 6.2,
-    "risk_pct": 6.33,
-    "t1_2r": 110.4,
-    "t2_3r": 116.6,
-    "be_cost_anchor": 98.3,
-    "rationale": "Cleared 20D pivot \u20b996.38 with 2.72x volume and strong institutional volume. Strong close in top 75% of day range; outperforming Nifty 500 by +14.1% over 3M."
-  }
-];
+    const trackAData = [];
     const trackBData = [
+  {
+    "name": "CRISIL Ltd.",
+    "symbol": "CRISIL",
+    "sector": "Financial Services",
+    "bucket": "Midcap 150",
+    "price": 4586.4,
+    "mcap_cr": "\u20b933,540 Cr",
+    "ret_1m": 0.19,
+    "volume": "26,558",
+    "rvol": "0.79x",
+    "delivery_pct": "N/A",
+    "breakout_ref": 4706.2,
+    "pe": 37.93,
+    "de": 0.1,
+    "roe": 29.05,
+    "roce": 32.5,
+    "ocf_to_pat": 0.98,
+    "halo_score": 68,
+    "dist_to_high": "2.55%",
+    "vol_dryup_ratio": "0.66x",
+    "bbw_percentile": "0.0%",
+    "atr_pct": "2.48%",
+    "rs_alpha": "15.0%",
+    "pivot_ref": 4706.2,
+    "pass_all_7": false,
+    "entry_trigger": 4710.9,
+    "initial_sl": 4540.3,
+    "risk_1r": 170.6,
+    "risk_pct": 3.62,
+    "target_1_2r": 5052.1,
+    "target_2_3r": 5222.7,
+    "be_retest_anchor": 4696.8,
+    "rationale": "Consolidating tightly 2.55% under 20D pivot with deep historical coil (BBW: 0.0th percentile) and supply drying (5D Vol: 0.66x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
+  },
   {
     "name": "City Union Bank Ltd.",
     "symbol": "CUB",
     "sector": "Financial Services",
     "bucket": "Smallcap 250",
-    "price": 230.95,
-    "mcap_cr": "\u20b922,882 Cr",
-    "ret_1m": -0.38,
-    "volume": "1,115,071",
-    "rvol": "0.45x",
+    "price": 229.84,
+    "mcap_cr": "\u20b922,772 Cr",
+    "ret_1m": -2.52,
+    "volume": "1,005,683",
+    "rvol": "0.42x",
     "delivery_pct": "N/A",
-    "breakout_ref": 238.95,
-    "pe": 16.36,
+    "breakout_ref": 237.74,
+    "pe": 16.28,
     "de": 0.0,
     "roe": 0.0,
     "roce": 0.0,
     "ocf_to_pat": 1.05,
-    "halo_score": 65,
-    "dist_to_high": "3.35%",
-    "vol_dryup_ratio": "0.56x",
-    "bbw_percentile": "13.3%",
-    "atr_pct": "3.44%",
-    "rs_alpha": "9.3%",
-    "pivot_ref": 238.95,
+    "halo_score": 68,
+    "dist_to_high": "3.32%",
+    "vol_dryup_ratio": "0.54x",
+    "bbw_percentile": "8.3%",
+    "atr_pct": "3.41%",
+    "rs_alpha": "9.5%",
+    "pivot_ref": 237.74,
     "pass_all_7": false,
-    "entry_trigger": 239.2,
-    "initial_sl": 227.3,
-    "risk_1r": 11.9,
-    "risk_pct": 4.97,
-    "target_1_2r": 263.0,
-    "target_2_3r": 274.9,
-    "be_retest_anchor": 238.5,
-    "rationale": "Consolidating tightly 3.35% under 20D pivot with deep historical coil (BBW: 13.3th percentile) and extreme dry-up (5D Vol: 0.56x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
+    "entry_trigger": 238.0,
+    "initial_sl": 226.2,
+    "risk_1r": 11.8,
+    "risk_pct": 4.96,
+    "target_1_2r": 261.6,
+    "target_2_3r": 273.4,
+    "be_retest_anchor": 237.3,
+    "rationale": "Consolidating tightly 3.32% under 20D pivot with deep historical coil (BBW: 8.3th percentile) and extreme dry-up (5D Vol: 0.54x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
   }
 ];
 
