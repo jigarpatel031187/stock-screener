@@ -475,7 +475,7 @@
           <div class="live-badge">
             <span class="live-dot"></span> Active EOD Feed
           </div>
-          <div class="timestamp-box">📅 26 Oct 2026 | 10:59 PM IST</div>
+          <div class="timestamp-box">📅 27 Oct 2026 | 09:37 PM IST</div>
         </div>
       </div>
     </header>
@@ -489,11 +489,11 @@
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-purple);">
         <div class="stat-label">Track B: Squeeze Leaderboard</div>
-        <div class="stat-val">1 <span class="stat-sub">Coiling Beneath Pivot</span></div>
+        <div class="stat-val">0 <span class="stat-sub">Coiling Beneath Pivot</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-green);">
         <div class="stat-label">Track A: Active Breakouts</div>
-        <div class="stat-val">1 <span class="stat-sub">Volume Blast Confirmations</span></div>
+        <div class="stat-val">0 <span class="stat-sub">Volume Blast Confirmations</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-blue);">
         <div class="stat-label">Institutional Quality Floor</div>
@@ -505,11 +505,11 @@
     <div class="tab-bar">
       <button class="tab-btn active" id="tab-btn-b" onclick="switchTab('b')">
         💣 Track B: Pre-Breakout Squeeze Leaderboard
-        <span class="tab-badge" id="badge-b">1</span>
+        <span class="tab-badge" id="badge-b">0</span>
       </button>
       <button class="tab-btn" id="tab-btn-a" onclick="switchTab('a')">
         🚀 Track A: Active & Confirmed Breakouts
-        <span class="tab-badge" id="badge-a">1</span>
+        <span class="tab-badge" id="badge-a">0</span>
       </button>
     </div>
 
@@ -534,77 +534,8 @@
   </div>
 
   <script>
-    const trackAData = [
-  {
-    "name": "CRISIL Ltd.",
-    "symbol": "CRISIL",
-    "sector": "Financial Services",
-    "bucket": "Midcap 150",
-    "price": 4777.8,
-    "mcap_cr": "\u20b934,940 Cr",
-    "ret_1m": 3.73,
-    "volume": "213,193",
-    "rvol": "5.78x",
-    "delivery_pct": "N/A",
-    "breakout_ref": 4805.0,
-    "pe": 39.01,
-    "de": 0.1,
-    "roe": 29.05,
-    "roce": 34.8,
-    "ocf_to_pat": 0.98,
-    "state": "CONFIRMED_RETEST",
-    "breakout_score": 78,
-    "pivot_ref": 4706.2,
-    "extension_pct": "+1.52%",
-    "volume_ratio": "5.78x",
-    "crr": 0.88,
-    "range_ratio": "3.04x",
-    "rs_spread": "+14.8%",
-    "structural_sl": 4362.3,
-    "unit_risk": 415.5,
-    "risk_pct": 8.7,
-    "t1_2r": 5608.8,
-    "t2_3r": 6024.3,
-    "be_cost_anchor": 4794.5,
-    "rationale": "Cleared 20D pivot \u20b94706.2 with 5.78x volume and strong institutional volume. Strong close in top 12% of day range; outperforming Nifty 500 by +14.8% over 3M."
-  }
-];
-    const trackBData = [
-  {
-    "name": "Great Eastern Shipping Co. Ltd.",
-    "symbol": "GESHIP",
-    "sector": "Services",
-    "bucket": "Smallcap 250",
-    "price": 1532.4,
-    "mcap_cr": "\u20b921,090 Cr",
-    "ret_1m": 3.28,
-    "volume": "541,913",
-    "rvol": "0.61x",
-    "delivery_pct": "N/A",
-    "breakout_ref": 1583.0,
-    "pe": 5.85,
-    "de": 0.06,
-    "roe": 0.0,
-    "roce": 20.26,
-    "ocf_to_pat": 1.05,
-    "halo_score": 68,
-    "dist_to_high": "3.2%",
-    "vol_dryup_ratio": "0.65x",
-    "bbw_percentile": "0.0%",
-    "atr_pct": "3.0%",
-    "rs_alpha": "13.4%",
-    "pivot_ref": 1583.0,
-    "pass_all_7": false,
-    "entry_trigger": 1584.6,
-    "initial_sl": 1515.6,
-    "risk_1r": 69.0,
-    "risk_pct": 4.35,
-    "target_1_2r": 1722.6,
-    "target_2_3r": 1791.6,
-    "be_retest_anchor": 1579.8,
-    "rationale": "Consolidating tightly 3.2% under 20D pivot with deep historical coil (BBW: 0.0th percentile) and supply drying (5D Vol: 0.65x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
-  }
-];
+    const trackAData = [];
+    const trackBData = [];
 
     let currentTab = 'b';
 
