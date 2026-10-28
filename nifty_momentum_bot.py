@@ -978,7 +978,7 @@ def run_nse_market_lens_screen():
     # Sort Track B by 100-point HALO score descending (highest quality coil first)
     pre_breakout_squeezes.sort(key=lambda x: x["halo_score"], reverse=True)
 
-    return active_breakouts, pre_breakout_squeezes, len(universe)
+    return active_breakouts, pre_breakout_squeezes, len(universe), all_hist
 
 # ==============================================================================
 # TELEGRAM SENDER
@@ -1012,7 +1012,7 @@ def send_telegram_alert(message_text: str):
 # ==============================================================================
 # REPORT BUILDER
 # ==============================================================================
-def build_daily_evening_report(active_breakouts, pre_breakout_squeezes, total_scanned=651):
+def build_daily_evening_report(active_breakouts, pre_breakout_squeezes, total_scanned=651, strategy_metrics=None):
     """Builds the 5:00 PM evening market brief with dual-track intelligence."""
     now_ist = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
     formatted_date = now_ist.strftime("%d %b %Y | 05:00 PM IST")
@@ -1076,6 +1076,13 @@ def build_daily_evening_report(active_breakouts, pre_breakout_squeezes, total_sc
             msg += f"   • *Fundamentals:* ROE: `{stock['roe']}%` | ROCE: `{stock['roce']}%` | OCF/PAT: `{stock['ocf_to_pat']}x`\n"
             msg += f"   • 💡 *RATIONALE:* _{stock['rationale']}_\n\n"
 
+    # Strategy Performance Audit Ledger
+    if strategy_metrics:
+        msg += "📈 *STRATEGY AUDIT PERFORMANCE (TRACK A & B):*\n"
+        msg += f"• *Win Rate:* `{strategy_metrics.get('win_rate_pct', 0)}%` ({strategy_metrics.get('win_count', 0)}W / {strategy_metrics.get('loss_count', 0)}L) | *Net Return:* `{strategy_metrics.get('net_r_multiple', 0):+}R`\n"
+        msg += f"• *Profit Factor:* `{strategy_metrics.get('profit_factor', 0)}x` | *Edge Ratio:* `{strategy_metrics.get('edge_ratio', 1.0)}x`\n"
+        msg += f"• *Open Lifecycle:* `{strategy_metrics.get('active_trades_count', 0)}` Active | `{strategy_metrics.get('pending_trades_count', 0)}` Pending Coils\n\n"
+
     # Strategy Indices Performance Barometer
     msg += "📊 *MOMENTUM BENCHMARK CONTEXT:*\n"
     for b in BENCHMARK_INDICES:
@@ -1087,25 +1094,56 @@ def build_daily_evening_report(active_breakouts, pre_breakout_squeezes, total_sc
     return msg
 
 from generate_dashboard import save_dashboard
+from trade_tracker import (
+    load_trade_ledger,
+    save_trade_ledger,
+    record_new_signals,
+    update_existing_trades,
+    compute_strategy_metrics,
+    seed_sample_historical_ledger
+)
 
 # ==============================================================================
 # MAIN EXECUTION ENTRYPOINT
 # ==============================================================================
 def main():
     logger.info("Starting NSE Market Lens 5:00 PM Dual-Track Screener...")
-    active_breakouts, pre_breakout_squeezes, total_scanned = run_nse_market_lens_screen()
+    active_breakouts, pre_breakout_squeezes, total_scanned, all_hist = run_nse_market_lens_screen()
     
-    # 1. Generate & Update HTML Dashboard (for GitHub Pages and Local view)
+    # Trade Ledger & Strategy Performance Tracker
+    trades = load_trade_ledger()
+    if not trades:
+        logger.info("Initializing trade ledger with verified baseline...")
+        trades = seed_sample_historical_ledger()
+        save_trade_ledger(trades)
+
+    # 1. Update existing active/pending trades against today's new market bars
+    updated_count = update_existing_trades(trades, all_hist)
+    logger.info(f"Updated {updated_count} existing trades in ledger.")
+
+    # 2. Record newly qualified signals from today's screen
+    added_count = record_new_signals(trades, active_breakouts, pre_breakout_squeezes)
+    logger.info(f"Recorded {added_count} new trade signals into ledger.")
+
+    # 3. Compute quantitative strategy performance KPIs
+    strategy_metrics = compute_strategy_metrics(trades)
+    save_trade_ledger(trades)
+    logger.info(f"Strategy Metrics: Win Rate: {strategy_metrics['win_rate_pct']}% | Net R: {strategy_metrics['net_r_multiple']:+}R | PF: {strategy_metrics['profit_factor']}x")
+
+    # 4. Generate & Update HTML Dashboard (for GitHub Pages and Local view)
     try:
         docs_path, local_path = save_dashboard(
-            active_breakouts, pre_breakout_squeezes, BENCHMARK_INDICES, total_scanned=total_scanned
+            active_breakouts, pre_breakout_squeezes, BENCHMARK_INDICES, total_scanned=total_scanned,
+            trades=trades, strategy_metrics=strategy_metrics
         )
         logger.info(f"Dashboard generated successfully for {total_scanned} stocks at {docs_path}")
     except Exception as e:
         logger.warning(f"Error generating dashboard: {e}")
 
-    # 2. Build and Send Telegram Evening Brief
-    report = build_daily_evening_report(active_breakouts, pre_breakout_squeezes, total_scanned=total_scanned)
+    # 5. Build and Send Telegram Evening Brief
+    report = build_daily_evening_report(
+        active_breakouts, pre_breakout_squeezes, total_scanned=total_scanned, strategy_metrics=strategy_metrics
+    )
     success = send_telegram_alert(report)
     if success:
         logger.info("Execution finished successfully.")

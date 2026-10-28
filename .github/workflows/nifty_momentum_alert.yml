@@ -38,9 +38,9 @@ jobs:
         run: |
           python nifty_momentum_bot.py
 
-      - name: Commit & Publish Updated Web Dashboard
+      - name: Commit & Publish Updated Web Dashboard and Trade Ledger
         run: |
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
-          git add docs/index.html dashboard.html
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update live radar dashboard [skip ci]" && git push)
+          git add docs/index.html dashboard.html data/trades.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update live radar dashboard and trade ledger [skip ci]" && git pull --rebase origin main && git push origin main)
