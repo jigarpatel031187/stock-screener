@@ -2,9 +2,13 @@ name: AntiGravity Smart Money Dual Track Radar (Daily 5 PM)
 
 on:
   schedule:
-    # Runs Monday through Friday at 05:00 PM IST (11:30 AM UTC)
-    - cron: '30 11 * * 1-5'
+    # Primary trigger: 05:03 PM IST (11:33 AM UTC - off-peak minute avoids GitHub queue congestion)
+    - cron: '33 11 * * 1-5'
+    # Automatic backup trigger: 05:15 PM IST (11:45 AM UTC)
+    - cron: '45 11 * * 1-5'
   workflow_dispatch: # Allows manual trigger from GitHub UI anytime
+  repository_dispatch: # Allows external automated webhook pings (e.g. from cron-job.org)
+    types: [daily-alert]
 
 jobs:
   run-screener-alert:
