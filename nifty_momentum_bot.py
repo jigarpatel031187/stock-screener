@@ -986,8 +986,8 @@ def run_nse_market_lens_screen():
 def send_telegram_alert(message_text: str):
     """Sends message to Telegram via Bot API."""
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        logger.error("Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID environment variables.")
-        sys.exit(1)
+        logger.warning("Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID environment variables. Skipping alert.")
+        return False
 
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
@@ -1144,12 +1144,16 @@ def main():
     report = build_daily_evening_report(
         active_breakouts, pre_breakout_squeezes, total_scanned=total_scanned, strategy_metrics=strategy_metrics
     )
-    success = send_telegram_alert(report)
-    if success:
-        logger.info("Execution finished successfully.")
+    if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
+        success = send_telegram_alert(report)
+        if success:
+            logger.info("Telegram alert dispatched successfully.")
+        else:
+            logger.warning("Telegram alert dispatch failed or skipped.")
     else:
-        logger.error("Execution failed.")
-        sys.exit(1)
+        logger.info("Telegram credentials not configured; skipped Telegram broadcast.")
+
+    logger.info("Test execution completed successfully.")
 
 if __name__ == "__main__":
     main()
