@@ -56,7 +56,7 @@ MIN_VOLUME = int(os.environ.get("MIN_VOLUME", 50000))           # Volume thresho
 # Fundamental Quality Filters
 MIN_ROE = float(os.environ.get("MIN_ROE", 15.0))                # ROE >= 15%
 MIN_ROCE = float(os.environ.get("MIN_ROCE", 20.0))              # ROCE >= 20%
-MIN_OCF_TO_PAT = float(os.environ.get("MIN_OCF_TO_PAT", 0.8))   # OCF to PAT Ratio >= 0.8
+MIN_OCF_TO_PAT = float(os.environ.get("MIN_OCF_TO_PAT", 0.6))   # OCF to PAT Ratio >= 0.6 (Balanced for High-Growth Compounders)
 
 # ==============================================================================
 # PART A: DATA PROCESSING ENGINE & CANDIDATE UNIVERSE
@@ -1025,7 +1025,7 @@ def build_daily_evening_report(active_breakouts, pre_breakout_squeezes, total_sc
     # Shared Quality Criteria
     msg += "🛡️ *INSTITUTIONAL QUALITY & SAFETY FLOOR:*\n"
     msg += "• `₹2,000 Cr < MCap < ₹35,000 Cr` | `P/E < 80` | `D/E < 1.5`\n"
-    msg += "• `ROE >= 15%` | `ROCE >= 20%` | `OCF/PAT >= 0.8` (Cash Quality)\n\n"
+    msg += "• `ROE >= 15%` | `ROCE >= 20%` | `OCF/PAT >= 0.6` (Cash Quality)\n\n"
 
     # =========================================================
     # SECTION 1: TRACK B - HALO PRE-BREAKOUT SQUEEZE LEADERBOARD
