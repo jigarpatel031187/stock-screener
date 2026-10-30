@@ -743,7 +743,7 @@
           <div class="live-badge">
             <span class="live-dot"></span> Active EOD Feed
           </div>
-          <div class="timestamp-box">📅 29 Oct 2026 | 11:02 PM IST</div>
+          <div class="timestamp-box">📅 30 Oct 2026 | 10:38 PM IST</div>
         </div>
       </div>
     </header>
@@ -752,7 +752,7 @@
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Candidate Universe</div>
-        <div class="stat-val">651 <span class="stat-sub">Stocks Monitored</span></div>
+        <div class="stat-val">650 <span class="stat-sub">Stocks Monitored</span></div>
         <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Nifty Mid 150 + Small 250 + Micro 250</div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-purple);">
@@ -761,7 +761,7 @@
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-green);">
         <div class="stat-label">Track A: Active Breakouts</div>
-        <div class="stat-val">1 <span class="stat-sub">Volume Blast Confirmations</span></div>
+        <div class="stat-val">0 <span class="stat-sub">Volume Blast Confirmations</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-blue);">
         <div class="stat-label">Strategy Audit Performance</div>
@@ -777,7 +777,7 @@
       </button>
       <button class="tab-btn" id="tab-btn-a" onclick="switchTab('a')">
         🚀 Track A: Active & Confirmed Breakouts
-        <span class="tab-badge" id="badge-a">1</span>
+        <span class="tab-badge" id="badge-a">0</span>
       </button>
       <button class="tab-btn" id="tab-btn-ledger" onclick="switchTab('ledger')">
         📈 Strategy Performance & Trade Ledger
@@ -912,41 +912,7 @@
   </div>
 
   <script>
-    const trackAData = [
-  {
-    "name": "Acutaas Chemicals Ltd.",
-    "symbol": "ACUTAAS",
-    "sector": "Healthcare",
-    "bucket": "Smallcap 250",
-    "price": 3976.7,
-    "mcap_cr": "\u20b932,558 Cr",
-    "ret_1m": 23.72,
-    "volume": "2,936,329",
-    "rvol": "4.06x",
-    "delivery_pct": "N/A",
-    "breakout_ref": 3975.0,
-    "pe": 74.44,
-    "de": 0.01,
-    "roe": 26.11,
-    "roce": 32.23,
-    "ocf_to_pat": 0.85,
-    "state": "ACTIVE_BREAKOUT",
-    "breakout_score": 83,
-    "pivot_ref": 3975.0,
-    "extension_pct": "+0.04%",
-    "volume_ratio": "4.06x",
-    "crr": 0.85,
-    "range_ratio": "2.06x",
-    "rs_spread": "+25.8%",
-    "structural_sl": 2983.8,
-    "unit_risk": 992.9,
-    "risk_pct": 24.97,
-    "t1_2r": 5962.5,
-    "t2_3r": 6955.4,
-    "be_cost_anchor": 3990.6,
-    "rationale": "Cleared 20D pivot \u20b93975.0 with 4.06x volume and strong institutional volume. Strong close in top 15% of day range; outperforming Nifty 500 by +25.8% over 3M."
-  }
-];
+    const trackAData = [];
     const trackBData = [];
     const tradesData = [
   {
@@ -1155,11 +1121,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 791.35,
-    "pnl_pct": -0.32,
-    "pnl_r": -0.01,
+    "current_price": 782.05,
+    "pnl_pct": -1.49,
+    "pnl_r": -0.06,
     "max_price_seen": 808.8,
-    "days_held": 2,
+    "days_held": 3,
     "notes": "Cleared 20D pivot \u20b9778.18 with 1.97x volume and strong institutional volume. Strong close in top 8% of day range; outperforming Nifty 500 by +18.6% over 3M."
   },
   {
@@ -1185,11 +1151,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 3976.7,
-    "pnl_pct": 0.0,
-    "pnl_r": 0.0,
-    "max_price_seen": 3976.7,
-    "days_held": 0,
+    "current_price": 4003.6,
+    "pnl_pct": 0.68,
+    "pnl_r": 0.03,
+    "max_price_seen": 4032.2,
+    "days_held": 2,
     "notes": "Cleared 20D pivot \u20b93975.0 with 4.06x volume and strong institutional volume. Strong close in top 15% of day range; outperforming Nifty 500 by +25.8% over 3M."
   }
 ];

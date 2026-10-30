@@ -205,11 +205,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 791.35,
-    "pnl_pct": -0.32,
-    "pnl_r": -0.01,
+    "current_price": 782.05,
+    "pnl_pct": -1.49,
+    "pnl_r": -0.06,
     "max_price_seen": 808.8,
-    "days_held": 2,
+    "days_held": 3,
     "notes": "Cleared 20D pivot \u20b9778.18 with 1.97x volume and strong institutional volume. Strong close in top 8% of day range; outperforming Nifty 500 by +18.6% over 3M."
   },
   {
@@ -235,11 +235,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 3976.7,
-    "pnl_pct": 0.0,
-    "pnl_r": 0.0,
-    "max_price_seen": 3976.7,
-    "days_held": 0,
+    "current_price": 4003.6,
+    "pnl_pct": 0.68,
+    "pnl_r": 0.03,
+    "max_price_seen": 4032.2,
+    "days_held": 2,
     "notes": "Cleared 20D pivot \u20b93975.0 with 4.06x volume and strong institutional volume. Strong close in top 15% of day range; outperforming Nifty 500 by +25.8% over 3M."
   }
 ]
