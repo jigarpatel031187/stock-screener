@@ -56,7 +56,8 @@ MIN_VOLUME = int(os.environ.get("MIN_VOLUME", 50000))           # Volume thresho
 # Fundamental Quality Filters
 MIN_ROE = float(os.environ.get("MIN_ROE", 15.0))                # ROE >= 15%
 MIN_ROCE = float(os.environ.get("MIN_ROCE", 15.0))              # ROCE >= 15%
-MIN_OCF_TO_PAT = float(os.environ.get("MIN_OCF_TO_PAT", 0.6))   # OCF to PAT Ratio >= 0.6 (Balanced for High-Growth Compounders)
+MIN_OCF_TO_PAT = float(os.environ.get("MIN_OCF_TO_PAT", 0.8))   # OCF to PAT Ratio >= 0.8
+MAX_OCF_TO_PAT = float(os.environ.get("MAX_OCF_TO_PAT", 2.0))   # OCF to PAT Ratio <= 2.0 (Eliminates distorted one-off balance sheet spikes)
 
 # ==============================================================================
 # PART A: DATA PROCESSING ENGINE & CANDIDATE UNIVERSE
@@ -834,14 +835,24 @@ def run_nse_market_lens_screen():
             pe_val = round(trailing_pe, 2) if trailing_pe else None
             de_raw = info.get("debtToEquity")
             de_ratio = round(de_raw / 100.0, 2) if de_raw is not None else 0.0
-            roe_raw = info.get("returnOnEquity")
-            roe_pct = round(roe_raw * 100, 2) if roe_raw is not None else 0.0
 
-            ebit = info.get("ebitda") or info.get("operatingCashflow")
-            total_debt = info.get("totalDebt") or 0
+            # 1. ROE Calculation (with Balance Sheet Fallback when ticker.info omits returnOnEquity)
+            roe_raw = info.get("returnOnEquity")
             book_value = info.get("bookValue")
             shares_out = info.get("sharesOutstanding")
+            net_income = info.get("netIncomeToCommon")
             equity = (book_value * shares_out) if (book_value and shares_out) else None
+
+            if roe_raw is not None and roe_raw > 0:
+                roe_pct = round(roe_raw * 100, 2)
+            elif net_income and equity and equity > 0:
+                roe_pct = round((net_income / equity) * 100, 2)
+            else:
+                roe_pct = 0.0
+
+            # 2. ROCE Calculation (Operating Profit / Total Capital Employed)
+            ebit = info.get("ebitda") or info.get("operatingCashflow")
+            total_debt = info.get("totalDebt") or 0
             cap_employed = (equity + total_debt) if (equity and total_debt is not None) else None
 
             if ebit and cap_employed and cap_employed > 0:
@@ -849,20 +860,31 @@ def run_nse_market_lens_screen():
             else:
                 roce_pct = round(roe_pct * (1.0 + (de_ratio * 0.15)), 2)
 
+            # 3. OCF / PAT Calculation (with Audited Cashflow Statement Fallback)
             operating_cashflow = info.get("operatingCashflow")
-            net_income = info.get("netIncomeToCommon")
+            if not operating_cashflow:
+                try:
+                    cf = ticker.cashflow
+                    if not cf.empty:
+                        for idx in cf.index:
+                            if "Operating Cash Flow" in idx or "Operating" in idx:
+                                operating_cashflow = float(cf.loc[idx].iloc[0])
+                                break
+                except Exception:
+                    pass
+
             if operating_cashflow and net_income and net_income > 0:
                 ocf_to_pat = round(operating_cashflow / net_income, 2)
             else:
-                ocf_to_pat = 1.05
+                ocf_to_pat = None
 
             # Fundamental Quality & Safety Floor Check
             c_pe = (pe_val is None or (0 < pe_val <= MAX_PE))
             c_mcap = (MIN_MCAP_CR <= mcap_cr <= MAX_MCAP_CR)
             c_de = (de_ratio <= MAX_DEBT_TO_EQUITY)
-            c_roe = (roe_pct >= MIN_ROE or roe_pct == 0.0)
-            c_roce = (roce_pct >= MIN_ROCE or roce_pct == 0.0)
-            c_ocf = (ocf_to_pat >= MIN_OCF_TO_PAT)
+            c_roe = (roe_pct >= MIN_ROE)
+            c_roce = (roce_pct >= MIN_ROCE)
+            c_ocf = (ocf_to_pat is not None and (MIN_OCF_TO_PAT <= ocf_to_pat <= MAX_OCF_TO_PAT))
 
             if not (c_pe and c_mcap and c_de and c_roe and c_roce and c_ocf):
                 logger.info(f"Skipping {sym} due to fundamental safety floor (P/E: {pe_val}, D/E: {de_ratio}, MCap: {mcap_cr} Cr, ROE: {roe_pct}%, ROCE: {roce_pct}%, OCF/PAT: {ocf_to_pat})")
@@ -1027,7 +1049,7 @@ def build_daily_evening_report(active_breakouts, pre_breakout_squeezes, total_sc
     # Shared Quality Criteria
     msg += "🛡️ *INSTITUTIONAL QUALITY & SAFETY FLOOR:*\n"
     msg += "• `MCap > ₹2,000 Cr (Large, Mid, Small, Micro)` | `P/E < 80` | `D/E < 1.5`\n"
-    msg += "• `ROE >= 15%` | `ROCE >= 15%` | `OCF/PAT >= 0.6` (Cash Quality)\n\n"
+    msg += "• `ROE >= 15%` | `ROCE >= 15%` | `0.8 <= OCF/PAT <= 2.0` (Cash Quality)\n\n"
 
     # =========================================================
     # SECTION 1: TRACK B - HALO PRE-BREAKOUT SQUEEZE LEADERBOARD
