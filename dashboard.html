@@ -736,14 +736,14 @@
             <span>🌌</span> AntiGravity Smart Money Dual Track Radar
           </h1>
           <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
-            Institutional High-Quality Quality Compounders (MCap ₹2k–35k Cr | ROE ≥15% | ROCE ≥20% | OCF/PAT ≥0.6)
+            Institutional High-Quality Quality Compounders (MCap > ₹2,000 Cr | ROE ≥15% | ROCE ≥15% | OCF/PAT ≥0.6)
           </p>
         </div>
         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
           <div class="live-badge">
             <span class="live-dot"></span> Active EOD Feed
           </div>
-          <div class="timestamp-box">📅 05 Nov 2026 | 12:23 AM IST</div>
+          <div class="timestamp-box">📅 05 Nov 2026 | 10:12 AM IST</div>
         </div>
       </div>
     </header>
@@ -752,12 +752,12 @@
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Candidate Universe</div>
-        <div class="stat-val">652 <span class="stat-sub">Stocks Monitored</span></div>
-        <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Nifty Mid 150 + Small 250 + Micro 250</div>
+        <div class="stat-val">752 <span class="stat-sub">Stocks Monitored</span></div>
+        <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Nifty 100 + Mid 150 + Small 250 + Micro 250</div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-purple);">
         <div class="stat-label">Track B: Squeeze Leaderboard</div>
-        <div class="stat-val">0 <span class="stat-sub">Coiling Beneath Pivot</span></div>
+        <div class="stat-val">2 <span class="stat-sub">Coiling Beneath Pivot</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-green);">
         <div class="stat-label">Track A: Active Breakouts</div>
@@ -773,7 +773,7 @@
     <div class="tab-bar">
       <button class="tab-btn active" id="tab-btn-b" onclick="switchTab('b')">
         💣 Track B: Pre-Breakout Squeeze Leaderboard
-        <span class="tab-badge" id="badge-b">0</span>
+        <span class="tab-badge" id="badge-b">2</span>
       </button>
       <button class="tab-btn" id="tab-btn-a" onclick="switchTab('a')">
         🚀 Track A: Active & Confirmed Breakouts
@@ -781,7 +781,7 @@
       </button>
       <button class="tab-btn" id="tab-btn-ledger" onclick="switchTab('ledger')">
         📈 Strategy Performance & Trade Ledger
-        <span class="tab-badge" id="badge-ledger">8</span>
+        <span class="tab-badge" id="badge-ledger">10</span>
       </button>
     </div>
 
@@ -835,8 +835,8 @@
 
         <div class="kpi-card" style="border-left: 3px solid var(--accent-cyan);">
           <div class="kpi-title">Lifecycle Distribution</div>
-          <div class="kpi-number col-cyan">2 Active · 0 Pending</div>
-          <div class="kpi-desc">8 Total Historical Signals Tracked</div>
+          <div class="kpi-number col-cyan">2 Active · 2 Pending</div>
+          <div class="kpi-desc">10 Total Historical Signals Tracked</div>
         </div>
       </div>
 
@@ -913,7 +913,76 @@
 
   <script>
     const trackAData = [];
-    const trackBData = [];
+    const trackBData = [
+  {
+    "name": "Supriya Lifescience Ltd.",
+    "symbol": "SUPRIYA",
+    "sector": "Healthcare",
+    "bucket": "Microcap 250",
+    "price": 879.0,
+    "mcap_cr": "\u20b97,074 Cr",
+    "ret_1m": -2.28,
+    "volume": "60,615",
+    "rvol": "0.4x",
+    "delivery_pct": "N/A",
+    "breakout_ref": 923.25,
+    "pe": 35.66,
+    "de": 0.0,
+    "roe": 0.0,
+    "roce": 24.07,
+    "ocf_to_pat": 1.05,
+    "halo_score": 77,
+    "dist_to_high": "4.79%",
+    "vol_dryup_ratio": "0.61x",
+    "bbw_percentile": "2.5%",
+    "atr_pct": "3.45%",
+    "rs_alpha": "2.4%",
+    "pivot_ref": 923.25,
+    "pass_all_7": false,
+    "entry_trigger": 924.2,
+    "initial_sl": 878.7,
+    "risk_1r": 45.5,
+    "risk_pct": 4.92,
+    "target_1_2r": 1015.2,
+    "target_2_3r": 1060.7,
+    "be_retest_anchor": 921.4,
+    "rationale": "Consolidating tightly 4.79% under 20D pivot with deep historical coil (BBW: 2.5th percentile) and supply drying (5D Vol: 0.61x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
+  },
+  {
+    "name": "Knowledge Marine & Engineering Works Ltd.",
+    "symbol": "KMEW",
+    "sector": "Services",
+    "bucket": "Microcap 250",
+    "price": 3276.6,
+    "mcap_cr": "\u20b98,311 Cr",
+    "ret_1m": 2.32,
+    "volume": "30,267",
+    "rvol": "0.25x",
+    "delivery_pct": "N/A",
+    "breakout_ref": 3409.0,
+    "pe": 58.73,
+    "de": 0.39,
+    "roe": 0.0,
+    "roce": 18.38,
+    "ocf_to_pat": 1.05,
+    "halo_score": 65,
+    "dist_to_high": "3.88%",
+    "vol_dryup_ratio": "0.68x",
+    "bbw_percentile": "1.7%",
+    "atr_pct": "5.17%",
+    "rs_alpha": "31.8%",
+    "pivot_ref": 3409.0,
+    "pass_all_7": false,
+    "entry_trigger": 3412.4,
+    "initial_sl": 3158.3,
+    "risk_1r": 254.1,
+    "risk_pct": 7.45,
+    "target_1_2r": 3920.6,
+    "target_2_3r": 4174.7,
+    "be_retest_anchor": 3402.2,
+    "rationale": "Consolidating tightly 3.88% under 20D pivot with deep historical coil (BBW: 1.7th percentile) and supply drying (5D Vol: 0.68x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
+  }
+];
     const tradesData = [
   {
     "id": "KARURVYSYA_20241014_A",
@@ -1121,11 +1190,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 787.25,
-    "pnl_pct": -0.84,
+    "current_price": 787.45,
+    "pnl_pct": -0.81,
     "pnl_r": -0.03,
     "max_price_seen": 808.8,
-    "days_held": 5,
+    "days_held": 7,
     "notes": "Cleared 20D pivot \u20b9778.18 with 1.97x volume and strong institutional volume. Strong close in top 8% of day range; outperforming Nifty 500 by +18.6% over 3M."
   },
   {
@@ -1151,19 +1220,81 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 3904.0,
-    "pnl_pct": -1.83,
-    "pnl_r": -0.07,
+    "current_price": 3826.4,
+    "pnl_pct": -3.78,
+    "pnl_r": -0.15,
     "max_price_seen": 4045.3,
-    "days_held": 4,
+    "days_held": 6,
     "notes": "Cleared 20D pivot \u20b93975.0 with 4.06x volume and strong institutional volume. Strong close in top 15% of day range; outperforming Nifty 500 by +25.8% over 3M."
+  },
+  {
+    "id": "SUPRIYA_20261105_B",
+    "symbol": "SUPRIYA",
+    "name": "Supriya Lifescience Ltd.",
+    "sector": "Healthcare",
+    "bucket": "Microcap 250",
+    "track": "Track B",
+    "signal_type": "HALO_SQUEEZE",
+    "detected_date": "2026-11-05",
+    "entry_date": null,
+    "score": 77,
+    "signal_price": 879.0,
+    "entry_price": 924.2,
+    "entry_trigger": 924.2,
+    "initial_sl": 878.7,
+    "current_sl": 878.7,
+    "target_1_2r": 1015.2,
+    "target_2_3r": 1060.7,
+    "risk_per_share": 45.5,
+    "risk_pct": 4.92,
+    "be_retest_anchor": 921.4,
+    "status": "PENDING_TRIGGER",
+    "exit_date": null,
+    "exit_price": null,
+    "current_price": 879.0,
+    "pnl_pct": 0.0,
+    "pnl_r": 0.0,
+    "max_price_seen": 879.0,
+    "days_held": 0,
+    "notes": "Consolidating tightly 4.79% under 20D pivot with deep historical coil (BBW: 2.5th percentile) and supply drying (5D Vol: 0.61x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
+  },
+  {
+    "id": "KMEW_20261105_B",
+    "symbol": "KMEW",
+    "name": "Knowledge Marine & Engineering Works Ltd.",
+    "sector": "Services",
+    "bucket": "Microcap 250",
+    "track": "Track B",
+    "signal_type": "HALO_SQUEEZE",
+    "detected_date": "2026-11-05",
+    "entry_date": null,
+    "score": 65,
+    "signal_price": 3276.6,
+    "entry_price": 3412.4,
+    "entry_trigger": 3412.4,
+    "initial_sl": 3158.3,
+    "current_sl": 3158.3,
+    "target_1_2r": 3920.6,
+    "target_2_3r": 4174.7,
+    "risk_per_share": 254.1,
+    "risk_pct": 7.45,
+    "be_retest_anchor": 3402.2,
+    "status": "PENDING_TRIGGER",
+    "exit_date": null,
+    "exit_price": null,
+    "current_price": 3276.6,
+    "pnl_pct": 0.0,
+    "pnl_r": 0.0,
+    "max_price_seen": 3276.6,
+    "days_held": 0,
+    "notes": "Consolidating tightly 3.88% under 20D pivot with deep historical coil (BBW: 1.7th percentile) and supply drying (5D Vol: 0.68x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
   }
 ];
     const strategyMetrics = {
-  "total_signals": 8,
+  "total_signals": 10,
   "closed_trades_count": 6,
   "active_trades_count": 2,
-  "pending_trades_count": 0,
+  "pending_trades_count": 2,
   "win_count": 3,
   "loss_count": 3,
   "win_rate_pct": 50.0,
@@ -1175,7 +1306,7 @@
   "avg_loss_pct": 4.68,
   "edge_ratio": 2.06,
   "track_a_count": 5,
-  "track_b_count": 3
+  "track_b_count": 5
 };
 
     let currentTab = 'b';

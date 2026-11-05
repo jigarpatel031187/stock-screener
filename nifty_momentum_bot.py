@@ -45,17 +45,17 @@ if os.path.exists(env_file_path):
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
-# Parameters for Nifty Mid, Small & Microcap Universe
+# Parameters for Nifty Large, Mid, Small & Microcap Universe
 MIN_1M_RETURN = float(os.environ.get("MIN_1M_RETURN", 8.0))      # Return Over % 1 Month > 8%
 MAX_PE = float(os.environ.get("MAX_PE", 80.0))                   # P/E < 80.0
-MIN_MCAP_CR = float(os.environ.get("MIN_MCAP_CR", 2000.0))       # MCap > 2,000 Cr
-MAX_MCAP_CR = float(os.environ.get("MAX_MCAP_CR", 35000.0))      # MCap < 35,000 Cr
+MIN_MCAP_CR = float(os.environ.get("MIN_MCAP_CR", 2000.0))       # MCap > 2,000 Cr (Protects against illiquid micro-penny stocks)
+MAX_MCAP_CR = float(os.environ.get("MAX_MCAP_CR", 5000000.0))    # No upper limit (Enables Largecaps up to ₹50 Lakh Cr)
 MAX_DEBT_TO_EQUITY = float(os.environ.get("MAX_DE", 1.5))        # Debt to Equity < 1.5
 MIN_VOLUME = int(os.environ.get("MIN_VOLUME", 50000))           # Volume threshold
 
 # Fundamental Quality Filters
 MIN_ROE = float(os.environ.get("MIN_ROE", 15.0))                # ROE >= 15%
-MIN_ROCE = float(os.environ.get("MIN_ROCE", 20.0))              # ROCE >= 20%
+MIN_ROCE = float(os.environ.get("MIN_ROCE", 15.0))              # ROCE >= 15%
 MIN_OCF_TO_PAT = float(os.environ.get("MIN_OCF_TO_PAT", 0.6))   # OCF to PAT Ratio >= 0.6 (Balanced for High-Growth Compounders)
 
 # ==============================================================================
@@ -110,14 +110,16 @@ CANDIDATE_UNIVERSE = [
 
 def fetch_dynamic_universe():
     """
-    Dynamically loads and aggregates the complete universe of 650+ stocks
+    Dynamically loads and aggregates the complete universe of 750+ stocks
     from official NSE indices:
-    1. Nifty Midcap 150 (Rank 101 - 250)
-    2. Nifty Smallcap 250 (Rank 251 - 500)
-    3. Nifty Microcap 250 (Rank 501 - 750)
+    1. Nifty 100 Largecap (Rank 1 - 100)
+    2. Nifty Midcap 150 (Rank 101 - 250)
+    3. Nifty Smallcap 250 (Rank 251 - 500)
+    4. Nifty Microcap 250 (Rank 501 - 750)
     Falls back gracefully to curated CANDIDATE_UNIVERSE if NSE endpoint is unreachable.
     """
     urls = [
+        ("Largecap 100", "https://archives.nseindia.com/content/indices/ind_nifty100list.csv"),
         ("Midcap 150", "https://archives.nseindia.com/content/indices/ind_niftymidcap150list.csv"),
         ("Smallcap 250", "https://archives.nseindia.com/content/indices/ind_niftysmallcap250list.csv"),
         ("Microcap 250", "https://archives.nseindia.com/content/indices/ind_niftymicrocap250_list.csv")
@@ -152,7 +154,7 @@ def fetch_dynamic_universe():
             "sector": str(row.get("Industry", "Equities")).strip(),
             "bucket": row.get("Bucket", "NSE")
         })
-    logger.info(f"Loaded dynamic universe of {len(universe)} stocks (Midcap 150 + Smallcap 250 + Microcap 250).")
+    logger.info(f"Loaded dynamic universe of {len(universe)} stocks (Largecap 100 + Midcap 150 + Smallcap 250 + Microcap 250).")
     return universe
 
 def download_universe_history(universe, chunk_size=100):
@@ -764,11 +766,11 @@ def calculate_active_breakout_score(hist, nifty500_hist=None, delivery_pct=None)
 # ==============================================================================
 def run_nse_market_lens_screen():
     """
-    Executes Dual-Track Screener across the complete Nifty Mid, Small & Microcap Universe:
-      - Dynamic Universe: Nifty Midcap 150 + Nifty Smallcap 250 + Nifty Microcap 250 (650+ stocks)
-      - Parallel Multi-threaded 2-Year Historical Download (~20s)
+    Executes Dual-Track Screener across the complete Nifty 750 Universe:
+      - Dynamic Universe: Nifty 100 + Nifty Midcap 150 + Nifty Smallcap 250 + Nifty Microcap 250 (750 stocks)
+      - Parallel Multi-threaded 2-Year Historical Download
       - Track A (Active Breakouts) & Track B (HALO 100-Point Squeeze Leaderboard)
-      - Strict Quality Floor: MCap ₹300 Cr - ₹75k Cr, P/E < 100, D/E < 2.0, ROE >= 10%, ROCE >= 12%
+      - Strict Quality Floor: MCap > ₹2,000 Cr, P/E < 80, D/E < 1.5, ROE >= 15%, ROCE >= 15%, OCF/PAT >= 0.6
     """
     logger.info("Initializing Official NSE authenticated session...")
     nse_session = create_nse_session()
@@ -1019,13 +1021,13 @@ def build_daily_evening_report(active_breakouts, pre_breakout_squeezes, total_sc
 
     msg = "🌌 *ANTIGRAVITY SMART MONEY DUAL TRACK RADAR*\n"
     msg += f"📅 _{formatted_date}_\n"
-    msg += f"🌐 *UNIVERSE: {total_scanned} STOCKS (NIFTY MID 150 + SMALL 250 + MICRO 250)*\n"
+    msg += f"🌐 *UNIVERSE: {total_scanned} STOCKS (NIFTY 100 + MID 150 + SMALL 250 + MICRO 250)*\n"
     msg += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
 
     # Shared Quality Criteria
     msg += "🛡️ *INSTITUTIONAL QUALITY & SAFETY FLOOR:*\n"
-    msg += "• `₹2,000 Cr < MCap < ₹35,000 Cr` | `P/E < 80` | `D/E < 1.5`\n"
-    msg += "• `ROE >= 15%` | `ROCE >= 20%` | `OCF/PAT >= 0.6` (Cash Quality)\n\n"
+    msg += "• `MCap > ₹2,000 Cr (Large, Mid, Small, Micro)` | `P/E < 80` | `D/E < 1.5`\n"
+    msg += "• `ROE >= 15%` | `ROCE >= 15%` | `OCF/PAT >= 0.6` (Cash Quality)\n\n"
 
     # =========================================================
     # SECTION 1: TRACK B - HALO PRE-BREAKOUT SQUEEZE LEADERBOARD

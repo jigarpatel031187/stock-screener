@@ -9,7 +9,7 @@ import os
 import json
 import datetime
 
-def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=None, total_scanned=651, trades=None, strategy_metrics=None):
+def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=None, total_scanned=750, trades=None, strategy_metrics=None):
     """
     Renders a futuristic dark-mode HTML dashboard with embedded JSON data,
     TradingView mini widgets, search/filter controls, and statistics.
@@ -802,7 +802,7 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
             <span>🌌</span> AntiGravity Smart Money Dual Track Radar
           </h1>
           <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
-            Institutional High-Quality Quality Compounders (MCap ₹2k–35k Cr | ROE ≥15% | ROCE ≥20% | OCF/PAT ≥0.6)
+            Institutional High-Quality Quality Compounders (MCap > ₹2,000 Cr | ROE ≥15% | ROCE ≥15% | OCF/PAT ≥0.6)
           </p>
         </div>
         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -819,7 +819,7 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
       <div class="stat-card">
         <div class="stat-label">Candidate Universe</div>
         <div class="stat-val">{total_scanned} <span class="stat-sub">Stocks Monitored</span></div>
-        <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Nifty Mid 150 + Small 250 + Micro 250</div>
+        <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Nifty 100 + Mid 150 + Small 250 + Micro 250</div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-purple);">
         <div class="stat-label">Track B: Squeeze Leaderboard</div>
@@ -1395,7 +1395,7 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
 </html>"""
     return html_content
 
-def save_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=None, output_dir=None, total_scanned=651, trades=None, strategy_metrics=None):
+def save_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=None, output_dir=None, total_scanned=750, trades=None, strategy_metrics=None):
     """Saves generated dashboard to docs/index.html and root dashboard.html."""
     if output_dir is None:
         output_dir = os.path.dirname(os.path.abspath(__file__))
