@@ -1040,9 +1040,12 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
 
           <!-- Trade Plan Box -->
           <div class="trade-plan">
-            <div class="plan-line">
-              <span class="plan-tag">🎯 BUY TRIGGER</span>
-              <span class="plan-val buy">Buy-Stop Limit @ ₹${{stock.entry_trigger}}</span>
+            <div class="plan-line" style="border-bottom: 1px dashed rgba(56, 189, 248, 0.25); padding-bottom: 5px; margin-bottom: 4px;">
+              <span class="plan-tag" style="color: var(--accent-amber); font-weight: 800;">⚡ CLEAR ACTION</span>
+              <span class="plan-val buy" style="font-size: 13px;">👉 BUY ABOVE ₹${{stock.entry_trigger}}</span>
+            </div>
+            <div style="font-size: 11px; color: var(--accent-rose); font-weight: 600; margin-bottom: 4px;">
+              ⛔ DO NOT BUY AT CURRENT PRICE (₹${{stock.price}}) — Place GTT / Buy-Stop Limit @ ₹${{stock.entry_trigger}}
             </div>
             <div class="plan-line">
               <span class="plan-tag">🛑 INITIAL SL (1R)</span>
@@ -1132,9 +1135,12 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
 
           <!-- Trade Plan Box -->
           <div class="trade-plan">
-            <div class="plan-line">
-              <span class="plan-tag">🎯 ENTRY WINDOW</span>
-              <span class="plan-val buy">Near Pivot Retest (Max Chase: 3.0%)</span>
+            <div class="plan-line" style="border-bottom: 1px dashed rgba(16, 185, 129, 0.25); padding-bottom: 5px; margin-bottom: 4px;">
+              <span class="plan-tag" style="color: var(--accent-green); font-weight: 800;">⚡ CLEAR ACTION</span>
+              <span class="plan-val buy" style="font-size: 13px; color: var(--accent-green);">👉 BUY AT CURRENT PRICE (₹${{stock.price}})</span>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">
+              🎯 Pivot Retest Entry Zone: ₹${{stock.pivot_ref || stock.breakout_ref}} to ₹${{((stock.pivot_ref || stock.price) * 1.03).toFixed(1)}} (Max 3% Chase)
             </div>
             <div class="plan-line">
               <span class="plan-tag">🛑 STRUCTURAL SL</span>

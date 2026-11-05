@@ -743,7 +743,7 @@
           <div class="live-badge">
             <span class="live-dot"></span> Active EOD Feed
           </div>
-          <div class="timestamp-box">📅 05 Nov 2026 | 10:21 AM IST</div>
+          <div class="timestamp-box">📅 05 Nov 2026 | 11:00 AM IST</div>
         </div>
       </div>
     </header>
@@ -752,12 +752,12 @@
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Candidate Universe</div>
-        <div class="stat-val">752 <span class="stat-sub">Stocks Monitored</span></div>
+        <div class="stat-val">750 <span class="stat-sub">Stocks Monitored</span></div>
         <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Nifty 100 + Mid 150 + Small 250 + Micro 250</div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-purple);">
         <div class="stat-label">Track B: Squeeze Leaderboard</div>
-        <div class="stat-val">1 <span class="stat-sub">Coiling Beneath Pivot</span></div>
+        <div class="stat-val">0 <span class="stat-sub">Coiling Beneath Pivot</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-green);">
         <div class="stat-label">Track A: Active Breakouts</div>
@@ -773,7 +773,7 @@
     <div class="tab-bar">
       <button class="tab-btn active" id="tab-btn-b" onclick="switchTab('b')">
         💣 Track B: Pre-Breakout Squeeze Leaderboard
-        <span class="tab-badge" id="badge-b">1</span>
+        <span class="tab-badge" id="badge-b">0</span>
       </button>
       <button class="tab-btn" id="tab-btn-a" onclick="switchTab('a')">
         🚀 Track A: Active & Confirmed Breakouts
@@ -913,42 +913,7 @@
 
   <script>
     const trackAData = [];
-    const trackBData = [
-  {
-    "name": "Supriya Lifescience Ltd.",
-    "symbol": "SUPRIYA",
-    "sector": "Healthcare",
-    "bucket": "Microcap 250",
-    "price": 879.5,
-    "mcap_cr": "\u20b97,075 Cr",
-    "ret_1m": -2.23,
-    "volume": "62,329",
-    "rvol": "0.41x",
-    "delivery_pct": "N/A",
-    "breakout_ref": 923.25,
-    "pe": 35.66,
-    "de": 0.0,
-    "roe": 16.57,
-    "roce": 24.07,
-    "ocf_to_pat": 0.94,
-    "halo_score": 77,
-    "dist_to_high": "4.74%",
-    "vol_dryup_ratio": "0.61x",
-    "bbw_percentile": "2.5%",
-    "atr_pct": "3.45%",
-    "rs_alpha": "2.4%",
-    "pivot_ref": 923.25,
-    "pass_all_7": false,
-    "entry_trigger": 924.2,
-    "initial_sl": 878.7,
-    "risk_1r": 45.5,
-    "risk_pct": 4.92,
-    "target_1_2r": 1015.2,
-    "target_2_3r": 1060.7,
-    "be_retest_anchor": 921.4,
-    "rationale": "Consolidating tightly 4.74% under 20D pivot with deep historical coil (BBW: 2.5th percentile) and supply drying (5D Vol: 0.61x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
-  }
-];
+    const trackBData = [];
     const tradesData = [
   {
     "id": "KARURVYSYA_20241014_A",
@@ -1332,9 +1297,12 @@
 
           <!-- Trade Plan Box -->
           <div class="trade-plan">
-            <div class="plan-line">
-              <span class="plan-tag">🎯 BUY TRIGGER</span>
-              <span class="plan-val buy">Buy-Stop Limit @ ₹${stock.entry_trigger}</span>
+            <div class="plan-line" style="border-bottom: 1px dashed rgba(56, 189, 248, 0.25); padding-bottom: 5px; margin-bottom: 4px;">
+              <span class="plan-tag" style="color: var(--accent-amber); font-weight: 800;">⚡ CLEAR ACTION</span>
+              <span class="plan-val buy" style="font-size: 13px;">👉 BUY ABOVE ₹${stock.entry_trigger}</span>
+            </div>
+            <div style="font-size: 11px; color: var(--accent-rose); font-weight: 600; margin-bottom: 4px;">
+              ⛔ DO NOT BUY AT CURRENT PRICE (₹${stock.price}) — Place GTT / Buy-Stop Limit @ ₹${stock.entry_trigger}
             </div>
             <div class="plan-line">
               <span class="plan-tag">🛑 INITIAL SL (1R)</span>
@@ -1424,9 +1392,12 @@
 
           <!-- Trade Plan Box -->
           <div class="trade-plan">
-            <div class="plan-line">
-              <span class="plan-tag">🎯 ENTRY WINDOW</span>
-              <span class="plan-val buy">Near Pivot Retest (Max Chase: 3.0%)</span>
+            <div class="plan-line" style="border-bottom: 1px dashed rgba(16, 185, 129, 0.25); padding-bottom: 5px; margin-bottom: 4px;">
+              <span class="plan-tag" style="color: var(--accent-green); font-weight: 800;">⚡ CLEAR ACTION</span>
+              <span class="plan-val buy" style="font-size: 13px; color: var(--accent-green);">👉 BUY AT CURRENT PRICE (₹${stock.price})</span>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">
+              🎯 Pivot Retest Entry Zone: ₹${stock.pivot_ref || stock.breakout_ref} to ₹${((stock.pivot_ref || stock.price) * 1.03).toFixed(1)} (Max 3% Chase)
             </div>
             <div class="plan-line">
               <span class="plan-tag">🛑 STRUCTURAL SL</span>
