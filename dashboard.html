@@ -743,7 +743,7 @@
           <div class="live-badge">
             <span class="live-dot"></span> Active EOD Feed
           </div>
-          <div class="timestamp-box">📅 05 Nov 2026 | 11:05 AM IST</div>
+          <div class="timestamp-box">📅 05 Nov 2026 | 12:50 PM IST</div>
         </div>
       </div>
     </header>
@@ -757,15 +757,15 @@
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-purple);">
         <div class="stat-label">Track B: Squeeze Leaderboard</div>
-        <div class="stat-val">1 <span class="stat-sub">Coiling Beneath Pivot</span></div>
+        <div class="stat-val">0 <span class="stat-sub">Coiling Beneath Pivot</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-green);">
         <div class="stat-label">Track A: Active Breakouts</div>
-        <div class="stat-val">0 <span class="stat-sub">Volume Blast Confirmations</span></div>
+        <div class="stat-val">1 <span class="stat-sub">Volume Blast Confirmations</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-blue);">
         <div class="stat-label">Strategy Audit Performance</div>
-        <div class="stat-val col-green">50.0% <span class="stat-sub">Win Rate (+2.8R Net)</span></div>
+        <div class="stat-val col-green">42.9% <span class="stat-sub">Win Rate (+1.8R Net)</span></div>
       </div>
     </div>
 
@@ -773,15 +773,15 @@
     <div class="tab-bar">
       <button class="tab-btn active" id="tab-btn-b" onclick="switchTab('b')">
         💣 Track B: Pre-Breakout Squeeze Leaderboard
-        <span class="tab-badge" id="badge-b">1</span>
+        <span class="tab-badge" id="badge-b">0</span>
       </button>
       <button class="tab-btn" id="tab-btn-a" onclick="switchTab('a')">
         🚀 Track A: Active & Confirmed Breakouts
-        <span class="tab-badge" id="badge-a">0</span>
+        <span class="tab-badge" id="badge-a">1</span>
       </button>
       <button class="tab-btn" id="tab-btn-ledger" onclick="switchTab('ledger')">
         📈 Strategy Performance & Trade Ledger
-        <span class="tab-badge" id="badge-ledger">10</span>
+        <span class="tab-badge" id="badge-ledger">11</span>
       </button>
     </div>
 
@@ -807,36 +807,36 @@
       <div class="ledger-kpis">
         <div class="kpi-card" style="border-left: 3px solid var(--accent-green);">
           <div class="kpi-title">Strategy Win Rate</div>
-          <div class="kpi-number col-green" id="kpi-win-rate">50.0%</div>
+          <div class="kpi-number col-green" id="kpi-win-rate">42.9%</div>
           <div class="kpi-desc" id="kpi-win-sub">
-            3 Wins · 3 Losses (6 Resolved)
+            3 Wins · 4 Losses (7 Resolved)
           </div>
         </div>
 
         <div class="kpi-card" style="border-left: 3px solid var(--accent-blue);">
           <div class="kpi-title">Net Strategy R-Return</div>
-          <div class="kpi-number col-blue" id="kpi-net-r">+2.8R</div>
+          <div class="kpi-number col-blue" id="kpi-net-r">+1.8R</div>
           <div class="kpi-desc" id="kpi-net-sub">
-            Gross Won: +5.8R · Gross Lost: -3.0R
+            Gross Won: +5.8R · Gross Lost: -4.0R
           </div>
         </div>
 
         <div class="kpi-card" style="border-left: 3px solid var(--accent-purple);">
           <div class="kpi-title">Profit Factor</div>
-          <div class="kpi-number col-purple" id="kpi-profit-factor">1.93x</div>
+          <div class="kpi-number col-purple" id="kpi-profit-factor">1.45x</div>
           <div class="kpi-desc">Gross Win R / Gross Loss R</div>
         </div>
 
         <div class="kpi-card" style="border-left: 3px solid var(--accent-amber);">
           <div class="kpi-title">Asymmetric Payoff Edge</div>
-          <div class="kpi-number col-amber">+9.62% / -4.68%</div>
-          <div class="kpi-desc">2.06x Advantage over standard stop</div>
+          <div class="kpi-number col-amber">+9.62% / -5.37%</div>
+          <div class="kpi-desc">1.79x Advantage over standard stop</div>
         </div>
 
         <div class="kpi-card" style="border-left: 3px solid var(--accent-cyan);">
           <div class="kpi-title">Lifecycle Distribution</div>
           <div class="kpi-number col-cyan">3 Active · 1 Pending</div>
-          <div class="kpi-desc">10 Total Historical Signals Tracked</div>
+          <div class="kpi-desc">11 Total Historical Signals Tracked</div>
         </div>
       </div>
 
@@ -912,43 +912,42 @@
   </div>
 
   <script>
-    const trackAData = [];
-    const trackBData = [
+    const trackAData = [
   {
-    "name": "Supriya Lifescience Ltd.",
-    "symbol": "SUPRIYA",
-    "sector": "Healthcare",
-    "bucket": "Microcap 250",
-    "price": 879.1,
-    "mcap_cr": "\u20b97,075 Cr",
-    "ret_1m": -2.27,
-    "volume": "83,345",
-    "rvol": "0.55x",
+    "name": "LG Electronics India Ltd.",
+    "symbol": "LGEINDIA",
+    "sector": "Consumer Durables",
+    "bucket": "Midcap 150",
+    "price": 1817.0,
+    "mcap_cr": "\u20b9123,299 Cr",
+    "ret_1m": 2.6,
+    "volume": "2,030,520",
+    "rvol": "6.68x",
     "delivery_pct": "N/A",
-    "breakout_ref": 923.25,
-    "pe": 35.66,
-    "de": 0.0,
-    "roe": 16.57,
-    "roce": 24.07,
+    "breakout_ref": 1790.0,
+    "pe": 67.63,
+    "de": 0.06,
+    "roe": 23.8,
+    "roce": 32.39,
     "ocf_to_pat": 0.94,
-    "halo_score": 77,
-    "dist_to_high": "4.78%",
-    "vol_dryup_ratio": "0.64x",
-    "bbw_percentile": "2.5%",
-    "atr_pct": "3.45%",
-    "rs_alpha": "2.4%",
-    "pivot_ref": 923.25,
-    "pass_all_7": false,
-    "entry_trigger": 924.2,
-    "initial_sl": 878.7,
-    "risk_1r": 45.5,
-    "risk_pct": 4.92,
-    "target_1_2r": 1015.2,
-    "target_2_3r": 1060.7,
-    "be_retest_anchor": 921.4,
-    "rationale": "Consolidating tightly 4.78% under 20D pivot with deep historical coil (BBW: 2.5th percentile) and supply drying (5D Vol: 0.64x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
+    "state": "ACTIVE_BREAKOUT",
+    "breakout_score": 79,
+    "pivot_ref": 1790.0,
+    "extension_pct": "+1.51%",
+    "volume_ratio": "6.68x",
+    "crr": 0.86,
+    "range_ratio": "3.29x",
+    "rs_spread": "+17.9%",
+    "structural_sl": 1575.5,
+    "unit_risk": 241.5,
+    "risk_pct": 13.29,
+    "t1_2r": 2300.0,
+    "t2_3r": 2541.5,
+    "be_cost_anchor": 1823.4,
+    "rationale": "Cleared 20D pivot \u20b91790.0 with 6.68x volume and strong institutional volume. Strong close in top 14% of day range; outperforming Nifty 500 by +17.9% over 3M."
   }
 ];
+    const trackBData = [];
     const tradesData = [
   {
     "id": "KARURVYSYA_20241014_A",
@@ -1156,9 +1155,9 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 779.0,
-    "pnl_pct": -1.88,
-    "pnl_r": -0.08,
+    "current_price": 771.3,
+    "pnl_pct": -2.85,
+    "pnl_r": -0.12,
     "max_price_seen": 808.8,
     "days_held": 7,
     "notes": "Cleared 20D pivot \u20b9778.18 with 1.97x volume and strong institutional volume. Strong close in top 8% of day range; outperforming Nifty 500 by +18.6% over 3M."
@@ -1186,9 +1185,9 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 3798.6,
-    "pnl_pct": -4.48,
-    "pnl_r": -0.18,
+    "current_price": 3783.0,
+    "pnl_pct": -4.87,
+    "pnl_r": -0.2,
     "max_price_seen": 4045.3,
     "days_held": 6,
     "notes": "Cleared 20D pivot \u20b93975.0 with 4.06x volume and strong institutional volume. Strong close in top 15% of day range; outperforming Nifty 500 by +25.8% over 3M."
@@ -1217,7 +1216,7 @@
     "status": "PENDING_TRIGGER",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 879.1,
+    "current_price": 870.65,
     "pnl_pct": 0.0,
     "pnl_r": 0.0,
     "max_price_seen": 879.0,
@@ -1245,33 +1244,63 @@
     "risk_per_share": 254.1,
     "risk_pct": 7.45,
     "be_retest_anchor": 3402.2,
-    "status": "ACTIVE",
-    "exit_date": null,
-    "exit_price": null,
-    "current_price": 3277.8,
-    "pnl_pct": -3.94,
-    "pnl_r": -0.53,
+    "status": "STOPPED_OUT",
+    "exit_date": "2026-11-05",
+    "exit_price": 3158.3,
+    "current_price": 3176.0,
+    "pnl_pct": -7.45,
+    "pnl_r": -1.0,
     "max_price_seen": 3417.0,
     "days_held": 1,
     "notes": "Consolidating tightly 3.88% under 20D pivot with deep historical coil (BBW: 1.7th percentile) and supply drying (5D Vol: 0.68x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
+  },
+  {
+    "id": "LGEINDIA_20261105_A",
+    "symbol": "LGEINDIA",
+    "name": "LG Electronics India Ltd.",
+    "sector": "Consumer Durables",
+    "bucket": "Midcap 150",
+    "track": "Track A",
+    "signal_type": "ACTIVE_BREAKOUT",
+    "detected_date": "2026-11-05",
+    "entry_date": "2026-11-05",
+    "score": 79,
+    "signal_price": 1817.0,
+    "entry_price": 1817.0,
+    "initial_sl": 1575.5,
+    "current_sl": 1575.5,
+    "target_1_2r": 2300.0,
+    "target_2_3r": 2541.5,
+    "risk_per_share": 241.5,
+    "risk_pct": 13.29,
+    "be_retest_anchor": 1823.4,
+    "status": "ACTIVE",
+    "exit_date": null,
+    "exit_price": null,
+    "current_price": 1817.0,
+    "pnl_pct": 0.0,
+    "pnl_r": 0.0,
+    "max_price_seen": 1817.0,
+    "days_held": 0,
+    "notes": "Cleared 20D pivot \u20b91790.0 with 6.68x volume and strong institutional volume. Strong close in top 14% of day range; outperforming Nifty 500 by +17.9% over 3M."
   }
 ];
     const strategyMetrics = {
-  "total_signals": 10,
-  "closed_trades_count": 6,
+  "total_signals": 11,
+  "closed_trades_count": 7,
   "active_trades_count": 3,
   "pending_trades_count": 1,
   "win_count": 3,
-  "loss_count": 3,
-  "win_rate_pct": 50.0,
-  "net_r_multiple": 2.8,
+  "loss_count": 4,
+  "win_rate_pct": 42.9,
+  "net_r_multiple": 1.8,
   "gross_gains_r": 5.8,
-  "gross_losses_r": 3.0,
-  "profit_factor": 1.93,
+  "gross_losses_r": 4.0,
+  "profit_factor": 1.45,
   "avg_win_pct": 9.62,
-  "avg_loss_pct": 4.68,
-  "edge_ratio": 2.06,
-  "track_a_count": 5,
+  "avg_loss_pct": 5.37,
+  "edge_ratio": 1.79,
+  "track_a_count": 6,
   "track_b_count": 5
 };
 
