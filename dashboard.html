@@ -743,7 +743,7 @@
           <div class="live-badge">
             <span class="live-dot"></span> Active EOD Feed
           </div>
-          <div class="timestamp-box">📅 11 Nov 2026 | 12:21 AM IST</div>
+          <div class="timestamp-box">📅 12 Nov 2026 | 12:22 AM IST</div>
         </div>
       </div>
     </header>
@@ -761,7 +761,7 @@
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-green);">
         <div class="stat-label">Track A: Active Breakouts</div>
-        <div class="stat-val">1 <span class="stat-sub">Volume Blast Confirmations</span></div>
+        <div class="stat-val">0 <span class="stat-sub">Volume Blast Confirmations</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-blue);">
         <div class="stat-label">Strategy Audit Performance</div>
@@ -777,7 +777,7 @@
       </button>
       <button class="tab-btn" id="tab-btn-a" onclick="switchTab('a')">
         🚀 Track A: Active & Confirmed Breakouts
-        <span class="tab-badge" id="badge-a">1</span>
+        <span class="tab-badge" id="badge-a">0</span>
       </button>
       <button class="tab-btn" id="tab-btn-ledger" onclick="switchTab('ledger')">
         📈 Strategy Performance & Trade Ledger
@@ -912,41 +912,7 @@
   </div>
 
   <script>
-    const trackAData = [
-  {
-    "name": "Pearl Global Industries Ltd.",
-    "symbol": "PGIL",
-    "sector": "Textiles",
-    "bucket": "Microcap 250",
-    "price": 1343.6,
-    "mcap_cr": "\u20b912,412 Cr",
-    "ret_1m": 5.6,
-    "volume": "504,571",
-    "rvol": "3.55x",
-    "delivery_pct": "N/A",
-    "breakout_ref": 1381.5,
-    "pe": 34.39,
-    "de": 0.66,
-    "roe": 21.24,
-    "roce": 19.85,
-    "ocf_to_pat": 1.28,
-    "state": "CONFIRMED_RETEST",
-    "breakout_score": 66,
-    "pivot_ref": 1351.4,
-    "extension_pct": "+-0.58%",
-    "volume_ratio": "3.55x",
-    "crr": 0.28,
-    "range_ratio": "1.64x",
-    "rs_spread": "+21.6%",
-    "structural_sl": 1219.1,
-    "unit_risk": 124.5,
-    "risk_pct": 9.27,
-    "t1_2r": 1592.6,
-    "t2_3r": 1717.1,
-    "be_cost_anchor": 1348.3,
-    "rationale": "Cleared 20D pivot \u20b91351.4 with 3.55x volume and strong institutional volume. Strong close in top 72% of day range; outperforming Nifty 500 by +21.6% over 3M."
-  }
-];
+    const trackAData = [];
     const trackBData = [];
     const tradesData = [
   {
