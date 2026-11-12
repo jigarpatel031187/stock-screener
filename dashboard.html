@@ -743,7 +743,7 @@
           <div class="live-badge">
             <span class="live-dot"></span> Active EOD Feed
           </div>
-          <div class="timestamp-box">📅 12 Nov 2026 | 12:23 AM IST</div>
+          <div class="timestamp-box">📅 13 Nov 2026 | 12:35 AM IST</div>
         </div>
       </div>
     </header>
@@ -761,7 +761,7 @@
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-green);">
         <div class="stat-label">Track A: Active Breakouts</div>
-        <div class="stat-val">0 <span class="stat-sub">Volume Blast Confirmations</span></div>
+        <div class="stat-val">1 <span class="stat-sub">Volume Blast Confirmations</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-blue);">
         <div class="stat-label">Strategy Audit Performance</div>
@@ -777,11 +777,11 @@
       </button>
       <button class="tab-btn" id="tab-btn-a" onclick="switchTab('a')">
         🚀 Track A: Active & Confirmed Breakouts
-        <span class="tab-badge" id="badge-a">0</span>
+        <span class="tab-badge" id="badge-a">1</span>
       </button>
       <button class="tab-btn" id="tab-btn-ledger" onclick="switchTab('ledger')">
         📈 Strategy Performance & Trade Ledger
-        <span class="tab-badge" id="badge-ledger">12</span>
+        <span class="tab-badge" id="badge-ledger">13</span>
       </button>
     </div>
 
@@ -835,8 +835,8 @@
 
         <div class="kpi-card" style="border-left: 3px solid var(--accent-cyan);">
           <div class="kpi-title">Lifecycle Distribution</div>
-          <div class="kpi-number col-cyan">4 Active · 1 Pending</div>
-          <div class="kpi-desc">12 Total Historical Signals Tracked</div>
+          <div class="kpi-number col-cyan">5 Active · 1 Pending</div>
+          <div class="kpi-desc">13 Total Historical Signals Tracked</div>
         </div>
       </div>
 
@@ -912,7 +912,41 @@
   </div>
 
   <script>
-    const trackAData = [];
+    const trackAData = [
+  {
+    "name": "Tanla Platforms Ltd.",
+    "symbol": "TANLA",
+    "sector": "Information Technology",
+    "bucket": "Microcap 250",
+    "price": 694.5,
+    "mcap_cr": "\u20b99,649 Cr",
+    "ret_1m": 40.71,
+    "volume": "4,645,685",
+    "rvol": "3.4x",
+    "delivery_pct": "N/A",
+    "breakout_ref": 681.55,
+    "pe": 17.45,
+    "de": 0.03,
+    "roe": 22.24,
+    "roce": 26.75,
+    "ocf_to_pat": 1.47,
+    "state": "ACTIVE_BREAKOUT",
+    "breakout_score": 74,
+    "pivot_ref": 681.55,
+    "extension_pct": "+1.9%",
+    "volume_ratio": "3.4x",
+    "crr": 0.75,
+    "range_ratio": "1.92x",
+    "rs_spread": "+14.0%",
+    "structural_sl": 483.5,
+    "unit_risk": 211.0,
+    "risk_pct": 30.38,
+    "t1_2r": 1116.5,
+    "t2_3r": 1327.5,
+    "be_cost_anchor": 696.9,
+    "rationale": "Cleared 20D pivot \u20b9681.55 with 3.4x volume and strong institutional volume. Strong close in top 25% of day range; outperforming Nifty 500 by +14.0% over 3M."
+  }
+];
     const trackBData = [];
     const tradesData = [
   {
@@ -1121,11 +1155,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 789.3,
-    "pnl_pct": -0.58,
-    "pnl_r": -0.02,
+    "current_price": 775.15,
+    "pnl_pct": -2.36,
+    "pnl_r": -0.1,
     "max_price_seen": 808.8,
-    "days_held": 9,
+    "days_held": 10,
     "notes": "Cleared 20D pivot \u20b9778.18 with 1.97x volume and strong institutional volume. Strong close in top 8% of day range; outperforming Nifty 500 by +18.6% over 3M."
   },
   {
@@ -1151,11 +1185,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 3882.6,
-    "pnl_pct": -2.37,
-    "pnl_r": -0.09,
+    "current_price": 3916.9,
+    "pnl_pct": -1.5,
+    "pnl_r": -0.06,
     "max_price_seen": 4045.3,
-    "days_held": 8,
+    "days_held": 9,
     "notes": "Cleared 20D pivot \u20b93975.0 with 4.06x volume and strong institutional volume. Strong close in top 15% of day range; outperforming Nifty 500 by +25.8% over 3M."
   },
   {
@@ -1182,11 +1216,11 @@
     "status": "PENDING_TRIGGER",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 631.25,
+    "current_price": 637.9,
     "pnl_pct": 0.0,
     "pnl_r": 0.0,
     "max_price_seen": 879.0,
-    "days_held": 3,
+    "days_held": 4,
     "notes": "Consolidating tightly 4.79% under 20D pivot with deep historical coil (BBW: 2.5th percentile) and supply drying (5D Vol: 0.61x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
   },
   {
@@ -1243,11 +1277,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 1793.8,
-    "pnl_pct": -1.28,
-    "pnl_r": -0.1,
+    "current_price": 1740.6,
+    "pnl_pct": -4.2,
+    "pnl_r": -0.32,
     "max_price_seen": 1836.0,
-    "days_held": 3,
+    "days_held": 4,
     "notes": "Cleared 20D pivot \u20b91790.0 with 6.68x volume and strong institutional volume. Strong close in top 14% of day range; outperforming Nifty 500 by +17.9% over 3M."
   },
   {
@@ -1273,18 +1307,48 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 1343.6,
-    "pnl_pct": 0.36,
-    "pnl_r": 0.03,
+    "current_price": 1391.8,
+    "pnl_pct": 3.96,
+    "pnl_r": 0.31,
     "max_price_seen": 1413.3,
-    "days_held": 2,
+    "days_held": 3,
     "notes": "Cleared 20D pivot \u20b91351.4 with 2.48x volume and strong institutional volume. Strong close in top 10% of day range; outperforming Nifty 500 by +28.4% over 3M."
+  },
+  {
+    "id": "TANLA_20261113_A",
+    "symbol": "TANLA",
+    "name": "Tanla Platforms Ltd.",
+    "sector": "Information Technology",
+    "bucket": "Microcap 250",
+    "track": "Track A",
+    "signal_type": "ACTIVE_BREAKOUT",
+    "detected_date": "2026-11-13",
+    "entry_date": "2026-11-13",
+    "score": 74,
+    "signal_price": 694.5,
+    "entry_price": 694.5,
+    "initial_sl": 483.5,
+    "current_sl": 483.5,
+    "target_1_2r": 1116.5,
+    "target_2_3r": 1327.5,
+    "risk_per_share": 211.0,
+    "risk_pct": 30.38,
+    "be_retest_anchor": 696.9,
+    "status": "ACTIVE",
+    "exit_date": null,
+    "exit_price": null,
+    "current_price": 694.5,
+    "pnl_pct": 0.0,
+    "pnl_r": 0.0,
+    "max_price_seen": 694.5,
+    "days_held": 0,
+    "notes": "Cleared 20D pivot \u20b9681.55 with 3.4x volume and strong institutional volume. Strong close in top 25% of day range; outperforming Nifty 500 by +14.0% over 3M."
   }
 ];
     const strategyMetrics = {
-  "total_signals": 12,
+  "total_signals": 13,
   "closed_trades_count": 7,
-  "active_trades_count": 4,
+  "active_trades_count": 5,
   "pending_trades_count": 1,
   "win_count": 3,
   "loss_count": 4,
@@ -1296,7 +1360,7 @@
   "avg_win_pct": 9.62,
   "avg_loss_pct": 5.37,
   "edge_ratio": 1.79,
-  "track_a_count": 7,
+  "track_a_count": 8,
   "track_b_count": 5
 };
 
