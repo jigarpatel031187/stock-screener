@@ -743,7 +743,7 @@
           <div class="live-badge">
             <span class="live-dot"></span> Active EOD Feed
           </div>
-          <div class="timestamp-box">📅 14 Nov 2026 | 12:17 AM IST</div>
+          <div class="timestamp-box">📅 16 Nov 2026 | 10:11 AM IST</div>
         </div>
       </div>
     </header>
@@ -752,16 +752,16 @@
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Candidate Universe</div>
-        <div class="stat-val">752 <span class="stat-sub">Stocks Monitored</span></div>
+        <div class="stat-val">751 <span class="stat-sub">Stocks Monitored</span></div>
         <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Nifty 100 + Mid 150 + Small 250 + Micro 250</div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-purple);">
         <div class="stat-label">Track B: Squeeze Leaderboard</div>
-        <div class="stat-val">0 <span class="stat-sub">Coiling Beneath Pivot</span></div>
+        <div class="stat-val">1 <span class="stat-sub">Coiling Beneath Pivot</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-green);">
         <div class="stat-label">Track A: Active Breakouts</div>
-        <div class="stat-val">1 <span class="stat-sub">Volume Blast Confirmations</span></div>
+        <div class="stat-val">0 <span class="stat-sub">Volume Blast Confirmations</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-blue);">
         <div class="stat-label">Strategy Audit Performance</div>
@@ -773,15 +773,15 @@
     <div class="tab-bar">
       <button class="tab-btn active" id="tab-btn-b" onclick="switchTab('b')">
         💣 Track B: Pre-Breakout Squeeze Leaderboard
-        <span class="tab-badge" id="badge-b">0</span>
+        <span class="tab-badge" id="badge-b">1</span>
       </button>
       <button class="tab-btn" id="tab-btn-a" onclick="switchTab('a')">
         🚀 Track A: Active & Confirmed Breakouts
-        <span class="tab-badge" id="badge-a">1</span>
+        <span class="tab-badge" id="badge-a">0</span>
       </button>
       <button class="tab-btn" id="tab-btn-ledger" onclick="switchTab('ledger')">
         📈 Strategy Performance & Trade Ledger
-        <span class="tab-badge" id="badge-ledger">13</span>
+        <span class="tab-badge" id="badge-ledger">14</span>
       </button>
     </div>
 
@@ -835,8 +835,8 @@
 
         <div class="kpi-card" style="border-left: 3px solid var(--accent-cyan);">
           <div class="kpi-title">Lifecycle Distribution</div>
-          <div class="kpi-number col-cyan">5 Active · 1 Pending</div>
-          <div class="kpi-desc">13 Total Historical Signals Tracked</div>
+          <div class="kpi-number col-cyan">5 Active · 2 Pending</div>
+          <div class="kpi-desc">14 Total Historical Signals Tracked</div>
         </div>
       </div>
 
@@ -912,42 +912,43 @@
   </div>
 
   <script>
-    const trackAData = [
+    const trackAData = [];
+    const trackBData = [
   {
-    "name": "Tanla Platforms Ltd.",
-    "symbol": "TANLA",
+    "name": "Tech Mahindra Ltd.",
+    "symbol": "TECHM",
     "sector": "Information Technology",
-    "bucket": "Microcap 250",
-    "price": 730.7,
-    "mcap_cr": "\u20b99,678 Cr",
-    "ret_1m": 47.85,
-    "volume": "2,956,327",
-    "rvol": "1.86x",
+    "bucket": "Largecap 100",
+    "price": 1787.0,
+    "mcap_cr": "\u20b9174,996 Cr",
+    "ret_1m": 14.38,
+    "volume": "311,767",
+    "rvol": "0.08x",
     "delivery_pct": "N/A",
-    "breakout_ref": 709.4,
-    "pe": 17.5,
-    "de": 0.03,
-    "roe": 22.24,
-    "roce": 26.75,
-    "ocf_to_pat": 1.47,
-    "state": "ACTIVE_BREAKOUT",
-    "breakout_score": 70,
-    "pivot_ref": 709.4,
-    "extension_pct": "+3.0%",
-    "volume_ratio": "1.86x",
-    "crr": 0.83,
-    "range_ratio": "1.48x",
-    "rs_spread": "+16.2%",
-    "structural_sl": 488.3,
-    "unit_risk": 242.4,
-    "risk_pct": 33.17,
-    "t1_2r": 1215.5,
-    "t2_3r": 1457.9,
-    "be_cost_anchor": 733.3,
-    "rationale": "Cleared 20D pivot \u20b9709.4 with 1.86x volume and strong institutional volume. Strong close in top 17% of day range; outperforming Nifty 500 by +16.2% over 3M."
+    "breakout_ref": 1860.0,
+    "pe": 28.69,
+    "de": 0.07,
+    "roe": 19.19,
+    "roce": 28.47,
+    "ocf_to_pat": 1.17,
+    "halo_score": 67,
+    "dist_to_high": "3.92%",
+    "vol_dryup_ratio": "0.44x",
+    "bbw_percentile": "0.0%",
+    "atr_pct": "2.46%",
+    "rs_alpha": "10.4%",
+    "pivot_ref": 1860.0,
+    "pass_all_7": false,
+    "entry_trigger": 1861.9,
+    "initial_sl": 1796.0,
+    "risk_1r": 65.9,
+    "risk_pct": 3.54,
+    "target_1_2r": 1993.7,
+    "target_2_3r": 2059.6,
+    "be_retest_anchor": 1856.3,
+    "rationale": "Consolidating tightly 3.92% under 20D pivot with deep historical coil (BBW: 0.0th percentile) and extreme dry-up (5D Vol: 0.44x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
   }
 ];
-    const trackBData = [];
     const tradesData = [
   {
     "id": "KARURVYSYA_20241014_A",
@@ -1155,11 +1156,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 785.55,
-    "pnl_pct": -1.05,
-    "pnl_r": -0.04,
-    "max_price_seen": 808.8,
-    "days_held": 11,
+    "current_price": 807.65,
+    "pnl_pct": 1.73,
+    "pnl_r": 0.07,
+    "max_price_seen": 828.95,
+    "days_held": 13,
     "notes": "Cleared 20D pivot \u20b9778.18 with 1.97x volume and strong institutional volume. Strong close in top 8% of day range; outperforming Nifty 500 by +18.6% over 3M."
   },
   {
@@ -1185,11 +1186,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 3996.1,
-    "pnl_pct": 0.49,
-    "pnl_r": 0.02,
-    "max_price_seen": 4120.0,
-    "days_held": 10,
+    "current_price": 4039.2,
+    "pnl_pct": 1.57,
+    "pnl_r": 0.06,
+    "max_price_seen": 4130.0,
+    "days_held": 12,
     "notes": "Cleared 20D pivot \u20b93975.0 with 4.06x volume and strong institutional volume. Strong close in top 15% of day range; outperforming Nifty 500 by +25.8% over 3M."
   },
   {
@@ -1216,11 +1217,11 @@
     "status": "PENDING_TRIGGER",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 642.05,
+    "current_price": 625.7,
     "pnl_pct": 0.0,
     "pnl_r": 0.0,
     "max_price_seen": 879.0,
-    "days_held": 5,
+    "days_held": 7,
     "notes": "Consolidating tightly 4.79% under 20D pivot with deep historical coil (BBW: 2.5th percentile) and supply drying (5D Vol: 0.61x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
   },
   {
@@ -1277,11 +1278,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 1728.8,
-    "pnl_pct": -4.85,
-    "pnl_r": -0.37,
+    "current_price": 1748.5,
+    "pnl_pct": -3.77,
+    "pnl_r": -0.28,
     "max_price_seen": 1836.0,
-    "days_held": 5,
+    "days_held": 7,
     "notes": "Cleared 20D pivot \u20b91790.0 with 6.68x volume and strong institutional volume. Strong close in top 14% of day range; outperforming Nifty 500 by +17.9% over 3M."
   },
   {
@@ -1307,11 +1308,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 1370.2,
-    "pnl_pct": 2.35,
-    "pnl_r": 0.18,
+    "current_price": 1317.3,
+    "pnl_pct": -1.61,
+    "pnl_r": -0.12,
     "max_price_seen": 1413.3,
-    "days_held": 4,
+    "days_held": 6,
     "notes": "Cleared 20D pivot \u20b91351.4 with 2.48x volume and strong institutional volume. Strong close in top 10% of day range; outperforming Nifty 500 by +28.4% over 3M."
   },
   {
@@ -1337,19 +1338,50 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 694.5,
+    "current_price": 720.8,
+    "pnl_pct": 3.79,
+    "pnl_r": 0.12,
+    "max_price_seen": 736.5,
+    "days_held": 2,
+    "notes": "Cleared 20D pivot \u20b9681.55 with 3.4x volume and strong institutional volume. Strong close in top 25% of day range; outperforming Nifty 500 by +14.0% over 3M."
+  },
+  {
+    "id": "TECHM_20261116_B",
+    "symbol": "TECHM",
+    "name": "Tech Mahindra Ltd.",
+    "sector": "Information Technology",
+    "bucket": "Largecap 100",
+    "track": "Track B",
+    "signal_type": "HALO_SQUEEZE",
+    "detected_date": "2026-11-16",
+    "entry_date": null,
+    "score": 67,
+    "signal_price": 1787.0,
+    "entry_price": 1861.9,
+    "entry_trigger": 1861.9,
+    "initial_sl": 1796.0,
+    "current_sl": 1796.0,
+    "target_1_2r": 1993.7,
+    "target_2_3r": 2059.6,
+    "risk_per_share": 65.9,
+    "risk_pct": 3.54,
+    "be_retest_anchor": 1856.3,
+    "status": "PENDING_TRIGGER",
+    "exit_date": null,
+    "exit_price": null,
+    "current_price": 1787.0,
     "pnl_pct": 0.0,
     "pnl_r": 0.0,
-    "max_price_seen": 694.5,
+    "max_price_seen": 1787.0,
     "days_held": 0,
-    "notes": "Cleared 20D pivot \u20b9681.55 with 3.4x volume and strong institutional volume. Strong close in top 25% of day range; outperforming Nifty 500 by +14.0% over 3M."
+    "notes": "Consolidating tightly 3.92% under 20D pivot with deep historical coil (BBW: 0.0th percentile) and extreme dry-up (5D Vol: 0.44x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
   }
 ];
     const strategyMetrics = {
-  "total_signals": 13,
+  "total_signals": 14,
   "closed_trades_count": 7,
   "active_trades_count": 5,
-  "pending_trades_count": 1,
+  "pending_trades_count": 2,
   "win_count": 3,
   "loss_count": 4,
   "win_rate_pct": 42.9,
@@ -1361,7 +1393,7 @@
   "avg_loss_pct": 5.37,
   "edge_ratio": 1.79,
   "track_a_count": 8,
-  "track_b_count": 5
+  "track_b_count": 6
 };
 
     let currentTab = 'b';
