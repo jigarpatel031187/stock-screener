@@ -743,7 +743,7 @@
           <div class="live-badge">
             <span class="live-dot"></span> Active EOD Feed
           </div>
-          <div class="timestamp-box">📅 17 Nov 2026 | 02:45 AM IST</div>
+          <div class="timestamp-box">📅 17 Nov 2026 | 05:02 PM IST</div>
         </div>
       </div>
     </header>
@@ -752,12 +752,12 @@
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Candidate Universe</div>
-        <div class="stat-val">751 <span class="stat-sub">Stocks Monitored</span></div>
+        <div class="stat-val">750 <span class="stat-sub">Stocks Monitored</span></div>
         <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Nifty 100 + Mid 150 + Small 250 + Micro 250</div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-purple);">
         <div class="stat-label">Track B: Squeeze Leaderboard</div>
-        <div class="stat-val">0 <span class="stat-sub">Coiling Beneath Pivot</span></div>
+        <div class="stat-val">2 <span class="stat-sub">Coiling Beneath Pivot</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-green);">
         <div class="stat-label">Track A: Active Breakouts</div>
@@ -773,7 +773,7 @@
     <div class="tab-bar">
       <button class="tab-btn active" id="tab-btn-b" onclick="switchTab('b')">
         💣 Track B: Pre-Breakout Squeeze Leaderboard
-        <span class="tab-badge" id="badge-b">0</span>
+        <span class="tab-badge" id="badge-b">2</span>
       </button>
       <button class="tab-btn" id="tab-btn-a" onclick="switchTab('a')">
         🚀 Track A: Active & Confirmed Breakouts
@@ -781,7 +781,7 @@
       </button>
       <button class="tab-btn" id="tab-btn-ledger" onclick="switchTab('ledger')">
         📈 Strategy Performance & Trade Ledger
-        <span class="tab-badge" id="badge-ledger">14</span>
+        <span class="tab-badge" id="badge-ledger">15</span>
       </button>
     </div>
 
@@ -835,8 +835,8 @@
 
         <div class="kpi-card" style="border-left: 3px solid var(--accent-cyan);">
           <div class="kpi-title">Lifecycle Distribution</div>
-          <div class="kpi-number col-cyan">5 Active · 2 Pending</div>
-          <div class="kpi-desc">14 Total Historical Signals Tracked</div>
+          <div class="kpi-number col-cyan">5 Active · 3 Pending</div>
+          <div class="kpi-desc">15 Total Historical Signals Tracked</div>
         </div>
       </div>
 
@@ -913,7 +913,76 @@
 
   <script>
     const trackAData = [];
-    const trackBData = [];
+    const trackBData = [
+  {
+    "name": "Tech Mahindra Ltd.",
+    "symbol": "TECHM",
+    "sector": "Information Technology",
+    "bucket": "Largecap 100",
+    "price": 1762.0,
+    "mcap_cr": "\u20b9172,712 Cr",
+    "ret_1m": 7.67,
+    "volume": "1,754,032",
+    "rvol": "0.48x",
+    "delivery_pct": "N/A",
+    "breakout_ref": 1860.0,
+    "pe": 28.52,
+    "de": 0.07,
+    "roe": 19.19,
+    "roce": 28.47,
+    "ocf_to_pat": 1.17,
+    "halo_score": 77,
+    "dist_to_high": "5.27%",
+    "vol_dryup_ratio": "0.49x",
+    "bbw_percentile": "0.8%",
+    "atr_pct": "2.41%",
+    "rs_alpha": "7.7%",
+    "pivot_ref": 1860.0,
+    "pass_all_7": false,
+    "entry_trigger": 1861.9,
+    "initial_sl": 1798.2,
+    "risk_1r": 63.7,
+    "risk_pct": 3.42,
+    "target_1_2r": 1989.3,
+    "target_2_3r": 2053.0,
+    "be_retest_anchor": 1856.3,
+    "rationale": "Consolidating tightly 5.27% under 20D pivot with deep historical coil (BBW: 0.8th percentile) and extreme dry-up (5D Vol: 0.49x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
+  },
+  {
+    "name": "Persistent Systems Ltd.",
+    "symbol": "PERSISTENT",
+    "sector": "Information Technology",
+    "bucket": "Midcap 150",
+    "price": 5911.0,
+    "mcap_cr": "\u20b997,291 Cr",
+    "ret_1m": 1.22,
+    "volume": "372,228",
+    "rvol": "0.52x",
+    "delivery_pct": "N/A",
+    "breakout_ref": 6240.0,
+    "pe": 51.71,
+    "de": 0.07,
+    "roe": 22.92,
+    "roce": 28.55,
+    "ocf_to_pat": 0.96,
+    "halo_score": 72,
+    "dist_to_high": "5.27%",
+    "vol_dryup_ratio": "0.51x",
+    "bbw_percentile": "19.2%",
+    "atr_pct": "2.47%",
+    "rs_alpha": "6.3%",
+    "pivot_ref": 6240.0,
+    "pass_all_7": false,
+    "entry_trigger": 6246.2,
+    "initial_sl": 6027.2,
+    "risk_1r": 219.0,
+    "risk_pct": 3.51,
+    "target_1_2r": 6684.2,
+    "target_2_3r": 6903.2,
+    "be_retest_anchor": 6227.5,
+    "rationale": "Consolidating tightly 5.27% under 20D pivot with volatility contraction (BBW: 19.2th percentile) and extreme dry-up (5D Vol: 0.51x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
+  }
+];
     const tradesData = [
   {
     "id": "KARURVYSYA_20241014_A",
@@ -1121,11 +1190,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 816.45,
-    "pnl_pct": 2.84,
-    "pnl_r": 0.12,
-    "max_price_seen": 828.95,
-    "days_held": 12,
+    "current_price": 833.15,
+    "pnl_pct": 4.94,
+    "pnl_r": 0.2,
+    "max_price_seen": 834.5,
+    "days_held": 14,
     "notes": "Cleared 20D pivot \u20b9778.18 with 1.97x volume and strong institutional volume. Strong close in top 8% of day range; outperforming Nifty 500 by +18.6% over 3M."
   },
   {
@@ -1151,11 +1220,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 4039.1,
-    "pnl_pct": 1.57,
-    "pnl_r": 0.06,
+    "current_price": 3942.9,
+    "pnl_pct": -0.85,
+    "pnl_r": -0.03,
     "max_price_seen": 4130.0,
-    "days_held": 11,
+    "days_held": 13,
     "notes": "Cleared 20D pivot \u20b93975.0 with 4.06x volume and strong institutional volume. Strong close in top 15% of day range; outperforming Nifty 500 by +25.8% over 3M."
   },
   {
@@ -1182,11 +1251,11 @@
     "status": "PENDING_TRIGGER",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 632.1,
+    "current_price": 620.65,
     "pnl_pct": 0.0,
     "pnl_r": 0.0,
     "max_price_seen": 879.0,
-    "days_held": 6,
+    "days_held": 8,
     "notes": "Consolidating tightly 4.79% under 20D pivot with deep historical coil (BBW: 2.5th percentile) and supply drying (5D Vol: 0.61x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
   },
   {
@@ -1243,11 +1312,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 1745.4,
-    "pnl_pct": -3.94,
-    "pnl_r": -0.3,
+    "current_price": 1721.3,
+    "pnl_pct": -5.27,
+    "pnl_r": -0.4,
     "max_price_seen": 1836.0,
-    "days_held": 6,
+    "days_held": 8,
     "notes": "Cleared 20D pivot \u20b91790.0 with 6.68x volume and strong institutional volume. Strong close in top 14% of day range; outperforming Nifty 500 by +17.9% over 3M."
   },
   {
@@ -1273,11 +1342,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 1333.1,
-    "pnl_pct": -0.43,
-    "pnl_r": -0.03,
+    "current_price": 1368.2,
+    "pnl_pct": 2.2,
+    "pnl_r": 0.17,
     "max_price_seen": 1413.3,
-    "days_held": 5,
+    "days_held": 7,
     "notes": "Cleared 20D pivot \u20b91351.4 with 2.48x volume and strong institutional volume. Strong close in top 10% of day range; outperforming Nifty 500 by +28.4% over 3M."
   },
   {
@@ -1303,11 +1372,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 732.9,
-    "pnl_pct": 5.53,
-    "pnl_r": 0.18,
+    "current_price": 711.0,
+    "pnl_pct": 2.38,
+    "pnl_r": 0.08,
     "max_price_seen": 736.5,
-    "days_held": 1,
+    "days_held": 3,
     "notes": "Cleared 20D pivot \u20b9681.55 with 3.4x volume and strong institutional volume. Strong close in top 25% of day range; outperforming Nifty 500 by +14.0% over 3M."
   },
   {
@@ -1334,19 +1403,50 @@
     "status": "PENDING_TRIGGER",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 1787.0,
+    "current_price": 1762.0,
     "pnl_pct": 0.0,
     "pnl_r": 0.0,
     "max_price_seen": 1787.0,
-    "days_held": 0,
+    "days_held": 2,
     "notes": "Consolidating tightly 3.92% under 20D pivot with deep historical coil (BBW: 0.0th percentile) and extreme dry-up (5D Vol: 0.44x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
+  },
+  {
+    "id": "PERSISTENT_20261117_B",
+    "symbol": "PERSISTENT",
+    "name": "Persistent Systems Ltd.",
+    "sector": "Information Technology",
+    "bucket": "Midcap 150",
+    "track": "Track B",
+    "signal_type": "HALO_SQUEEZE",
+    "detected_date": "2026-11-17",
+    "entry_date": null,
+    "score": 72,
+    "signal_price": 5911.0,
+    "entry_price": 6246.2,
+    "entry_trigger": 6246.2,
+    "initial_sl": 6027.2,
+    "current_sl": 6027.2,
+    "target_1_2r": 6684.2,
+    "target_2_3r": 6903.2,
+    "risk_per_share": 219.0,
+    "risk_pct": 3.51,
+    "be_retest_anchor": 6227.5,
+    "status": "PENDING_TRIGGER",
+    "exit_date": null,
+    "exit_price": null,
+    "current_price": 5911.0,
+    "pnl_pct": 0.0,
+    "pnl_r": 0.0,
+    "max_price_seen": 5911.0,
+    "days_held": 0,
+    "notes": "Consolidating tightly 5.27% under 20D pivot with volatility contraction (BBW: 19.2th percentile) and extreme dry-up (5D Vol: 0.51x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
   }
 ];
     const strategyMetrics = {
-  "total_signals": 14,
+  "total_signals": 15,
   "closed_trades_count": 7,
   "active_trades_count": 5,
-  "pending_trades_count": 2,
+  "pending_trades_count": 3,
   "win_count": 3,
   "loss_count": 4,
   "win_rate_pct": 42.9,
@@ -1358,7 +1458,7 @@
   "avg_loss_pct": 5.37,
   "edge_ratio": 1.79,
   "track_a_count": 8,
-  "track_b_count": 6
+  "track_b_count": 7
 };
 
     let currentTab = 'b';
