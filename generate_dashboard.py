@@ -1148,11 +1148,15 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
             </div>
             <div class="plan-line">
               <span class="plan-tag">💰 TARGET 1 (2R)</span>
-              <span class="plan-val t1">₹${{stock.t1_2r || (stock.price * 1.08).toFixed(1)}} (Exit 50% & Move SL to Cost)</span>
+              <span class="plan-val t1">₹${{stock.t1_2r || (stock.price * 1.08).toFixed(1)}} (Book 40% & Move SL to Cost)</span>
             </div>
             <div class="plan-line">
-              <span class="plan-tag">🚀 TARGET 2 (3R)</span>
-              <span class="plan-val t2">₹${{stock.t2_3r || (stock.price * 1.14).toFixed(1)}} (Exit Remaining 50%)</span>
+              <span class="plan-tag">🚀 TARGET 2 (Dynamic/3R)</span>
+              <span class="plan-val t2">₹${{stock.t2_3r || (stock.price * 1.14).toFixed(1)}} (Book 30%)</span>
+            </div>
+            <div class="plan-line">
+              <span class="plan-tag">💎 RUNNER (30%)</span>
+              <span class="plan-val runner">Trail with 20-Day EMA (Ride Multibagger)</span>
             </div>
           </div>
 

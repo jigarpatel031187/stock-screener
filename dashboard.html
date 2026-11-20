@@ -743,7 +743,7 @@
           <div class="live-badge">
             <span class="live-dot"></span> Active EOD Feed
           </div>
-          <div class="timestamp-box">📅 20 Nov 2026 | 01:08 AM IST</div>
+          <div class="timestamp-box">📅 20 Nov 2026 | 04:18 PM IST</div>
         </div>
       </div>
     </header>
@@ -761,7 +761,7 @@
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-green);">
         <div class="stat-label">Track A: Active Breakouts</div>
-        <div class="stat-val">1 <span class="stat-sub">Volume Blast Confirmations</span></div>
+        <div class="stat-val">0 <span class="stat-sub">Volume Blast Confirmations</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-blue);">
         <div class="stat-label">Strategy Audit Performance</div>
@@ -777,7 +777,7 @@
       </button>
       <button class="tab-btn" id="tab-btn-a" onclick="switchTab('a')">
         🚀 Track A: Active & Confirmed Breakouts
-        <span class="tab-badge" id="badge-a">1</span>
+        <span class="tab-badge" id="badge-a">0</span>
       </button>
       <button class="tab-btn" id="tab-btn-ledger" onclick="switchTab('ledger')">
         📈 Strategy Performance & Trade Ledger
@@ -912,41 +912,7 @@
   </div>
 
   <script>
-    const trackAData = [
-  {
-    "name": "Navin Fluorine International Ltd.",
-    "symbol": "NAVINFLUOR",
-    "sector": "Chemicals",
-    "bucket": "Smallcap 250",
-    "price": 10278.0,
-    "mcap_cr": "\u20b952,374 Cr",
-    "ret_1m": 25.96,
-    "volume": "365,012",
-    "rvol": "1.56x",
-    "delivery_pct": "N/A",
-    "breakout_ref": 10165.0,
-    "pe": 57.53,
-    "de": 0.28,
-    "roe": 22.58,
-    "roce": 24.32,
-    "ocf_to_pat": 1.17,
-    "state": "ACTIVE_BREAKOUT",
-    "breakout_score": 75,
-    "pivot_ref": 10165.0,
-    "extension_pct": "+1.11%",
-    "volume_ratio": "1.56x",
-    "crr": 0.97,
-    "range_ratio": "1.52x",
-    "rs_spread": "+24.8%",
-    "structural_sl": 7416.5,
-    "unit_risk": 2861.5,
-    "risk_pct": 27.84,
-    "t1_2r": 16001.0,
-    "t2_3r": 18862.5,
-    "be_cost_anchor": 10314.0,
-    "rationale": "Cleared 20D pivot \u20b910165.0 with 1.56x volume and strong institutional volume. Strong close in top 3% of day range; outperforming Nifty 500 by +24.8% over 3M."
-  }
-];
+    const trackAData = [];
     const trackBData = [];
     const tradesData = [
   {
@@ -1621,11 +1587,15 @@
             </div>
             <div class="plan-line">
               <span class="plan-tag">💰 TARGET 1 (2R)</span>
-              <span class="plan-val t1">₹${stock.t1_2r || (stock.price * 1.08).toFixed(1)} (Exit 50% & Move SL to Cost)</span>
+              <span class="plan-val t1">₹${stock.t1_2r || (stock.price * 1.08).toFixed(1)} (Book 40% & Move SL to Cost)</span>
             </div>
             <div class="plan-line">
-              <span class="plan-tag">🚀 TARGET 2 (3R)</span>
-              <span class="plan-val t2">₹${stock.t2_3r || (stock.price * 1.14).toFixed(1)} (Exit Remaining 50%)</span>
+              <span class="plan-tag">🚀 TARGET 2 (Dynamic/3R)</span>
+              <span class="plan-val t2">₹${stock.t2_3r || (stock.price * 1.14).toFixed(1)} (Book 30%)</span>
+            </div>
+            <div class="plan-line">
+              <span class="plan-tag">💎 RUNNER (30%)</span>
+              <span class="plan-val runner">Trail with 20-Day EMA (Ride Multibagger)</span>
             </div>
           </div>
 

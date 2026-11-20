@@ -738,7 +738,11 @@ def calculate_active_breakout_score(hist, nifty500_hist=None, delivery_pct=None)
 
     risk_pct = round((unit_risk / today_close) * 100, 2)
     t1_2r = round(today_close + (2.0 * unit_risk), 1)
-    t2_3r = round(today_close + (3.0 * unit_risk), 1)
+    
+    # Dynamic Fibonacci 1.618 Base Extension Target (Adaptive to Base Depth)
+    base_depth = pivot - anchor_low
+    fib_t2 = round(pivot + (1.618 * base_depth), 1) if base_depth > 0 else round(today_close + (3.0 * unit_risk), 1)
+    t2_3r = round(max(today_close + (3.0 * unit_risk), fib_t2), 1)
 
     state_label = "CONFIRMED_RETEST" if retest_holding else "ACTIVE_BREAKOUT"
 
@@ -952,9 +956,11 @@ def run_nse_market_lens_screen():
 
             if is_halo_candidate and not is_track_a_breakout:
                 pivot = halo_metrics["pivot"]
-                entry_trigger = round(pivot * 1.001, 1)
-                base_low_5d = float(hist["Low"].iloc[-5:].min())
                 atr_val = (float(halo_metrics["atr_pct"]) / 100.0) * today_close
+                # Volatility-adjusted entry trigger: Pivot + max(0.1% tick, 0.15 * ATR)
+                atr_buffer = round(max(pivot * 0.001, 0.15 * atr_val), 1)
+                entry_trigger = round(pivot + atr_buffer, 1)
+                base_low_5d = float(hist["Low"].iloc[-5:].min())
                 sl_atr = entry_trigger - (1.5 * atr_val)
                 initial_sl = round(max(base_low_5d, sl_atr), 1)
 
@@ -962,7 +968,11 @@ def run_nse_market_lens_screen():
                 risk_pct = round((risk_1r / entry_trigger) * 100, 2)
 
                 target_1_2r = round(entry_trigger + (2.0 * risk_1r), 1)
-                target_2_3r = round(entry_trigger + (3.0 * risk_1r), 1)
+                
+                # Base Depth & Fibonacci 1.618 Extension Target
+                base_depth = pivot - base_low_5d
+                fib_ext_target = round(pivot + (1.618 * base_depth), 1) if base_depth > 0 else round(entry_trigger + (3.0 * risk_1r), 1)
+                target_2_3r = round(max(entry_trigger + (3.0 * risk_1r), fib_ext_target), 1)
                 be_retest_anchor = round(pivot * 0.998, 1)
 
                 dry_desc = "extreme dry-up" if halo_metrics['vol_dryup_ratio'] <= 0.60 else "supply drying"
@@ -1081,7 +1091,7 @@ def build_daily_evening_report(active_breakouts, pre_breakout_squeezes, total_sc
     # SECTION 2: TRACK A - ACTIVE & CONFIRMED BREAKOUTS
     # =========================================================
     msg += f"🚀 *TRACK A: ACTIVE & CONFIRMED BREAKOUTS ({len(active_breakouts)} Qualified)*\n"
-    msg += "_State Machine: 5-Day Retest Window | Structural SL | 50% @ 2R, 50% @ 3R_\n"
+    msg += "_State Machine: 5-Day Retest Window | Structural SL | 40% @ 2R, 30% @ T2, 30% Runner_\n"
     msg += "────────────────────────────\n"
 
     if not active_breakouts:
@@ -1096,8 +1106,9 @@ def build_daily_evening_report(active_breakouts, pre_breakout_squeezes, total_sc
             msg += f"   • ⚡ *CLEAR ACTION:* `👉 BUY AT CURRENT PRICE (₹{stock['price']})`\n"
             msg += f"     🎯 _Valid Entry Window: ₹{stock['pivot_ref']} to ₹{max_chase} (Max 3% Chase)_\n"
             msg += f"   • 🛑 *STOP LOSS:* `₹{stock['structural_sl']}` (Base Low - 0.25 ATR | Risk: ₹{stock['unit_risk']} | `{stock['risk_pct']}%`)\n"
-            msg += f"   • 💰 *TARGET 1 (2R):* `₹{stock['t1_2r']}` → *Exit 50% Profit* & Move SL to Cost (`₹{stock['be_cost_anchor']}`)\n"
-            msg += f"   • 🚀 *TARGET 2 (3R):* `₹{stock['t2_3r']}` → *Exit Remaining 50% Profit* (Net Payoff: *+2.5R*)\n"
+            msg += f"   • 💰 *TARGET 1 (2R):* `₹{stock['t1_2r']}` → *Exit 40% Profit* & Move SL to Cost (`₹{stock['be_cost_anchor']}`)\n"
+            msg += f"   • 🚀 *TARGET 2 (Dynamic/3R):* `₹{stock['t2_3r']}` → *Exit 30% Profit*\n"
+            msg += f"   • 💎 *RUNNER (30%):* Trail with 20-Day EMA (Ride Multibagger Trend)\n"
             msg += f"   • *Breakout Metrics:* Vol: `{stock['volume_ratio']}` SMA | CRR: `{stock['crr']}` | RE: `{stock['range_ratio']}` ATR{deliv_str}\n"
             msg += f"   • *Relative Strength:* `{stock['rs_spread']}` alpha vs Nifty 500 | 1M Ret: `+{stock['ret_1m']}%`\n"
             msg += f"   • *Fundamentals:* ROE: `{stock['roe']}%` | ROCE: `{stock['roce']}%` | OCF/PAT: `{stock['ocf_to_pat']}x`\n"
