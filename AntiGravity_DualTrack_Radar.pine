@@ -1,12 +1,12 @@
 //@version=5
-indicator("AntiGravity Smart Money Dual-Track Radar [Pro]", shorttitle="AntiGravity Radar", overlay=true)
+indicator("AntiGravity Smart Money Dual-Track Radar [Pro]", shorttitle="AntiGravity Radar", overlay=true, max_labels_count=500)
 
 // --- INPUTS ---
 pivot_len    = input.int(20, "Pivot Length")
 atr_len      = input.int(14, "ATR Length")
 atr_mult_ent = input.float(0.15, "Dynamic Entry ATR Buffer", step=0.05)
 t1_r_mult    = input.float(2.0, "Target 1 (R-Multiple)", step=0.5)
-t2_r_mult    = input.float(3.0, "Target 2 (R-Multiple)", step=0.5)
+t2_r_mult    = input.float(3.0, "Fallback Target 2 (R-Multiple)", step=0.5)
 
 // --- CALCULATIONS ---
 atr_val      = ta.atr(atr_len)
@@ -47,11 +47,12 @@ is_breakout  = ta.crossover(close, pivot_high) and (rvol >= 1.5) and (crr >= 0.7
 fire_breakout = is_breakout and not is_breakout[1]
 fire_squeeze  = is_squeeze and not is_squeeze[1]
 
-// --- PLOTS ---
+// --- MOVING AVERAGES ---
 plot(trail_ema, "20 EMA (Trail)", color=#A855F7, linewidth=2)
 plot(sma50, "50 SMA", color=#38BDF8, linewidth=2)
 plot(sma200, "200 SMA", color=#F59E0B, linewidth=2)
 
+// --- HORIZONTAL LEVEL LINES ---
 p_ent = plot(entry_trig, "BUY TRIGGER", color=#00E5FF, linewidth=2, trackprice=true)
 p_sl  = plot(struct_sl, "STOP LOSS", color=#FF3B69, linewidth=2, trackprice=true)
 p_t1  = plot(target_1, "TARGET 1 (2R)", color=#00E676, linewidth=2, trackprice=true)
@@ -62,6 +63,25 @@ fill(p_ent, p_t1, color=color.new(#00E676, 90), title="Reward Zone")
 
 plotshape(fire_breakout, title="Breakout", style=shape.labelup, location=location.belowbar, color=#10B981, text="BREAKOUT", textcolor=color.white, size=size.small)
 plotshape(fire_squeeze, title="Coil", style=shape.labeldown, location=location.abovebar, color=#F59E0B, text="COIL", textcolor=color.black, size=size.small)
+
+// --- ON-CHART FLOATING TAG BADGES ---
+var label lb_buy = na
+var label lb_sl  = na
+var label lb_t1  = na
+var label lb_t2  = na
+
+if barstate.islast
+    label.delete(lb_buy)
+    label.delete(lb_sl)
+    label.delete(lb_t1)
+    label.delete(lb_t2)
+
+    int tag_x = bar_index + 6
+
+    lb_buy := label.new(tag_x, entry_trig, "BUY: ₹" + str.tostring(entry_trig, "#.##"), color=#00E5FF, textcolor=#0F172A, style=label.style_label_left, size=size.small)
+    lb_sl  := label.new(tag_x, struct_sl,  "SL: ₹"  + str.tostring(struct_sl, "#.##") + " (-" + str.tostring(risk_pct, "#.#") + "%)", color=#FF3B69, textcolor=color.white, style=label.style_label_left, size=size.small)
+    lb_t1  := label.new(tag_x, target_1,   "T1: ₹"  + str.tostring(target_1, "#.##")  + " [40%]", color=#00E676, textcolor=#0F172A, style=label.style_label_left, size=size.small)
+    lb_t2  := label.new(tag_x, target_2,   "T2: ₹"  + str.tostring(target_2, "#.##")  + " [30%]", color=#FFD600, textcolor=#0F172A, style=label.style_label_left, size=size.small)
 
 // --- HUD TABLE (BOTTOM LEFT) ---
 var table hud = table.new(position.bottom_left, 2, 8, bgcolor=color.new(#0F172A, 0), border_color=color.new(#334155, 0), border_width=2)
