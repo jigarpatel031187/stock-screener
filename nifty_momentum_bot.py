@@ -728,19 +728,24 @@ def calculate_active_breakout_score(hist, nifty500_hist=None, delivery_pct=None)
         score += 3  # Mild penalty for over-extension
 
     # -------------------------------------------------------------
-    # 10. Structural Stop-Loss Engine (BaseLow - 0.25x ATR)
+    # 10. Structural Stop-Loss Engine (5D Shelf / 1.5x ATR, 3.5% to 6.5% Cap)
     # -------------------------------------------------------------
-    anchor_low = retest_low if retest_holding else base_low
-    structural_sl = round(anchor_low - (0.25 * curr_atr), 1)
-    unit_risk = round(today_close - structural_sl, 1)
-    if unit_risk <= 0:
-        return False, "REJECT", 0, {}, "SL_INVALID"
-
+    shelf_low_5d = float(low_series.iloc[-5:].min())
+    anchor_low = retest_low if retest_holding else shelf_low_5d
+    atr_sl_floor = today_close - (1.5 * curr_atr)
+    raw_sl = max(anchor_low - (0.25 * curr_atr), atr_sl_floor)
+    
+    raw_risk = today_close - raw_sl
+    max_risk = today_close * 0.065  # Institutional 6.5% max risk cap
+    min_risk = today_close * 0.035  # 3.5% min risk floor to avoid noise
+    
+    unit_risk = round(max(min(raw_risk, max_risk), min_risk), 1)
+    structural_sl = round(today_close - unit_risk, 1)
     risk_pct = round((unit_risk / today_close) * 100, 2)
     t1_2r = round(today_close + (2.0 * unit_risk), 1)
     
     # Dynamic Fibonacci 1.618 Base Extension Target (Adaptive to Base Depth)
-    base_depth = pivot - anchor_low
+    base_depth = max(pivot - anchor_low, 2.0 * curr_atr)
     fib_t2 = round(pivot + (1.618 * base_depth), 1) if base_depth > 0 else round(today_close + (3.0 * unit_risk), 1)
     t2_3r = round(max(today_close + (3.0 * unit_risk), fib_t2), 1)
 
@@ -962,15 +967,18 @@ def run_nse_market_lens_screen():
                 entry_trigger = round(pivot + atr_buffer, 1)
                 base_low_5d = float(hist["Low"].iloc[-5:].min())
                 sl_atr = entry_trigger - (1.5 * atr_val)
-                initial_sl = round(max(base_low_5d, sl_atr), 1)
-
-                risk_1r = round(entry_trigger - initial_sl, 1)
+                raw_sl = max(base_low_5d - (0.25 * atr_val), sl_atr)
+                raw_risk = entry_trigger - raw_sl
+                max_risk = entry_trigger * 0.065
+                min_risk = entry_trigger * 0.035
+                risk_1r = round(max(min(raw_risk, max_risk), min_risk), 1)
+                initial_sl = round(entry_trigger - risk_1r, 1)
                 risk_pct = round((risk_1r / entry_trigger) * 100, 2)
 
                 target_1_2r = round(entry_trigger + (2.0 * risk_1r), 1)
                 
                 # Base Depth & Fibonacci 1.618 Extension Target
-                base_depth = pivot - base_low_5d
+                base_depth = max(pivot - base_low_5d, 2.0 * atr_val)
                 fib_ext_target = round(pivot + (1.618 * base_depth), 1) if base_depth > 0 else round(entry_trigger + (3.0 * risk_1r), 1)
                 target_2_3r = round(max(entry_trigger + (3.0 * risk_1r), fib_ext_target), 1)
                 be_retest_anchor = round(pivot * 0.998, 1)

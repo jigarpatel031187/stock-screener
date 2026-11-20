@@ -1,14 +1,20 @@
 //@version=5
 indicator("AntiGravity Smart Money Dual-Track Radar [Pro]", shorttitle="AntiGravity Radar", overlay=true, max_labels_count=500)
 
-// --- INPUTS ---
-pivot_len    = input.int(20, "Pivot Length")
-atr_len      = input.int(14, "ATR Length")
+// =============================================================================
+// INPUTS & PARAMETERS
+// =============================================================================
+pivot_len    = input.int(20, "Pivot Length (Days)", minval=5)
+atr_len      = input.int(14, "ATR Length", minval=5)
 atr_mult_ent = input.float(0.15, "Dynamic Entry ATR Buffer", step=0.05)
+max_risk_cap = input.float(6.5, "Max Structural Risk Cap (%)", step=0.5)
+min_risk_flr = input.float(3.5, "Min Risk Floor (%)", step=0.5)
 t1_r_mult    = input.float(2.0, "Target 1 (R-Multiple)", step=0.5)
 t2_r_mult    = input.float(3.0, "Fallback Target 2 (R-Multiple)", step=0.5)
 
-// --- CALCULATIONS ---
+// =============================================================================
+// TECHNICAL INDICATORS
+// =============================================================================
 atr_val      = ta.atr(atr_len)
 sma50        = ta.sma(close, 50)
 sma200       = ta.sma(close, 200)
@@ -18,53 +24,88 @@ rvol         = vol_sma20 > 0 ? (volume / vol_sma20) : 1.0
 day_range    = high - low
 crr          = day_range > 0 ? ((close - low) / day_range) : 0.5
 
+// 20-Day Pivot & 5-Day Consolidation Base Shelf
 pivot_high   = ta.highest(high[1], pivot_len)
-base_low     = ta.lowest(low[1], pivot_len)
-base_depth   = pivot_high - base_low
+shelf_low_5d = ta.lowest(low[1], 5)
 
 dynamic_buf  = math.max(pivot_high * 0.001, atr_mult_ent * atr_val)
-entry_trig   = pivot_high + dynamic_buf
+breakout_lvl = pivot_high + dynamic_buf
 
-struct_sl    = base_low - (0.25 * atr_val)
-unit_risk    = entry_trig - struct_sl
-risk_pct     = (unit_risk / entry_trig) * 100
+// =============================================================================
+// STATE ENGINE: COIL SQUEEZE vs ACTIVE BREAKOUT vs EXTENDED
+// =============================================================================
+// 1. Extended Gate: Price has run > 3.0% beyond pivot
+is_extended  = close > (pivot_high * 1.03)
 
-target_1     = entry_trig + (t1_r_mult * unit_risk)
-fib_t2       = pivot_high + (1.618 * base_depth)
-target_2     = math.max(entry_trig + (t2_r_mult * unit_risk), fib_t2)
+// 2. Active Breakout Window: Price above pivot, but within 3.0% chase limit
+is_breakout  = (close > pivot_high) and not is_extended
 
-// --- SQUEEZE & BREAKOUT ---
+// 3. Coil Squeeze: Price consolidating tightly under pivot
 [bb_mid, bb_u, bb_l] = ta.bb(close, 20, 2.0)
 bbw          = (bb_u - bb_l) / bb_mid * 100
 bbw_min120   = ta.lowest(bbw, 120)
 bbw_max120   = ta.highest(bbw, 120)
-bbw_rank     = (bbw_max120 - bbw_min120) > 0 ? ((bbw - bbw_min120) / (bbw_max120 - bbw_min120)) * 100 : 50.0
+bbw_span     = bbw_max120 - bbw_min120
+bbw_rank     = bbw_span > 0 ? ((bbw - bbw_min120) / bbw_span) * 100 : 50.0
 
 dist_to_piv  = ((pivot_high - close) / pivot_high) * 100
-is_squeeze   = (bbw_rank <= 25.0) and (rvol <= 0.85) and (dist_to_piv <= 5.5) and (dist_to_piv >= 0.0) and (close >= sma50)
-is_breakout  = ta.crossover(close, pivot_high) and (rvol >= 1.5) and (crr >= 0.70) and (close >= sma50)
+is_squeeze   = (close <= pivot_high) and (bbw_rank <= 25.0) and (rvol <= 0.85) and (dist_to_piv <= 5.5) and (dist_to_piv >= 0.0) and (close >= sma50)
 
-fire_breakout = is_breakout and not is_breakout[1]
-fire_squeeze  = is_squeeze and not is_squeeze[1]
+// =============================================================================
+// ADAPTIVE ENTRY, STOP LOSS & TARGET CALCULATIONS
+// =============================================================================
+// Effective Entry: If in Active Breakout, buy at CMP; if coiling, buy at breakout trigger
+float entry_price = is_breakout ? close : breakout_lvl
 
-// --- MOVING AVERAGES ---
+// 5-Day Shelf Structural SL with ATR Floor (Never uses wide 20-day low)
+float atr_sl_floor = entry_price - (1.5 * atr_val)
+float raw_sl       = math.max(shelf_low_5d - (0.25 * atr_val), atr_sl_floor)
+
+// Institutional Risk Bounds (3.5% minimum to 6.5% maximum)
+float raw_risk         = entry_price - raw_sl
+float max_risk_allowed = entry_price * (max_risk_cap / 100.0)
+float min_risk_allowed = entry_price * (min_risk_flr / 100.0)
+
+float unit_risk = math.max(math.min(raw_risk, max_risk_allowed), min_risk_allowed)
+float final_sl  = entry_price - unit_risk
+float risk_pct  = (unit_risk / entry_price) * 100.0
+
+// Targets: 2R (Book 40%), Dynamic Fibonacci 1.618 Extension (Book 30%)
+float target_1   = entry_price + (t1_r_mult * unit_risk)
+float base_depth = math.max(pivot_high - shelf_low_5d, 2.0 * atr_val)
+float fib_t2     = entry_price + (1.618 * base_depth)
+float target_2   = math.max(entry_price + (t2_r_mult * unit_risk), fib_t2)
+
+// =============================================================================
+// MOVING AVERAGES (TREND BACKBONE)
+// =============================================================================
 plot(trail_ema, "20 EMA (Trail)", color=#A855F7, linewidth=2)
 plot(sma50, "50 SMA", color=#38BDF8, linewidth=2)
 plot(sma200, "200 SMA", color=#F59E0B, linewidth=2)
 
-// --- HORIZONTAL LEVEL LINES ---
-p_ent = plot(entry_trig, "BUY TRIGGER", color=#00E5FF, linewidth=2, trackprice=true)
-p_sl  = plot(struct_sl, "STOP LOSS", color=#FF3B69, linewidth=2, trackprice=true)
-p_t1  = plot(target_1, "TARGET 1 (2R)", color=#00E676, linewidth=2, trackprice=true)
-p_t2  = plot(target_2, "TARGET 2 (Dyn)", color=#FFD600, linewidth=2, trackprice=true)
+// =============================================================================
+// ON-CHART HORIZONTAL TRADE LEVELS
+// =============================================================================
+p_ent = plot(entry_price, "ENTRY LEVEL", color=#00E5FF, linewidth=2, trackprice=true)
+p_sl  = plot(final_sl,    "STOP LOSS",   color=#FF3B69, linewidth=2, trackprice=true)
+p_t1  = plot(target_1,    "TARGET 1",    color=#00E676, linewidth=2, trackprice=true)
+p_t2  = plot(target_2,    "TARGET 2",    color=#FFD600, linewidth=2, trackprice=true)
 
 fill(p_ent, p_sl, color=color.new(#FF3B69, 90), title="Risk Zone")
 fill(p_ent, p_t1, color=color.new(#00E676, 90), title="Reward Zone")
 
-plotshape(fire_breakout, title="Breakout", style=shape.labelup, location=location.belowbar, color=#10B981, text="BREAKOUT", textcolor=color.white, size=size.small)
-plotshape(fire_squeeze, title="Coil", style=shape.labeldown, location=location.abovebar, color=#F59E0B, text="COIL", textcolor=color.black, size=size.small)
+// =============================================================================
+// BREAKOUT & SQUEEZE SIGNAL BADGES ON CANDLES
+// =============================================================================
+sig_breakout = ta.crossover(close, pivot_high) and (rvol >= 1.5) and (crr >= 0.70) and (close >= sma50)
+sig_squeeze  = is_squeeze and not is_squeeze[1]
 
-// --- ON-CHART FLOATING TAG BADGES ---
+plotshape(sig_breakout, title="Breakout Bar", style=shape.labelup, location=location.belowbar, color=#10B981, text="BREAKOUT", textcolor=color.white, size=size.small)
+plotshape(sig_squeeze,  title="Coil Bar",     style=shape.labeldown, location=location.abovebar, color=#F59E0B, text="COIL",     textcolor=color.black, size=size.small)
+
+// =============================================================================
+// ON-CHART DIRECT PRICE ACTION BADGES (AT RIGHT EDGE)
+// =============================================================================
 var label lb_buy = na
 var label lb_sl  = na
 var label lb_t1  = na
@@ -76,28 +117,55 @@ if barstate.islast
     label.delete(lb_t1)
     label.delete(lb_t2)
 
-    int tag_x = bar_index + 6
+    int tag_x = bar_index + 4
 
-    lb_buy := label.new(tag_x, entry_trig, "BUY: ₹" + str.tostring(entry_trig, "#.##"), color=#00E5FF, textcolor=#0F172A, style=label.style_label_left, size=size.small)
-    lb_sl  := label.new(tag_x, struct_sl,  "SL: ₹"  + str.tostring(struct_sl, "#.##") + " (-" + str.tostring(risk_pct, "#.#") + "%)", color=#FF3B69, textcolor=color.white, style=label.style_label_left, size=size.small)
-    lb_t1  := label.new(tag_x, target_1,   "T1: ₹"  + str.tostring(target_1, "#.##")  + " [40%]", color=#00E676, textcolor=#0F172A, style=label.style_label_left, size=size.small)
-    lb_t2  := label.new(tag_x, target_2,   "T2: ₹"  + str.tostring(target_2, "#.##")  + " [30%]", color=#FFD600, textcolor=#0F172A, style=label.style_label_left, size=size.small)
+    // Adaptive Buy Label Text & Color
+    string buy_txt = ""
+    color  buy_bg  = #00E5FF
+    color  buy_fg  = #0F172A
 
-// --- HUD TABLE (BOTTOM LEFT) ---
+    if is_extended
+        float ext_pct = ((close - pivot_high) / pivot_high) * 100.0
+        buy_txt := "EXTENDED: DO NOT CHASE (+" + str.tostring(ext_pct, "#.#") + "%)"
+        buy_bg  := #F59E0B
+        buy_fg  := #0F172A
+    else if is_breakout
+        buy_txt := "BUY (CMP): INR " + str.tostring(close, "#.##")
+        buy_bg  := #10B981
+        buy_fg  := color.white
+    else
+        buy_txt := "BUY ABOVE: INR " + str.tostring(entry_price, "#.##")
+        buy_bg  := #00E5FF
+        buy_fg  := #0F172A
+
+    string sl_txt = "SL: INR " + str.tostring(final_sl, "#.##") + " (-" + str.tostring(risk_pct, "#.#") + "%)"
+    string t1_txt = "T1: INR " + str.tostring(target_1, "#.##") + " [Book 40%]"
+    string t2_txt = "T2: INR " + str.tostring(target_2, "#.##") + " [Book 30%]"
+
+    lb_buy := label.new(tag_x, entry_price, buy_txt, color=buy_bg, textcolor=buy_fg, style=label.style_label_left, size=size.small)
+    lb_sl  := label.new(tag_x, final_sl,    sl_txt,  color=#FF3B69, textcolor=color.white, style=label.style_label_left, size=size.small)
+    lb_t1  := label.new(tag_x, target_1,    t1_txt,  color=#00E676, textcolor=#0F172A, style=label.style_label_left, size=size.small)
+    lb_t2  := label.new(tag_x, target_2,    t2_txt,  color=#FFD600, textcolor=#0F172A, style=label.style_label_left, size=size.small)
+
+// =============================================================================
+// HUD DASHBOARD TABLE (BOTTOM LEFT)
+// =============================================================================
 var table hud = table.new(position.bottom_left, 2, 8, bgcolor=color.new(#0F172A, 0), border_color=color.new(#334155, 0), border_width=2)
 
 if barstate.islast
     table.cell(hud, 0, 0, "AntiGravity Radar", bgcolor=#1E293B, text_color=#38BDF8, text_size=size.small)
-    string st_txt = is_breakout ? "BREAKOUT" : (is_squeeze ? "COIL" : "WATCH")
-    color st_bg = is_breakout ? #10B981 : (is_squeeze ? #F59E0B : #334155)
-    color st_fg = is_breakout or is_squeeze ? #0F172A : #F8FAFC
-    table.cell(hud, 1, 0, st_txt, bgcolor=st_bg, text_color=st_fg, text_size=size.small)
 
-    table.cell(hud, 0, 1, "Buy Above", text_color=#94A3B8, text_size=size.small)
-    table.cell(hud, 1, 1, str.tostring(entry_trig, "#.##"), text_color=#00E5FF, text_size=size.small)
+    string st_title = is_extended ? "EXTENDED" : (is_breakout ? "ACTIVE BREAKOUT" : (is_squeeze ? "COIL SQUEEZE" : "WATCHING"))
+    color  st_color = is_extended ? #F59E0B : (is_breakout ? #10B981 : (is_squeeze ? #00E5FF : #64748B))
+    table.cell(hud, 1, 0, st_title, bgcolor=st_color, text_color=#0F172A, text_size=size.small)
+
+    string ent_header = is_breakout ? "Buy at CMP" : (is_extended ? "Status" : "Buy Above")
+    string ent_val    = is_extended ? "Wait for Retest" : str.tostring(entry_price, "#.##")
+    table.cell(hud, 0, 1, ent_header, text_color=#94A3B8, text_size=size.small)
+    table.cell(hud, 1, 1, ent_val,    text_color=#00E5FF, text_size=size.small)
 
     table.cell(hud, 0, 2, "Stop Loss (1R)", text_color=#94A3B8, text_size=size.small)
-    table.cell(hud, 1, 2, str.tostring(struct_sl, "#.##") + " (-" + str.tostring(risk_pct, "#.#") + "%)", text_color=#FF3B69, text_size=size.small)
+    table.cell(hud, 1, 2, str.tostring(final_sl, "#.##") + " (-" + str.tostring(risk_pct, "#.#") + "%)", text_color=#FF3B69, text_size=size.small)
 
     table.cell(hud, 0, 3, "Target 1 (2R)", text_color=#94A3B8, text_size=size.small)
     table.cell(hud, 1, 3, str.tostring(target_1, "#.##") + " [40%]", text_color=#00E676, text_size=size.small)
@@ -113,5 +181,5 @@ if barstate.islast
 
     table.cell(hud, 0, 7, "Squeeze Rank", text_color=#94A3B8, text_size=size.small)
     string coil_lbl = bbw_rank <= 25.0 ? "Coiled" : "Normal"
-    color coil_col = bbw_rank <= 25.0 ? #F59E0B : #94A3B8
+    color  coil_col = bbw_rank <= 25.0 ? #F59E0B : #94A3B8
     table.cell(hud, 1, 7, str.tostring(bbw_rank, "#.#") + "% (" + coil_lbl + ")", text_color=coil_col, text_size=size.small)
