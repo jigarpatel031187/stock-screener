@@ -5,7 +5,6 @@ indicator("AntiGravity Smart Money Dual-Track Radar [Pro]", shorttitle="AntiGrav
 // 1. USER INPUTS & GRAPHICS CONFIGURATION
 // ==============================================================================
 grp_display  = "🎨 Visual & Display Styling"
-tbl_pos_opt  = input.string("Bottom Left", "HUD Table Position", options=["Top Left", "Bottom Left", "Top Right", "Bottom Right"], group=grp_display)
 tbl_size_opt = input.string("Small", "HUD Table Text Size", options=["Normal", "Small", "Tiny"], group=grp_display)
 show_lines   = input.bool(true, "Show Active Trade Level Rays (Right Extended)", group=grp_display)
 show_zones   = input.bool(true, "Show Shaded Risk/Reward Box", group=grp_display)
@@ -148,19 +147,19 @@ if show_lines and barstate.islast
 
     // 6. Shaded Risk / Reward Projection Boxes
     if show_zones
-        box_risk := box.new(start_bar, entry_trigger, end_bar, structural_sl, 
+        box_risk := box.new(left=start_bar, top=entry_trigger, right=end_bar, bottom=structural_sl, 
                             border_color=color.new(#FF3B69, 70), bgcolor=color.new(#FF3B69, 88))
-        box_reward := box.new(start_bar, target_1, end_bar, entry_trigger, 
+        box_reward := box.new(left=start_bar, top=target_1, right=end_bar, bottom=entry_trigger, 
                               border_color=color.new(#00E676, 70), bgcolor=color.new(#00E676, 88))
 
 // ==============================================================================
 // 6. HIGH-CONTRAST FLOATING HUD TABLE
 // ==============================================================================
-tbl_pos = tbl_pos_opt == "Top Left" ? position.top_left : (tbl_pos_opt == "Top Right" ? position.top_right : (tbl_pos_opt == "Bottom Right" ? position.bottom_right : position.bottom_left))
 tbl_txt_size = tbl_size_opt == "Normal" ? size.normal : (tbl_size_opt == "Tiny" ? size.tiny : size.small)
 
-var table hud = table.new(tbl_pos, 2, 8, 
-                          bgcolor=color.new(#0F172A, 5), 
+// Global table declaration using Pine Script v5 constant position
+var table hud = table.new(position.bottom_left, 2, 8, 
+                          bgcolor=color.new(#0F172A, 0), 
                           border_color=color.new(#334155, 0), 
                           border_width=2)
 
