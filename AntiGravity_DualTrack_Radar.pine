@@ -97,9 +97,9 @@ plotshape(is_squeeze and not is_squeeze[1], title="Track B Squeeze Coil Alert", 
 // ==============================================================================
 // 4. FLOATING HUD STATS TABLE
 // ==============================================================================
+var table hud = table.new(position.top_right, 2, 8, bgcolor=color.new(#0f172a, 15), border_color=color.new(#334155, 30), border_width=1)
+
 if show_table and barstate.islast
-    var table hud = table.new(position.top_right, 2, 8, bgcolor=color.new(#0f172a, 15), border_color=color.new(#334155, 30), border_width=1)
-    
     table.cell(hud, 0, 0, "AntiGravity Dual Radar", bgcolor=color.new(#1e293b, 0), text_color=color.white, text_size=size.small)
     table.cell(hud, 1, 0, is_breakout ? "🚀 ACTIVE BREAKOUT" : (is_squeeze ? "💣 COIL SQUEEZE" : "WAIT / WATCH"), 
                bgcolor=is_breakout ? color.new(#10b981, 20) : (is_squeeze ? color.new(#f59e0b, 20) : color.new(#334155, 20)), 
