@@ -1,35 +1,36 @@
 //@version=5
-indicator("AntiGravity Smart Money Dual-Track Radar [Pro]", overlay=true, max_lines_count=500, max_labels_count=500)
+indicator("AntiGravity Smart Money Dual-Track Radar [Pro]", shorttitle="AntiGravity Radar", overlay=true, max_lines_count=500, max_labels_count=500, max_boxes_count=500)
 
 // ==============================================================================
-// 1. INPUTS & CONFIGURATION
+// 1. USER INPUTS & GRAPHICS CONFIGURATION
 // ==============================================================================
-grp_pivots   = "Pivot & Dynamic Entry Parameters"
-pivot_len    = input.int(20, "Pivot Lookback Length (Days)", minval=5, maxval=60, group=grp_pivots)
+grp_display  = "🎨 Visual & Display Styling"
+tbl_pos_opt  = input.string("Bottom Left", "HUD Table Position", options=["Top Left", "Bottom Left", "Top Right", "Bottom Right"], group=grp_display)
+tbl_size_opt = input.string("Small", "HUD Table Text Size", options=["Normal", "Small", "Tiny"], group=grp_display)
+show_lines   = input.bool(true, "Show Active Trade Level Rays (Right Extended)", group=grp_display)
+show_zones   = input.bool(true, "Show Shaded Risk/Reward Box", group=grp_display)
+show_mas     = input.bool(true, "Show Trend Moving Averages (20 EMA, 50, 200 SMA)", group=grp_display)
+show_signals = input.bool(true, "Show Breakout & Squeeze Badges on Candles", group=grp_display)
+show_table   = input.bool(true, "Show Floating HUD Stats Table", group=grp_display)
+
+grp_pivots   = "⚙️ Pivot & Entry Parameters"
+pivot_len    = input.int(20, "Pivot Lookback Length (Sessions)", minval=5, maxval=60, group=grp_pivots)
 atr_len      = input.int(14, "ATR Length", minval=5, maxval=30, group=grp_pivots)
 atr_mult_ent = input.float(0.15, "Dynamic Entry ATR Buffer", minval=0.05, maxval=0.50, step=0.05, group=grp_pivots)
 
-grp_targets  = "Dynamic Targets & Risk Management"
+grp_targets  = "🎯 Targets & Risk Management"
 t1_r_mult    = input.float(2.0, "Target 1 (R-Multiple)", step=0.5, group=grp_targets)
 use_fib_ext  = input.bool(true, "Use Fibonacci 1.618 for Target 2", group=grp_targets)
 t2_r_mult    = input.float(3.0, "Fallback Target 2 (R-Multiple)", step=0.5, group=grp_targets)
 trail_ema_l  = input.int(20, "Multibagger Runner Trailing EMA", minval=10, maxval=50, group=grp_targets)
 
-grp_filters  = "Trend & Squeeze Filters"
-sma50_len    = input.int(50, "Daily Trend SMA", group=grp_filters)
-sma200_len   = input.int(200, "Macro Base SMA", group=grp_filters)
-bb_len       = input.int(20, "Bollinger Band Length", group=grp_filters)
-bb_mult      = input.float(2.0, "Bollinger StdDev", group=grp_filters)
-show_table   = input.bool(true, "Show Floating HUD Table", group=grp_filters)
-
 // ==============================================================================
-// 2. MATHEMATICAL ENGINES
+// 2. MATHEMATICAL CORE
 // ==============================================================================
-// ATR & Moving Averages
 atr_val      = ta.atr(atr_len)
 atr_pct      = (atr_val / close) * 100
-sma50        = ta.sma(close, sma50_len)
-sma200       = ta.sma(close, sma200_len)
+sma50        = ta.sma(close, 50)
+sma200       = ta.sma(close, 200)
 trail_ema    = ta.ema(close, trail_ema_l)
 vol_sma20    = ta.sma(volume, 20)
 rvol         = vol_sma20 > 0 ? (volume / vol_sma20) : 1.0
@@ -58,71 +59,147 @@ fib_t2         = pivot_high + (1.618 * base_depth)
 target_2       = use_fib_ext ? math.max(entry_trigger + (t2_r_mult * unit_risk), fib_t2) : (entry_trigger + (t2_r_mult * unit_risk))
 
 // Squeeze Calculation (Bollinger Bandwidth)
-[bb_mid, bb_upper, bb_lower] = ta.bb(close, bb_len, bb_mult)
+[bb_mid, bb_upper, bb_lower] = ta.bb(close, 20, 2.0)
 bbw = (bb_upper - bb_lower) / bb_mid * 100
 bbw_min120 = ta.lowest(bbw, 120)
 bbw_max120 = ta.highest(bbw, 120)
 bbw_rank = (bbw_max120 - bbw_min120) > 0 ? ((bbw - bbw_min120) / (bbw_max120 - bbw_min120)) * 100 : 50.0
 
-// Squeeze Detection (Track B)
+// Setup Detection
 dist_to_pivot = ((pivot_high - close) / pivot_high) * 100
-is_squeeze = (bbw_rank <= 25.0) and (rvol <= 0.85) and (dist_to_pivot <= 5.5) and (dist_to_pivot >= 0.0) and (close >= sma50)
+is_squeeze    = (bbw_rank <= 25.0) and (rvol <= 0.85) and (dist_to_pivot <= 5.5) and (dist_to_pivot >= 0.0) and (close >= sma50)
+is_breakout   = ta.crossover(close, pivot_high) and (rvol >= 1.5) and (crr >= 0.70) and (close >= sma50)
 
-// Active Breakout Detection (Track A)
-is_breakout = ta.crossover(close, pivot_high) and (rvol >= 1.5) and (crr >= 0.70) and (close >= sma50)
-
-// ==============================================================================
-// 3. PLOTS & VISUALIZATIONS
-// ==============================================================================
-// Moving Averages
-plot(sma50, "50 SMA (Trend)", color=color.new(#38bdf8, 20), linewidth=1)
-plot(sma200, "200 SMA (Macro Floor)", color=color.new(#f59e0b, 30), linewidth=2)
-plot(trail_ema, "20 EMA (Multibagger Trailing)", color=color.new(#a855f7, 0), linewidth=2)
-
-// Dynamic Key Levels
-p_pivot = plot(pivot_high, "20D Pivot High", color=color.new(#94a3b8, 40), style=plot.style_linebr, linewidth=1)
-p_entry = plot(entry_trigger, "Dynamic Entry Trigger (+0.15 ATR)", color=color.new(#38bdf8, 0), style=plot.style_linebr, linewidth=2)
-p_sl    = plot(structural_sl, "Structural Stop Loss", color=color.new(#f43f5e, 0), style=plot.style_linebr, linewidth=2)
-p_t1    = plot(target_1, "Target 1 (+2.0R)", color=color.new(#10b981, 0), style=plot.style_linebr, linewidth=2)
-p_t2    = plot(target_2, "Target 2 (Dynamic Fib 1.618)", color=color.new(#06b6d4, 0), style=plot.style_linebr, linewidth=2)
-
-// Shaded Risk / Reward Zones
-fill(p_entry, p_sl, color=color.new(#f43f5e, 90), title="Risk Zone (1R)")
-fill(p_entry, p_t1, color=color.new(#10b981, 90), title="Reward Zone (T1 2R)")
-
-// Breakout & Squeeze Signals
-plotshape(is_breakout, title="Track A Breakout Alert", style=shape.triangleup, location=location.belowbar, color=#10b981, size=size.normal, text="BREAKOUT")
-plotshape(is_squeeze and not is_squeeze[1], title="Track B Squeeze Coil Alert", style=shape.diamond, location=location.abovebar, color=#f59e0b, size=size.small, text="COIL")
+// Trigger Only on First Event Bar (Prevents Crowding)
+fire_breakout = is_breakout and not is_breakout[1]
+fire_squeeze  = is_squeeze and not is_squeeze[1]
 
 // ==============================================================================
-// 4. FLOATING HUD STATS TABLE
+// 3. MOVING AVERAGES PLOT
 // ==============================================================================
-var table hud = table.new(position.top_right, 2, 8, bgcolor=color.new(#0f172a, 15), border_color=color.new(#334155, 30), border_width=1)
+plot(show_mas ? trail_ema : na, "20 EMA (Multibagger Trail)", color=#A855F7, linewidth=2)
+plot(show_mas ? sma50 : na, "50 SMA (Trend Filter)", color=#38BDF8, linewidth=2)
+plot(show_mas ? sma200 : na, "200 SMA (Macro Floor)", color=#F59E0B, linewidth=2)
+
+// ==============================================================================
+// 4. CLEAN SIGNALS (NON-OVERLAPPING BADGES)
+// ==============================================================================
+plotshape(show_signals and fire_breakout, title="Breakout Signal", style=shape.labelup, 
+          location=location.belowbar, color=#10B981, text="BREAKOUT", textcolor=color.white, size=size.small)
+
+plotshape(show_signals and fire_squeeze, title="Squeeze Coil Signal", style=shape.labeldown, 
+          location=location.abovebar, color=#F59E0B, text="COIL", textcolor=color.black, size=size.small)
+
+// ==============================================================================
+// 5. ACTIVE TRADE SETUP: CLEAN EXTENDED RAYS & LABELS
+// ==============================================================================
+var line ln_pivot  = na
+var line ln_entry  = na
+var line ln_sl     = na
+var line ln_t1     = na
+var line ln_t2     = na
+
+var label lbl_entry = na
+var label lbl_sl    = na
+var label lbl_t1    = na
+var label lbl_t2    = na
+var box   box_risk  = na
+var box   box_reward = na
+
+if show_lines and barstate.islast
+    // Clear previous drawings
+    line.delete(ln_pivot)
+    line.delete(ln_entry)
+    line.delete(ln_sl)
+    line.delete(ln_t1)
+    line.delete(ln_t2)
+    label.delete(lbl_entry)
+    label.delete(lbl_sl)
+    label.delete(lbl_t1)
+    label.delete(lbl_t2)
+    box.delete(box_risk)
+    box.delete(box_reward)
+
+    int start_bar = bar_index - 15
+    int end_bar   = bar_index + 12
+
+    // 1. Pivot High Line (Muted Dashed)
+    ln_pivot := line.new(start_bar, pivot_high, end_bar, pivot_high, color=#94A3B8, width=1, style=line.style_dashed)
+
+    // 2. Buy Trigger Line (Vivid Cyan)
+    ln_entry := line.new(start_bar, entry_trigger, end_bar, entry_trigger, color=#00E5FF, width=2)
+    lbl_entry := label.new(end_bar, entry_trigger, "👉 BUY ABOVE ₹" + str.tostring(entry_trigger, "#.##") + " (+0.15 ATR)", 
+                           color=#00E5FF, textcolor=#0F172A, style=label.style_label_left, size=size.small)
+
+    // 3. Stop Loss Line (Coral Rose)
+    ln_sl := line.new(start_bar, structural_sl, end_bar, structural_sl, color=#FF3B69, width=2)
+    lbl_sl := label.new(end_bar, structural_sl, "🛑 STOP LOSS ₹" + str.tostring(structural_sl, "#.##") + " (-" + str.tostring(risk_pct, "#.#") + "%)", 
+                        color=#FF3B69, textcolor=color.white, style=label.style_label_left, size=size.small)
+
+    // 4. Target 1 Line (Emerald Green)
+    ln_t1 := line.new(start_bar, target_1, end_bar, target_1, color=#00E676, width=2)
+    lbl_t1 := label.new(end_bar, target_1, "💰 TARGET 1 (2R) ₹" + str.tostring(target_1, "#.##") + " · Book 40%", 
+                        color=#00E676, textcolor=#0F172A, style=label.style_label_left, size=size.small)
+
+    // 5. Target 2 Line (Electric Gold / Blue)
+    ln_t2 := line.new(start_bar, target_2, end_bar, target_2, color=#FFD600, width=2)
+    lbl_t2 := label.new(end_bar, target_2, "🚀 TARGET 2 (Dyn) ₹" + str.tostring(target_2, "#.##") + " · Book 30%", 
+                        color=#FFD600, textcolor=#0F172A, style=label.style_label_left, size=size.small)
+
+    // 6. Shaded Risk / Reward Projection Boxes
+    if show_zones
+        box_risk := box.new(start_bar, entry_trigger, end_bar, structural_sl, 
+                            border_color=color.new(#FF3B69, 70), bgcolor=color.new(#FF3B69, 88))
+        box_reward := box.new(start_bar, target_1, end_bar, entry_trigger, 
+                              border_color=color.new(#00E676, 70), bgcolor=color.new(#00E676, 88))
+
+// ==============================================================================
+// 6. HIGH-CONTRAST FLOATING HUD TABLE
+// ==============================================================================
+tbl_pos = tbl_pos_opt == "Top Left" ? position.top_left : (tbl_pos_opt == "Top Right" ? position.top_right : (tbl_pos_opt == "Bottom Right" ? position.bottom_right : position.bottom_left))
+tbl_txt_size = tbl_size_opt == "Normal" ? size.normal : (tbl_size_opt == "Tiny" ? size.tiny : size.small)
+
+var table hud = table.new(tbl_pos, 2, 8, 
+                          bgcolor=color.new(#0F172A, 5), 
+                          border_color=color.new(#334155, 0), 
+                          border_width=2)
 
 if show_table and barstate.islast
-    table.cell(hud, 0, 0, "AntiGravity Dual Radar", bgcolor=color.new(#1e293b, 0), text_color=color.white, text_size=size.small)
-    table.cell(hud, 1, 0, is_breakout ? "🚀 ACTIVE BREAKOUT" : (is_squeeze ? "💣 COIL SQUEEZE" : "WAIT / WATCH"), 
-               bgcolor=is_breakout ? color.new(#10b981, 20) : (is_squeeze ? color.new(#f59e0b, 20) : color.new(#334155, 20)), 
-               text_color=color.white, text_size=size.small)
+    // Header
+    table.cell(hud, 0, 0, "⚡ AntiGravity Radar", bgcolor=#1E293B, text_color=#38BDF8, text_size=tbl_txt_size)
     
-    table.cell(hud, 0, 1, "Dynamic Entry", text_color=color.new(#94a3b8, 0), text_size=size.tiny)
-    table.cell(hud, 1, 1, "₹" + str.tostring(entry_trigger, "#.##") + " (+0.15 ATR)", text_color=color.new(#38bdf8, 0), text_size=size.tiny)
+    // Status Badge
+    string status_txt = is_breakout ? "🚀 ACTIVE BREAKOUT" : (is_squeeze ? "💣 COIL SQUEEZE" : "👀 WATCH / BASE")
+    color status_bg = is_breakout ? #10B981 : (is_squeeze ? #F59E0B : #334155)
+    color status_fg = is_breakout or is_squeeze ? #0F172A : #F8FAFC
+    table.cell(hud, 1, 0, status_txt, bgcolor=status_bg, text_color=status_fg, text_size=tbl_txt_size)
 
-    table.cell(hud, 0, 2, "Stop Loss (1R)", text_color=color.new(#94a3b8, 0), text_size=size.tiny)
-    table.cell(hud, 1, 2, "₹" + str.tostring(structural_sl, "#.##") + " (-" + str.tostring(risk_pct, "#.#") + "%)", text_color=color.new(#f43f5e, 0), text_size=size.tiny)
+    // Row 1: Entry Trigger
+    table.cell(hud, 0, 1, "👉 Dynamic Entry", text_color=#94A3B8, text_size=tbl_txt_size)
+    table.cell(hud, 1, 1, "₹" + str.tostring(entry_trigger, "#.##") + " (+0.15 ATR)", text_color=#00E5FF, text_size=tbl_txt_size)
 
-    table.cell(hud, 0, 3, "Target 1 (2R)", text_color=color.new(#94a3b8, 0), text_size=size.tiny)
-    table.cell(hud, 1, 3, "₹" + str.tostring(target_1, "#.##") + " (Book 40%)", text_color=color.new(#10b981, 0), text_size=size.tiny)
+    // Row 2: Stop Loss
+    table.cell(hud, 0, 2, "🛑 Initial SL (1R)", text_color=#94A3B8, text_size=tbl_txt_size)
+    table.cell(hud, 1, 2, "₹" + str.tostring(structural_sl, "#.##") + " (-" + str.tostring(risk_pct, "#.#") + "%)", text_color=#FF3B69, text_size=tbl_txt_size)
 
-    table.cell(hud, 0, 4, "Target 2 (Dyn)", text_color=color.new(#94a3b8, 0), text_size=size.tiny)
-    table.cell(hud, 1, 4, "₹" + str.tostring(target_2, "#.##") + " (Book 30%)", text_color=color.new(#06b6d4, 0), text_size=size.tiny)
+    // Row 3: Target 1
+    table.cell(hud, 0, 3, "💰 Target 1 (2R)", text_color=#94A3B8, text_size=tbl_txt_size)
+    table.cell(hud, 1, 3, "₹" + str.tostring(target_1, "#.##") + " (Book 40%)", text_color=#00E676, text_size=tbl_txt_size)
 
-    table.cell(hud, 0, 5, "Runner (30%)", text_color=color.new(#94a3b8, 0), text_size=size.tiny)
-    table.cell(hud, 1, 5, "Trail 20 EMA (₹" + str.tostring(trail_ema, "#.##") + ")", text_color=color.new(#a855f7, 0), text_size=size.tiny)
+    // Row 4: Target 2
+    table.cell(hud, 0, 4, "🚀 Target 2 (Dyn)", text_color=#94A3B8, text_size=tbl_txt_size)
+    table.cell(hud, 1, 4, "₹" + str.tostring(target_2, "#.##") + " (Book 30%)", text_color=#FFD600, text_size=tbl_txt_size)
 
-    table.cell(hud, 0, 6, "RVOL / CRR", text_color=color.new(#94a3b8, 0), text_size=size.tiny)
-    table.cell(hud, 1, 6, str.tostring(rvol, "#.##") + "x / " + str.tostring(crr, "#.##"), text_color=color.white, text_size=size.tiny)
+    // Row 5: Multibagger Runner
+    table.cell(hud, 0, 5, "💎 Runner (30%)", text_color=#94A3B8, text_size=tbl_txt_size)
+    table.cell(hud, 1, 5, "Trail 20 EMA (₹" + str.tostring(trail_ema, "#.##") + ")", text_color=#C084FC, text_size=tbl_txt_size)
 
-    table.cell(hud, 0, 7, "BBW Squeeze Rank", text_color=color.new(#94a3b8, 0), text_size=size.tiny)
-    table.cell(hud, 1, 7, str.tostring(bbw_rank, "#.#") + "% (" + (bbw_rank <= 25.0 ? "Coiled" : "Normal") + ")", 
-               text_color=bbw_rank <= 25.0 ? color.new(#f59e0b, 0) : color.white, text_size=size.tiny)
+    // Row 6: RVOL / CRR
+    table.cell(hud, 0, 6, "📊 RVOL / CRR", text_color=#94A3B8, text_size=tbl_txt_size)
+    table.cell(hud, 1, 6, str.tostring(rvol, "#.##") + "x  |  " + str.tostring(crr, "#.##"), text_color=#F8FAFC, text_size=tbl_txt_size)
+
+    // Row 7: BBW Percentile
+    table.cell(hud, 0, 7, "🔍 Squeeze Rank", text_color=#94A3B8, text_size=tbl_txt_size)
+    string coil_desc = bbw_rank <= 25.0 ? "🔥 Deep Coil" : "Normal"
+    color coil_col = bbw_rank <= 25.0 ? #F59E0B : #94A3B8
+    table.cell(hud, 1, 7, str.tostring(bbw_rank, "#.#") + "% (" + coil_desc + ")", text_color=coil_col, text_size=tbl_txt_size)
