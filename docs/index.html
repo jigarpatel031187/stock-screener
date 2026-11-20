@@ -743,7 +743,7 @@
           <div class="live-badge">
             <span class="live-dot"></span> Active EOD Feed
           </div>
-          <div class="timestamp-box">📅 20 Nov 2026 | 05:51 PM IST</div>
+          <div class="timestamp-box">📅 21 Nov 2026 | 12:45 AM IST</div>
         </div>
       </div>
     </header>
@@ -761,7 +761,7 @@
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-green);">
         <div class="stat-label">Track A: Active Breakouts</div>
-        <div class="stat-val">0 <span class="stat-sub">Volume Blast Confirmations</span></div>
+        <div class="stat-val">2 <span class="stat-sub">Volume Blast Confirmations</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-blue);">
         <div class="stat-label">Strategy Audit Performance</div>
@@ -777,11 +777,11 @@
       </button>
       <button class="tab-btn" id="tab-btn-a" onclick="switchTab('a')">
         🚀 Track A: Active & Confirmed Breakouts
-        <span class="tab-badge" id="badge-a">0</span>
+        <span class="tab-badge" id="badge-a">2</span>
       </button>
       <button class="tab-btn" id="tab-btn-ledger" onclick="switchTab('ledger')">
         📈 Strategy Performance & Trade Ledger
-        <span class="tab-badge" id="badge-ledger">16</span>
+        <span class="tab-badge" id="badge-ledger">18</span>
       </button>
     </div>
 
@@ -835,8 +835,8 @@
 
         <div class="kpi-card" style="border-left: 3px solid var(--accent-cyan);">
           <div class="kpi-title">Lifecycle Distribution</div>
-          <div class="kpi-number col-cyan">6 Active · 2 Pending</div>
-          <div class="kpi-desc">16 Total Historical Signals Tracked</div>
+          <div class="kpi-number col-cyan">8 Active · 2 Pending</div>
+          <div class="kpi-desc">18 Total Historical Signals Tracked</div>
         </div>
       </div>
 
@@ -912,7 +912,74 @@
   </div>
 
   <script>
-    const trackAData = [];
+    const trackAData = [
+  {
+    "name": "Minda Corporation Ltd.",
+    "symbol": "MINDACORP",
+    "sector": "Automobile and Auto Components",
+    "bucket": "Smallcap 250",
+    "price": 753.2,
+    "mcap_cr": "\u20b917,636 Cr",
+    "ret_1m": 18.86,
+    "volume": "736,767",
+    "rvol": "2.0x",
+    "delivery_pct": "N/A",
+    "breakout_ref": 742.0,
+    "pe": 32.04,
+    "de": 0.55,
+    "roe": 20.02,
+    "roce": 17.13,
+    "ocf_to_pat": 0.8,
+    "state": "ACTIVE_BREAKOUT",
+    "breakout_score": 66,
+    "pivot_ref": 742.0,
+    "extension_pct": "+1.51%",
+    "volume_ratio": "2.0x",
+    "crr": 0.81,
+    "range_ratio": "1.71x",
+    "rs_spread": "+2.5%",
+    "structural_sl": 705.7,
+    "unit_risk": 47.5,
+    "risk_pct": 6.31,
+    "t1_2r": 848.2,
+    "t2_3r": 895.7,
+    "be_cost_anchor": 755.8,
+    "rationale": "Cleared 20D pivot \u20b9742.0 with 2.0x volume and strong institutional volume. Strong close in top 19% of day range; outperforming Nifty 500 by +2.5% over 3M."
+  },
+  {
+    "name": "Gujarat Pipavav Port Ltd.",
+    "symbol": "GPPL",
+    "sector": "Services",
+    "bucket": "Microcap 250",
+    "price": 178.28,
+    "mcap_cr": "\u20b98,489 Cr",
+    "ret_1m": 9.28,
+    "volume": "3,113,083",
+    "rvol": "2.56x",
+    "delivery_pct": "N/A",
+    "breakout_ref": 178.4,
+    "pe": 15.4,
+    "de": 0.01,
+    "roe": 22.74,
+    "roce": 31.99,
+    "ocf_to_pat": 1.36,
+    "state": "CONFIRMED_RETEST",
+    "breakout_score": 66,
+    "pivot_ref": 175.51,
+    "extension_pct": "+1.58%",
+    "volume_ratio": "2.56x",
+    "crr": 0.56,
+    "range_ratio": "1.53x",
+    "rs_spread": "+15.8%",
+    "structural_sl": 169.8,
+    "unit_risk": 8.5,
+    "risk_pct": 4.77,
+    "t1_2r": 195.3,
+    "t2_3r": 203.8,
+    "be_cost_anchor": 178.9,
+    "rationale": "Cleared 20D pivot \u20b9175.51 with 2.56x volume and strong institutional volume. Strong close in top 44% of day range; outperforming Nifty 500 by +15.8% over 3M."
+  }
+];
     const trackBData = [];
     const tradesData = [
   {
@@ -1121,11 +1188,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 808.05,
-    "pnl_pct": 1.78,
-    "pnl_r": 0.07,
+    "current_price": 812.95,
+    "pnl_pct": 2.4,
+    "pnl_r": 0.1,
     "max_price_seen": 834.5,
-    "days_held": 17,
+    "days_held": 16,
     "notes": "Cleared 20D pivot \u20b9778.18 with 1.97x volume and strong institutional volume. Strong close in top 8% of day range; outperforming Nifty 500 by +18.6% over 3M."
   },
   {
@@ -1151,11 +1218,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 3833.5,
-    "pnl_pct": -3.6,
-    "pnl_r": -0.14,
+    "current_price": 3977.1,
+    "pnl_pct": 0.01,
+    "pnl_r": 0.0,
     "max_price_seen": 4130.0,
-    "days_held": 16,
+    "days_held": 15,
     "notes": "Cleared 20D pivot \u20b93975.0 with 4.06x volume and strong institutional volume. Strong close in top 15% of day range; outperforming Nifty 500 by +25.8% over 3M."
   },
   {
@@ -1243,11 +1310,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 1740.7,
-    "pnl_pct": -4.2,
-    "pnl_r": -0.32,
+    "current_price": 1716.2,
+    "pnl_pct": -5.55,
+    "pnl_r": -0.42,
     "max_price_seen": 1836.0,
-    "days_held": 11,
+    "days_held": 10,
     "notes": "Cleared 20D pivot \u20b91790.0 with 6.68x volume and strong institutional volume. Strong close in top 14% of day range; outperforming Nifty 500 by +17.9% over 3M."
   },
   {
@@ -1273,11 +1340,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 1435.5,
-    "pnl_pct": 7.22,
-    "pnl_r": 0.56,
+    "current_price": 1404.1,
+    "pnl_pct": 4.88,
+    "pnl_r": 0.38,
     "max_price_seen": 1470.0,
-    "days_held": 10,
+    "days_held": 9,
     "notes": "Cleared 20D pivot \u20b91351.4 with 2.48x volume and strong institutional volume. Strong close in top 10% of day range; outperforming Nifty 500 by +28.4% over 3M."
   },
   {
@@ -1303,11 +1370,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 660.6,
-    "pnl_pct": -4.88,
-    "pnl_r": -0.16,
+    "current_price": 670.0,
+    "pnl_pct": -3.53,
+    "pnl_r": -0.12,
     "max_price_seen": 736.5,
-    "days_held": 6,
+    "days_held": 5,
     "notes": "Cleared 20D pivot \u20b9681.55 with 3.4x volume and strong institutional volume. Strong close in top 25% of day range; outperforming Nifty 500 by +14.0% over 3M."
   },
   {
@@ -1334,11 +1401,11 @@
     "status": "PENDING_TRIGGER",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 1746.2,
+    "current_price": 1723.0,
     "pnl_pct": 0.0,
     "pnl_r": 0.0,
     "max_price_seen": 1787.0,
-    "days_held": 5,
+    "days_held": 4,
     "notes": "Consolidating tightly 3.92% under 20D pivot with deep historical coil (BBW: 0.0th percentile) and extreme dry-up (5D Vol: 0.44x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
   },
   {
@@ -1365,11 +1432,11 @@
     "status": "PENDING_TRIGGER",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 6124.0,
+    "current_price": 5880.0,
     "pnl_pct": 0.0,
     "pnl_r": 0.0,
     "max_price_seen": 5911.0,
-    "days_held": 4,
+    "days_held": 3,
     "notes": "Consolidating tightly 5.27% under 20D pivot with volatility contraction (BBW: 19.2th percentile) and extreme dry-up (5D Vol: 0.51x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
   },
   {
@@ -1395,18 +1462,78 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 10077.0,
-    "pnl_pct": -1.96,
-    "pnl_r": -0.07,
+    "current_price": 10203.0,
+    "pnl_pct": -0.73,
+    "pnl_r": -0.03,
     "max_price_seen": 10360.0,
-    "days_held": 3,
+    "days_held": 2,
     "notes": "Cleared 20D pivot \u20b910165.0 with 1.56x volume and strong institutional volume. Strong close in top 3% of day range; outperforming Nifty 500 by +24.8% over 3M."
+  },
+  {
+    "id": "MINDACORP_20261121_A",
+    "symbol": "MINDACORP",
+    "name": "Minda Corporation Ltd.",
+    "sector": "Automobile and Auto Components",
+    "bucket": "Smallcap 250",
+    "track": "Track A",
+    "signal_type": "ACTIVE_BREAKOUT",
+    "detected_date": "2026-11-21",
+    "entry_date": "2026-11-21",
+    "score": 66,
+    "signal_price": 753.2,
+    "entry_price": 753.2,
+    "initial_sl": 705.7,
+    "current_sl": 705.7,
+    "target_1_2r": 848.2,
+    "target_2_3r": 895.7,
+    "risk_per_share": 47.5,
+    "risk_pct": 6.31,
+    "be_retest_anchor": 755.8,
+    "status": "ACTIVE",
+    "exit_date": null,
+    "exit_price": null,
+    "current_price": 753.2,
+    "pnl_pct": 0.0,
+    "pnl_r": 0.0,
+    "max_price_seen": 753.2,
+    "days_held": 0,
+    "notes": "Cleared 20D pivot \u20b9742.0 with 2.0x volume and strong institutional volume. Strong close in top 19% of day range; outperforming Nifty 500 by +2.5% over 3M."
+  },
+  {
+    "id": "GPPL_20261121_A",
+    "symbol": "GPPL",
+    "name": "Gujarat Pipavav Port Ltd.",
+    "sector": "Services",
+    "bucket": "Microcap 250",
+    "track": "Track A",
+    "signal_type": "CONFIRMED_RETEST",
+    "detected_date": "2026-11-21",
+    "entry_date": "2026-11-21",
+    "score": 66,
+    "signal_price": 178.28,
+    "entry_price": 178.28,
+    "initial_sl": 169.8,
+    "current_sl": 169.8,
+    "target_1_2r": 195.3,
+    "target_2_3r": 203.8,
+    "risk_per_share": 8.5,
+    "risk_pct": 4.77,
+    "be_retest_anchor": 178.9,
+    "status": "ACTIVE",
+    "exit_date": null,
+    "exit_price": null,
+    "current_price": 178.28,
+    "pnl_pct": 0.0,
+    "pnl_r": 0.0,
+    "max_price_seen": 178.28,
+    "days_held": 0,
+    "notes": "Cleared 20D pivot \u20b9175.51 with 2.56x volume and strong institutional volume. Strong close in top 44% of day range; outperforming Nifty 500 by +15.8% over 3M."
   }
 ];
     const strategyMetrics = {
-  "total_signals": 16,
+  "total_signals": 18,
   "closed_trades_count": 7,
-  "active_trades_count": 6,
+  "active_trades_count": 8,
   "pending_trades_count": 2,
   "win_count": 3,
   "loss_count": 4,
@@ -1418,7 +1545,7 @@
   "avg_win_pct": 9.62,
   "avg_loss_pct": 5.37,
   "edge_ratio": 1.79,
-  "track_a_count": 9,
+  "track_a_count": 11,
   "track_b_count": 7
 };
 
