@@ -743,7 +743,7 @@
           <div class="live-badge">
             <span class="live-dot"></span> Active EOD Feed
           </div>
-          <div class="timestamp-box">📅 21 Nov 2026 | 10:49 AM IST</div>
+          <div class="timestamp-box">📅 21 Nov 2026 | 10:52 AM IST</div>
         </div>
       </div>
     </header>
@@ -761,7 +761,7 @@
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-green);">
         <div class="stat-label">Track A: Active Breakouts</div>
-        <div class="stat-val">0 <span class="stat-sub">Volume Blast Confirmations</span></div>
+        <div class="stat-val">1 <span class="stat-sub">Volume Blast Confirmations</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-blue);">
         <div class="stat-label">Strategy Audit Performance</div>
@@ -777,7 +777,7 @@
       </button>
       <button class="tab-btn" id="tab-btn-a" onclick="switchTab('a')">
         🚀 Track A: Active & Confirmed Breakouts
-        <span class="tab-badge" id="badge-a">0</span>
+        <span class="tab-badge" id="badge-a">1</span>
       </button>
       <button class="tab-btn" id="tab-btn-ledger" onclick="switchTab('ledger')">
         📈 Strategy Performance & Trade Ledger
@@ -912,7 +912,43 @@
   </div>
 
   <script>
-    const trackAData = [];
+    const trackAData = [
+  {
+    "name": "Minda Corporation Ltd.",
+    "symbol": "MINDACORP",
+    "sector": "Automobile and Auto Components",
+    "sec_category": "Auto & Auto Ancillaries",
+    "bucket": "Smallcap 250",
+    "price": 753.2,
+    "mcap_cr": "\u20b917,701 Cr",
+    "ret_1m": 18.86,
+    "volume": "736,767",
+    "rvol": "2.0x",
+    "delivery_pct": "N/A",
+    "breakout_ref": 742.0,
+    "pe": 32.15,
+    "de": 0.55,
+    "de_cap": "< 0.8",
+    "roe": 20.02,
+    "roce": 17.13,
+    "ocf_to_pat": 0.8,
+    "state": "ACTIVE_BREAKOUT",
+    "breakout_score": 66,
+    "pivot_ref": 742.0,
+    "extension_pct": "+1.51%",
+    "volume_ratio": "2.0x",
+    "crr": 0.81,
+    "range_ratio": "1.71x",
+    "rs_spread": "+1.2%",
+    "structural_sl": 705.7,
+    "unit_risk": 47.5,
+    "risk_pct": 6.31,
+    "t1_2r": 848.2,
+    "t2_3r": 895.7,
+    "be_cost_anchor": 755.8,
+    "rationale": "Cleared 20D pivot \u20b9742.0 with 2.0x volume and strong institutional volume. Strong close in top 19% of day range; outperforming Nifty 500 by +1.2% over 3M."
+  }
+];
     const trackBData = [];
     const tradesData = [
   {
@@ -1151,11 +1187,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 3977.1,
-    "pnl_pct": 0.01,
-    "pnl_r": 0.0,
+    "current_price": 3833.5,
+    "pnl_pct": -3.6,
+    "pnl_r": -0.14,
     "max_price_seen": 4130.0,
-    "days_held": 15,
+    "days_held": 16,
     "notes": "Cleared 20D pivot \u20b93975.0 with 4.06x volume and strong institutional volume. Strong close in top 15% of day range; outperforming Nifty 500 by +25.8% over 3M."
   },
   {
@@ -1243,11 +1279,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 1716.2,
-    "pnl_pct": -5.55,
-    "pnl_r": -0.42,
+    "current_price": 1740.7,
+    "pnl_pct": -4.2,
+    "pnl_r": -0.32,
     "max_price_seen": 1836.0,
-    "days_held": 10,
+    "days_held": 11,
     "notes": "Cleared 20D pivot \u20b91790.0 with 6.68x volume and strong institutional volume. Strong close in top 14% of day range; outperforming Nifty 500 by +17.9% over 3M."
   },
   {
@@ -1273,11 +1309,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 1404.1,
-    "pnl_pct": 4.88,
-    "pnl_r": 0.38,
+    "current_price": 1435.5,
+    "pnl_pct": 7.22,
+    "pnl_r": 0.56,
     "max_price_seen": 1470.0,
-    "days_held": 9,
+    "days_held": 10,
     "notes": "Cleared 20D pivot \u20b91351.4 with 2.48x volume and strong institutional volume. Strong close in top 10% of day range; outperforming Nifty 500 by +28.4% over 3M."
   },
   {
@@ -1303,11 +1339,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 670.0,
-    "pnl_pct": -3.53,
-    "pnl_r": -0.12,
+    "current_price": 660.6,
+    "pnl_pct": -4.88,
+    "pnl_r": -0.16,
     "max_price_seen": 736.5,
-    "days_held": 5,
+    "days_held": 6,
     "notes": "Cleared 20D pivot \u20b9681.55 with 3.4x volume and strong institutional volume. Strong close in top 25% of day range; outperforming Nifty 500 by +14.0% over 3M."
   },
   {
@@ -1334,11 +1370,11 @@
     "status": "PENDING_TRIGGER",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 1723.0,
+    "current_price": 1746.2,
     "pnl_pct": 0.0,
     "pnl_r": 0.0,
     "max_price_seen": 1787.0,
-    "days_held": 4,
+    "days_held": 5,
     "notes": "Consolidating tightly 3.92% under 20D pivot with deep historical coil (BBW: 0.0th percentile) and extreme dry-up (5D Vol: 0.44x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
   },
   {
@@ -1365,11 +1401,11 @@
     "status": "PENDING_TRIGGER",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 5880.0,
+    "current_price": 6124.0,
     "pnl_pct": 0.0,
     "pnl_r": 0.0,
     "max_price_seen": 5911.0,
-    "days_held": 3,
+    "days_held": 4,
     "notes": "Consolidating tightly 5.27% under 20D pivot with volatility contraction (BBW: 19.2th percentile) and extreme dry-up (5D Vol: 0.51x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
   },
   {
@@ -1395,11 +1431,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 10203.0,
-    "pnl_pct": -0.73,
-    "pnl_r": -0.03,
+    "current_price": 10077.0,
+    "pnl_pct": -1.96,
+    "pnl_r": -0.07,
     "max_price_seen": 10360.0,
-    "days_held": 2,
+    "days_held": 3,
     "notes": "Cleared 20D pivot \u20b910165.0 with 1.56x volume and strong institutional volume. Strong close in top 3% of day range; outperforming Nifty 500 by +24.8% over 3M."
   },
   {
