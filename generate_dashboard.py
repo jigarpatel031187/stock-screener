@@ -802,7 +802,7 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
             <span>🌌</span> AntiGravity Smart Money Dual Track Radar
           </h1>
           <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
-            Institutional High-Quality Quality Compounders (MCap > ₹2,000 Cr | ROE ≥15% | ROCE ≥15% | 0.8 ≤ OCF/PAT ≤ 2.0)
+            Institutional Quality Compounders (₹2,000 Cr – ₹50,000 Cr | ROE > 12% | ROCE > 12% | P/E < 91 | 0.5 < OCF/PAT < 3.0 | Sector D/E)
           </p>
         </div>
         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">

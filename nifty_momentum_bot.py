@@ -17,6 +17,7 @@ Exact Screen Query Rules:
 import os
 import sys
 import io
+import re
 import logging
 import datetime
 import requests
@@ -45,19 +46,58 @@ if os.path.exists(env_file_path):
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
-# Parameters for Nifty Large, Mid, Small & Microcap Universe
+# Parameters for Nifty Momentum Universe
 MIN_1M_RETURN = float(os.environ.get("MIN_1M_RETURN", 8.0))      # Return Over % 1 Month > 8%
-MAX_PE = float(os.environ.get("MAX_PE", 80.0))                   # P/E < 80.0
-MIN_MCAP_CR = float(os.environ.get("MIN_MCAP_CR", 2000.0))       # MCap > 2,000 Cr (Protects against illiquid micro-penny stocks)
-MAX_MCAP_CR = float(os.environ.get("MAX_MCAP_CR", 5000000.0))    # No upper limit (Enables Largecaps up to ₹50 Lakh Cr)
-MAX_DEBT_TO_EQUITY = float(os.environ.get("MAX_DE", 1.5))        # Debt to Equity < 1.5
+MAX_PE = float(os.environ.get("MAX_PE", 91.0))                   # P/E < 91.0
+MIN_MCAP_CR = float(os.environ.get("MIN_MCAP_CR", 2000.0))       # MCap >= 2,000 Cr
+MAX_MCAP_CR = float(os.environ.get("MAX_MCAP_CR", 50000.0))      # MCap <= 50,000 Cr (Mid & Smallcap focus)
 MIN_VOLUME = int(os.environ.get("MIN_VOLUME", 50000))           # Volume threshold
 
 # Fundamental Quality Filters
-MIN_ROE = float(os.environ.get("MIN_ROE", 15.0))                # ROE >= 15%
-MIN_ROCE = float(os.environ.get("MIN_ROCE", 15.0))              # ROCE >= 15%
-MIN_OCF_TO_PAT = float(os.environ.get("MIN_OCF_TO_PAT", 0.8))   # OCF to PAT Ratio >= 0.8
-MAX_OCF_TO_PAT = float(os.environ.get("MAX_OCF_TO_PAT", 2.0))   # OCF to PAT Ratio <= 2.0 (Eliminates distorted one-off balance sheet spikes)
+MIN_ROE = float(os.environ.get("MIN_ROE", 12.0))                # ROE >= 12%
+MIN_ROCE = float(os.environ.get("MIN_ROCE", 12.0))              # ROCE >= 12%
+MIN_OCF_TO_PAT = float(os.environ.get("MIN_OCF_TO_PAT", 0.5))   # OCF to PAT Ratio >= 0.5
+MAX_OCF_TO_PAT = float(os.environ.get("MAX_OCF_TO_PAT", 3.0))   # OCF to PAT Ratio <= 3.0
+
+def get_sector_de_limits(sector_name: str, industry_name: str = "") -> tuple:
+    """
+    Maps stock sector/industry to acceptable Debt-to-Equity cap and category.
+    Returns: (max_acceptable_de: float | None, sector_category: str, limit_label: str)
+    """
+    s = f"{sector_name} {industry_name}".lower()
+    
+    # 1. Banks, NBFCs & Insurance: Ignore D/E (BFSI leverage is raw material)
+    if any(k in s for k in ["bank", "nbfc", "financial", "insurance", "housing finance", "broking", "lending"]):
+        return None, "Banks, NBFCs & Insurance", "Ignore D/E (BFSI)"
+    # 2. IT, Software & Digital: < 0.2
+    elif bool(re.search(r"\b(it|software|tech|technology|digital|internet)\b", s)):
+        return 0.2, "IT, Software & Digital", "< 0.2"
+    # 3. FMCG & Consumer Durables: < 0.4
+    elif any(k in s for k in ["fmcg", "consumer durable", "fast moving", "food", "beverage", "personal care", "retail", "consumer service", "media"]):
+        return 0.4, "FMCG & Consumer Durables", "< 0.4"
+    # 4. Pharma & Healthcare: < 0.5
+    elif any(k in s for k in ["pharma", "healthcare", "health", "hospital", "biotech", "life science", "drug"]):
+        return 0.5, "Pharma & Healthcare", "< 0.5"
+    # 5. Auto & Auto Ancillaries: < 0.8
+    elif any(k in s for k in ["auto", "motor", "vehicle", "tire", "tyre"]):
+        return 0.8, "Auto & Auto Ancillaries", "< 0.8"
+    # 6. Chemicals & Specialty Materials: < 0.8
+    elif any(k in s for k in ["chemical", "fertilizer", "specialty material"]):
+        return 0.8, "Chemicals & Specialty Materials", "< 0.8"
+    # 7. Capital Goods & Engineering: < 0.7
+    elif any(k in s for k in ["capital good", "engineering", "industrial machinery", "electrical equipment", "defense"]):
+        return 0.7, "Capital Goods & Engineering", "< 0.7"
+    # 8. Metals, Mining & Cement: < 1.2
+    elif any(k in s for k in ["metal", "mining", "cement", "construction material", "steel", "iron", "aluminum", "mineral"]):
+        return 1.2, "Metals, Mining & Cement", "< 1.2"
+    # 9. Real Estate & Construction: < 1.5
+    elif any(k in s for k in ["real estate", "realty", "construction", "infra developer", "property"]):
+        return 1.5, "Real Estate & Construction", "< 1.5"
+    # 10. Power, Telecom & Infrastructure: < 2.0
+    elif any(k in s for k in ["power", "telecom", "utility", "utilities", "infrastructure", "gas", "energy", "oil"]):
+        return 2.0, "Power, Telecom & Infrastructure", "< 2.0"
+    else:
+        return 0.8, "General / Diversified", "< 0.8"
 
 # ==============================================================================
 # PART A: DATA PROCESSING ENGINE & CANDIDATE UNIVERSE
@@ -887,16 +927,36 @@ def run_nse_market_lens_screen():
             else:
                 ocf_to_pat = None
 
+            # Sector-Specific Debt-to-Equity & Banking Rule
+            max_allowed_de, sec_category, de_desc = get_sector_de_limits(
+                item.get("sector") or "", info.get("sector") or info.get("industry") or ""
+            )
+            is_bfsi = (max_allowed_de is None)
+
             # Fundamental Quality & Safety Floor Check
             c_pe = (pe_val is None or (0 < pe_val <= MAX_PE))
             c_mcap = (MIN_MCAP_CR <= mcap_cr <= MAX_MCAP_CR)
-            c_de = (de_ratio <= MAX_DEBT_TO_EQUITY)
-            c_roe = (roe_pct >= MIN_ROE)
-            c_roce = (roce_pct >= MIN_ROCE)
-            c_ocf = (ocf_to_pat is not None and (MIN_OCF_TO_PAT <= ocf_to_pat <= MAX_OCF_TO_PAT))
+            c_de = True if is_bfsi else (de_ratio <= max_allowed_de)
+            
+            # ROE floor: >= 12% (BFSI institutions screened by ROE >= 14%)
+            target_roe = 14.0 if is_bfsi else MIN_ROE
+            c_roe = (roe_pct >= target_roe)
+            
+            # ROCE floor: >= 12% (BFSI uses ROE as primary efficiency metric)
+            c_roce = True if is_bfsi else (roce_pct >= MIN_ROCE)
+            
+            # OCF / PAT ratio (0.5 to 3.0; ignored for BFSI where deposit inflows/outflows distort cashflow)
+            c_ocf = True if is_bfsi else (ocf_to_pat is None or (MIN_OCF_TO_PAT <= ocf_to_pat <= MAX_OCF_TO_PAT))
 
             if not (c_pe and c_mcap and c_de and c_roe and c_roce and c_ocf):
-                logger.info(f"Skipping {sym} due to fundamental safety floor (P/E: {pe_val}, D/E: {de_ratio}, MCap: {mcap_cr} Cr, ROE: {roe_pct}%, ROCE: {roce_pct}%, OCF/PAT: {ocf_to_pat})")
+                fail_tags = []
+                if not c_pe: fail_tags.append(f"P/E {pe_val} > {MAX_PE}")
+                if not c_mcap: fail_tags.append(f"MCap ₹{mcap_cr:,.0f} Cr not in [₹{MIN_MCAP_CR:,.0f}-₹{MAX_MCAP_CR:,.0f} Cr]")
+                if not c_de: fail_tags.append(f"D/E {de_ratio} > {max_allowed_de} ({sec_category})")
+                if not c_roe: fail_tags.append(f"ROE {roe_pct}% < {target_roe}%")
+                if not c_roce: fail_tags.append(f"ROCE {roce_pct}% < {MIN_ROCE}%")
+                if not c_ocf: fail_tags.append(f"OCF/PAT {ocf_to_pat} not in [{MIN_OCF_TO_PAT}-{MAX_OCF_TO_PAT}]")
+                logger.info(f"Skipping {sym} ({sec_category}): {', '.join(fail_tags)}")
                 continue
 
             # Fetch official NSE Live delivery if available
@@ -910,6 +970,7 @@ def run_nse_market_lens_screen():
                 "name": item["name"],
                 "symbol": clean_sym,
                 "sector": item["sector"],
+                "sec_category": sec_category,
                 "bucket": item.get("bucket", "NSE"),
                 "price": round(today_close, 2),
                 "mcap_cr": f"₹{mcap_cr:,.0f} Cr" if mcap_cr else "N/A",
@@ -919,10 +980,11 @@ def run_nse_market_lens_screen():
                 "delivery_pct": f"{delivery_pct}%" if delivery_pct is not None else "N/A",
                 "breakout_ref": round(max_high_20d, 2),
                 "pe": pe_val if pe_val else "N/A",
-                "de": de_ratio,
+                "de": de_ratio if not is_bfsi else "BFSI (N/A)",
+                "de_cap": de_desc,
                 "roe": roe_pct,
-                "roce": roce_pct,
-                "ocf_to_pat": ocf_to_pat
+                "roce": roce_pct if not is_bfsi else "N/A",
+                "ocf_to_pat": ocf_to_pat if not is_bfsi else "BFSI (N/A)"
             }
 
             # If delivery was fetched, re-evaluate breakout score with delivery info
@@ -1066,8 +1128,8 @@ def build_daily_evening_report(active_breakouts, pre_breakout_squeezes, total_sc
 
     # Shared Quality Criteria
     msg += "🛡️ *INSTITUTIONAL QUALITY & SAFETY FLOOR:*\n"
-    msg += "• `MCap > ₹2,000 Cr (Large, Mid, Small, Micro)` | `P/E < 80` | `D/E < 1.5`\n"
-    msg += "• `ROE >= 15%` | `ROCE >= 15%` | `0.8 <= OCF/PAT <= 2.0` (Cash Quality)\n\n"
+    msg += "• `MCap: ₹2,000 Cr – ₹50,000 Cr` | `P/E < 91` | `Sector-Adaptive D/E`\n"
+    msg += "• `ROE > 12%` | `ROCE > 12%` | `0.5 < OCF/PAT < 3.0`\n\n"
 
     # =========================================================
     # SECTION 1: TRACK B - HALO PRE-BREAKOUT SQUEEZE LEADERBOARD
@@ -1092,7 +1154,10 @@ def build_daily_evening_report(active_breakouts, pre_breakout_squeezes, total_sc
             msg += f"   • 🚀 *TARGET 2 (3R):* `₹{stock['target_2_3r']}` → *Book 30% Profit*\n"
             msg += f"   • 💎 *RUNNER (30%):* Trail with 20-Day EMA (Ride Multibagger Trend)\n"
             msg += f"   • *Squeeze Health:* BBW: `{stock['bbw_percentile']}` rank | ATR: `{stock['atr_pct']}` | Vol Dry-Up: `{stock['vol_dryup_ratio']}`{deliv_str}\n"
-            msg += f"   • *Fundamentals:* ROE: `{stock['roe']}%` | ROCE: `{stock['roce']}%` | OCF/PAT: `{stock['ocf_to_pat']}x`\n"
+            de_val_str = f"{stock.get('de')}" if stock.get('de') is not None else "N/A"
+            roce_str = f"{stock['roce']}%" if stock.get('roce') != 'N/A' else 'N/A (BFSI)'
+            ocf_str = f"{stock['ocf_to_pat']}x" if stock.get('ocf_to_pat') != 'BFSI (N/A)' else 'N/A (BFSI)'
+            msg += f"   • *Fundamentals:* ROE: `{stock['roe']}%` | ROCE: `{roce_str}` | OCF/PAT: `{ocf_str}` | D/E: `{de_val_str}` ({stock.get('sec_category', 'General')})\n"
             msg += f"   • 💡 *RATIONALE:* _{stock['rationale']}_\n\n"
 
     # =========================================================
@@ -1119,7 +1184,10 @@ def build_daily_evening_report(active_breakouts, pre_breakout_squeezes, total_sc
             msg += f"   • 💎 *RUNNER (30%):* Trail with 20-Day EMA (Ride Multibagger Trend)\n"
             msg += f"   • *Breakout Metrics:* Vol: `{stock['volume_ratio']}` SMA | CRR: `{stock['crr']}` | RE: `{stock['range_ratio']}` ATR{deliv_str}\n"
             msg += f"   • *Relative Strength:* `{stock['rs_spread']}` alpha vs Nifty 500 | 1M Ret: `+{stock['ret_1m']}%`\n"
-            msg += f"   • *Fundamentals:* ROE: `{stock['roe']}%` | ROCE: `{stock['roce']}%` | OCF/PAT: `{stock['ocf_to_pat']}x`\n"
+            de_val_str = f"{stock.get('de')}" if stock.get('de') is not None else "N/A"
+            roce_str = f"{stock['roce']}%" if stock.get('roce') != 'N/A' else 'N/A (BFSI)'
+            ocf_str = f"{stock['ocf_to_pat']}x" if stock.get('ocf_to_pat') != 'BFSI (N/A)' else 'N/A (BFSI)'
+            msg += f"   • *Fundamentals:* ROE: `{stock['roe']}%` | ROCE: `{roce_str}` | OCF/PAT: `{ocf_str}` | D/E: `{de_val_str}` ({stock.get('sec_category', 'General')})\n"
             msg += f"   • 💡 *RATIONALE:* _{stock['rationale']}_\n\n"
 
     # Strategy Performance Audit Ledger

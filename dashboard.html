@@ -736,14 +736,14 @@
             <span>🌌</span> AntiGravity Smart Money Dual Track Radar
           </h1>
           <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
-            Institutional High-Quality Quality Compounders (MCap > ₹2,000 Cr | ROE ≥15% | ROCE ≥15% | 0.8 ≤ OCF/PAT ≤ 2.0)
+            Institutional Quality Compounders (₹2,000 Cr – ₹50,000 Cr | ROE > 12% | ROCE > 12% | P/E < 91 | 0.5 < OCF/PAT < 3.0 | Sector D/E)
           </p>
         </div>
         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
           <div class="live-badge">
             <span class="live-dot"></span> Active EOD Feed
           </div>
-          <div class="timestamp-box">📅 21 Nov 2026 | 12:45 AM IST</div>
+          <div class="timestamp-box">📅 21 Nov 2026 | 10:49 AM IST</div>
         </div>
       </div>
     </header>
@@ -761,7 +761,7 @@
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-green);">
         <div class="stat-label">Track A: Active Breakouts</div>
-        <div class="stat-val">2 <span class="stat-sub">Volume Blast Confirmations</span></div>
+        <div class="stat-val">0 <span class="stat-sub">Volume Blast Confirmations</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-blue);">
         <div class="stat-label">Strategy Audit Performance</div>
@@ -777,7 +777,7 @@
       </button>
       <button class="tab-btn" id="tab-btn-a" onclick="switchTab('a')">
         🚀 Track A: Active & Confirmed Breakouts
-        <span class="tab-badge" id="badge-a">2</span>
+        <span class="tab-badge" id="badge-a">0</span>
       </button>
       <button class="tab-btn" id="tab-btn-ledger" onclick="switchTab('ledger')">
         📈 Strategy Performance & Trade Ledger
@@ -912,74 +912,7 @@
   </div>
 
   <script>
-    const trackAData = [
-  {
-    "name": "Minda Corporation Ltd.",
-    "symbol": "MINDACORP",
-    "sector": "Automobile and Auto Components",
-    "bucket": "Smallcap 250",
-    "price": 753.2,
-    "mcap_cr": "\u20b917,636 Cr",
-    "ret_1m": 18.86,
-    "volume": "736,767",
-    "rvol": "2.0x",
-    "delivery_pct": "N/A",
-    "breakout_ref": 742.0,
-    "pe": 32.04,
-    "de": 0.55,
-    "roe": 20.02,
-    "roce": 17.13,
-    "ocf_to_pat": 0.8,
-    "state": "ACTIVE_BREAKOUT",
-    "breakout_score": 66,
-    "pivot_ref": 742.0,
-    "extension_pct": "+1.51%",
-    "volume_ratio": "2.0x",
-    "crr": 0.81,
-    "range_ratio": "1.71x",
-    "rs_spread": "+2.5%",
-    "structural_sl": 705.7,
-    "unit_risk": 47.5,
-    "risk_pct": 6.31,
-    "t1_2r": 848.2,
-    "t2_3r": 895.7,
-    "be_cost_anchor": 755.8,
-    "rationale": "Cleared 20D pivot \u20b9742.0 with 2.0x volume and strong institutional volume. Strong close in top 19% of day range; outperforming Nifty 500 by +2.5% over 3M."
-  },
-  {
-    "name": "Gujarat Pipavav Port Ltd.",
-    "symbol": "GPPL",
-    "sector": "Services",
-    "bucket": "Microcap 250",
-    "price": 178.28,
-    "mcap_cr": "\u20b98,489 Cr",
-    "ret_1m": 9.28,
-    "volume": "3,113,083",
-    "rvol": "2.56x",
-    "delivery_pct": "N/A",
-    "breakout_ref": 178.4,
-    "pe": 15.4,
-    "de": 0.01,
-    "roe": 22.74,
-    "roce": 31.99,
-    "ocf_to_pat": 1.36,
-    "state": "CONFIRMED_RETEST",
-    "breakout_score": 66,
-    "pivot_ref": 175.51,
-    "extension_pct": "+1.58%",
-    "volume_ratio": "2.56x",
-    "crr": 0.56,
-    "range_ratio": "1.53x",
-    "rs_spread": "+15.8%",
-    "structural_sl": 169.8,
-    "unit_risk": 8.5,
-    "risk_pct": 4.77,
-    "t1_2r": 195.3,
-    "t2_3r": 203.8,
-    "be_cost_anchor": 178.9,
-    "rationale": "Cleared 20D pivot \u20b9175.51 with 2.56x volume and strong institutional volume. Strong close in top 44% of day range; outperforming Nifty 500 by +15.8% over 3M."
-  }
-];
+    const trackAData = [];
     const trackBData = [];
     const tradesData = [
   {
