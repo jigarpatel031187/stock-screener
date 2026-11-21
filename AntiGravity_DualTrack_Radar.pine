@@ -1,5 +1,5 @@
 //@version=5
-indicator("AntiGravity Smart Money Dual-Track Radar [Pro]", shorttitle="AntiGravity Radar", overlay=true, max_labels_count=500)
+indicator("Price Action Based Swing Trade", shorttitle="PA Swing Trade", overlay=true, max_labels_count=500)
 
 // =============================================================================
 // INPUTS & PARAMETERS
@@ -37,8 +37,11 @@ breakout_lvl = pivot_high + dynamic_buf
 // 1. Extended Gate: Price has run > 3.0% beyond pivot
 is_extended  = close > (pivot_high * 1.03)
 
-// 2. Active Breakout Window: Price above pivot, but within 3.0% chase limit
-is_breakout  = (close > pivot_high) and not is_extended
+// 2. Active Breakout Window: Price above pivot, within 3% chase limit & volume verified
+has_breakout_vol = (rvol >= 1.2) or (ta.highest(rvol, 3) >= 1.4)
+has_candle_close = (crr >= 0.50) or (ta.highest(crr, 3) >= 0.65)
+is_breakout      = (close > pivot_high) and not is_extended and (close >= sma50) and has_breakout_vol and has_candle_close
+is_unconfirmed   = (close > pivot_high) and not is_extended and not is_breakout
 
 // 3. Coil Squeeze: Price consolidating tightly under pivot
 [bb_mid, bb_u, bb_l] = ta.bb(close, 20, 2.0)
@@ -70,10 +73,10 @@ float unit_risk = math.max(math.min(raw_risk, max_risk_allowed), min_risk_allowe
 float final_sl  = entry_price - unit_risk
 float risk_pct  = (unit_risk / entry_price) * 100.0
 
-// Targets: 2R (Book 40%), Dynamic Fibonacci 1.618 Extension (Book 30%)
+// Targets: 2R (Book 40%), Dynamic Fibonacci 1.618 Extension from Pivot (Book 30%)
 float target_1   = entry_price + (t1_r_mult * unit_risk)
 float base_depth = math.max(pivot_high - shelf_low_5d, 2.0 * atr_val)
-float fib_t2     = entry_price + (1.618 * base_depth)
+float fib_t2     = pivot_high + (1.618 * base_depth)
 float target_2   = math.max(entry_price + (t2_r_mult * unit_risk), fib_t2)
 
 // =============================================================================
@@ -133,6 +136,10 @@ if barstate.islast
         buy_txt := "BUY (CMP): INR " + str.tostring(close, "#.##")
         buy_bg  := #10B981
         buy_fg  := color.white
+    else if is_unconfirmed
+        buy_txt := "UNCONFIRMED BREAK (LOW VOL): INR " + str.tostring(close, "#.##")
+        buy_bg  := #E11D48
+        buy_fg  := color.white
     else
         buy_txt := "BUY ABOVE: INR " + str.tostring(entry_price, "#.##")
         buy_bg  := #00E5FF
@@ -153,14 +160,14 @@ if barstate.islast
 var table hud = table.new(position.bottom_left, 2, 8, bgcolor=color.new(#0F172A, 0), border_color=color.new(#334155, 0), border_width=2)
 
 if barstate.islast
-    table.cell(hud, 0, 0, "AntiGravity Radar", bgcolor=#1E293B, text_color=#38BDF8, text_size=size.small)
+    table.cell(hud, 0, 0, "PA Swing Trade", bgcolor=#1E293B, text_color=#38BDF8, text_size=size.small)
 
-    string st_title = is_extended ? "EXTENDED" : (is_breakout ? "ACTIVE BREAKOUT" : (is_squeeze ? "COIL SQUEEZE" : "WATCHING"))
-    color  st_color = is_extended ? #F59E0B : (is_breakout ? #10B981 : (is_squeeze ? #00E5FF : #64748B))
-    table.cell(hud, 1, 0, st_title, bgcolor=st_color, text_color=#0F172A, text_size=size.small)
+    string st_title = is_extended ? "EXTENDED" : (is_breakout ? "ACTIVE BREAKOUT" : (is_unconfirmed ? "UNCONFIRMED" : (is_squeeze ? "COIL SQUEEZE" : "WATCHING")))
+    color  st_color = is_extended ? #F59E0B : (is_breakout ? #10B981 : (is_unconfirmed ? #E11D48 : (is_squeeze ? #00E5FF : #64748B)))
+    table.cell(hud, 1, 0, st_title, bgcolor=st_color, text_color=color.white, text_size=size.small)
 
-    string ent_header = is_breakout ? "Buy at CMP" : (is_extended ? "Status" : "Buy Above")
-    string ent_val    = is_extended ? "Wait for Retest" : str.tostring(entry_price, "#.##")
+    string ent_header = is_breakout ? "Buy at CMP" : (is_extended ? "Status" : (is_unconfirmed ? "Low Vol Break" : "Buy Above"))
+    string ent_val    = is_extended ? "Wait for Retest" : (is_unconfirmed ? "Wait for Volume" : str.tostring(entry_price, "#.##"))
     table.cell(hud, 0, 1, ent_header, text_color=#94A3B8, text_size=size.small)
     table.cell(hud, 1, 1, ent_val,    text_color=#00E5FF, text_size=size.small)
 
