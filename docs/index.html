@@ -743,7 +743,7 @@
           <div class="live-badge">
             <span class="live-dot"></span> Active EOD Feed
           </div>
-          <div class="timestamp-box">📅 25 Nov 2026 | 02:58 AM IST</div>
+          <div class="timestamp-box">📅 25 Nov 2026 | 03:02 AM IST</div>
         </div>
       </div>
     </header>
@@ -765,7 +765,7 @@
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-blue);">
         <div class="stat-label">Strategy Audit Performance</div>
-        <div class="stat-val col-green">42.9% <span class="stat-sub">Win Rate (+1.8R Net)</span></div>
+        <div class="stat-val col-green">37.5% <span class="stat-sub">Win Rate (+0.8R Net)</span></div>
       </div>
     </div>
 
@@ -807,35 +807,35 @@
       <div class="ledger-kpis">
         <div class="kpi-card" style="border-left: 3px solid var(--accent-green);">
           <div class="kpi-title">Strategy Win Rate</div>
-          <div class="kpi-number col-green" id="kpi-win-rate">42.9%</div>
+          <div class="kpi-number col-green" id="kpi-win-rate">37.5%</div>
           <div class="kpi-desc" id="kpi-win-sub">
-            3 Wins · 4 Losses (7 Resolved)
+            3 Wins · 5 Losses (8 Resolved)
           </div>
         </div>
 
         <div class="kpi-card" style="border-left: 3px solid var(--accent-blue);">
           <div class="kpi-title">Net Strategy R-Return</div>
-          <div class="kpi-number col-blue" id="kpi-net-r">+1.8R</div>
+          <div class="kpi-number col-blue" id="kpi-net-r">+0.8R</div>
           <div class="kpi-desc" id="kpi-net-sub">
-            Gross Won: +5.8R · Gross Lost: -4.0R
+            Gross Won: +5.8R · Gross Lost: -5.0R
           </div>
         </div>
 
         <div class="kpi-card" style="border-left: 3px solid var(--accent-purple);">
           <div class="kpi-title">Profit Factor</div>
-          <div class="kpi-number col-purple" id="kpi-profit-factor">1.45x</div>
+          <div class="kpi-number col-purple" id="kpi-profit-factor">1.16x</div>
           <div class="kpi-desc">Gross Win R / Gross Loss R</div>
         </div>
 
         <div class="kpi-card" style="border-left: 3px solid var(--accent-amber);">
           <div class="kpi-title">Asymmetric Payoff Edge</div>
-          <div class="kpi-number col-amber">+9.62% / -5.37%</div>
-          <div class="kpi-desc">1.79x Advantage over standard stop</div>
+          <div class="kpi-number col-amber">+9.62% / -5.0%</div>
+          <div class="kpi-desc">1.92x Advantage over standard stop</div>
         </div>
 
         <div class="kpi-card" style="border-left: 3px solid var(--accent-cyan);">
           <div class="kpi-title">Lifecycle Distribution</div>
-          <div class="kpi-number col-cyan">9 Active · 2 Pending</div>
+          <div class="kpi-number col-cyan">8 Active · 2 Pending</div>
           <div class="kpi-desc">19 Total Historical Signals Tracked</div>
         </div>
       </div>
@@ -1399,12 +1399,12 @@
     "risk_per_share": 219.0,
     "risk_pct": 3.51,
     "be_retest_anchor": 6227.5,
-    "status": "ACTIVE",
-    "exit_date": null,
-    "exit_price": null,
+    "status": "STOPPED_OUT",
+    "exit_date": "2026-11-17",
+    "exit_price": 6027.2,
     "current_price": 6282.5,
-    "pnl_pct": 0.58,
-    "pnl_r": 0.17,
+    "pnl_pct": -3.51,
+    "pnl_r": -1.0,
     "max_price_seen": 6339.5,
     "days_held": 5,
     "notes": "Consolidating tightly 5.27% under 20D pivot with volatility contraction (BBW: 19.2th percentile) and extreme dry-up (5D Vol: 0.51x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
@@ -1533,19 +1533,19 @@
 ];
     const strategyMetrics = {
   "total_signals": 19,
-  "closed_trades_count": 7,
-  "active_trades_count": 9,
+  "closed_trades_count": 8,
+  "active_trades_count": 8,
   "pending_trades_count": 2,
   "win_count": 3,
-  "loss_count": 4,
-  "win_rate_pct": 42.9,
-  "net_r_multiple": 1.8,
+  "loss_count": 5,
+  "win_rate_pct": 37.5,
+  "net_r_multiple": 0.8,
   "gross_gains_r": 5.8,
-  "gross_losses_r": 4.0,
-  "profit_factor": 1.45,
+  "gross_losses_r": 5.0,
+  "profit_factor": 1.16,
   "avg_win_pct": 9.62,
-  "avg_loss_pct": 5.37,
-  "edge_ratio": 1.79,
+  "avg_loss_pct": 5.0,
+  "edge_ratio": 1.92,
   "track_a_count": 11,
   "track_b_count": 8
 };
