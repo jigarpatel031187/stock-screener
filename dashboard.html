@@ -743,7 +743,7 @@
           <div class="live-badge">
             <span class="live-dot"></span> Active EOD Feed
           </div>
-          <div class="timestamp-box">📅 24 Nov 2026 | 04:26 AM IST</div>
+          <div class="timestamp-box">📅 25 Nov 2026 | 02:58 AM IST</div>
         </div>
       </div>
     </header>
@@ -757,7 +757,7 @@
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-purple);">
         <div class="stat-label">Track B: Squeeze Leaderboard</div>
-        <div class="stat-val">0 <span class="stat-sub">Coiling Beneath Pivot</span></div>
+        <div class="stat-val">1 <span class="stat-sub">Coiling Beneath Pivot</span></div>
       </div>
       <div class="stat-card" style="border-left: 3px solid var(--accent-green);">
         <div class="stat-label">Track A: Active Breakouts</div>
@@ -773,7 +773,7 @@
     <div class="tab-bar">
       <button class="tab-btn active" id="tab-btn-b" onclick="switchTab('b')">
         💣 Track B: Pre-Breakout Squeeze Leaderboard
-        <span class="tab-badge" id="badge-b">0</span>
+        <span class="tab-badge" id="badge-b">1</span>
       </button>
       <button class="tab-btn" id="tab-btn-a" onclick="switchTab('a')">
         🚀 Track A: Active & Confirmed Breakouts
@@ -781,7 +781,7 @@
       </button>
       <button class="tab-btn" id="tab-btn-ledger" onclick="switchTab('ledger')">
         📈 Strategy Performance & Trade Ledger
-        <span class="tab-badge" id="badge-ledger">18</span>
+        <span class="tab-badge" id="badge-ledger">19</span>
       </button>
     </div>
 
@@ -835,8 +835,8 @@
 
         <div class="kpi-card" style="border-left: 3px solid var(--accent-cyan);">
           <div class="kpi-title">Lifecycle Distribution</div>
-          <div class="kpi-number col-cyan">8 Active · 2 Pending</div>
-          <div class="kpi-desc">18 Total Historical Signals Tracked</div>
+          <div class="kpi-number col-cyan">9 Active · 2 Pending</div>
+          <div class="kpi-desc">19 Total Historical Signals Tracked</div>
         </div>
       </div>
 
@@ -913,7 +913,44 @@
 
   <script>
     const trackAData = [];
-    const trackBData = [];
+    const trackBData = [
+  {
+    "name": "L&T Technology Services Ltd.",
+    "symbol": "LTTS",
+    "sector": "Information Technology",
+    "sec_category": "IT, Software & Digital",
+    "bucket": "Midcap 150",
+    "price": 4222.6,
+    "mcap_cr": "\u20b944,800 Cr",
+    "ret_1m": 7.3,
+    "volume": "179,245",
+    "rvol": "0.96x",
+    "delivery_pct": "N/A",
+    "breakout_ref": 4347.4,
+    "pe": 33.12,
+    "de": 0.08,
+    "de_cap": "< 0.2",
+    "roe": 20.21,
+    "roce": 25.88,
+    "ocf_to_pat": 1.14,
+    "halo_score": 83,
+    "dist_to_high": "2.87%",
+    "vol_dryup_ratio": "0.59x",
+    "bbw_percentile": "12.5%",
+    "atr_pct": "2.75%",
+    "rs_alpha": "18.3%",
+    "pivot_ref": 4347.4,
+    "pass_all_7": false,
+    "entry_trigger": 4364.8,
+    "initial_sl": 4190.6,
+    "risk_1r": 174.2,
+    "risk_pct": 3.99,
+    "target_1_2r": 4713.2,
+    "target_2_3r": 4907.9,
+    "be_retest_anchor": 4338.7,
+    "rationale": "Consolidating tightly 2.87% under 20D pivot with deep historical coil (BBW: 12.5th percentile) and extreme dry-up (5D Vol: 0.59x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
+  }
+];
     const tradesData = [
   {
     "id": "KARURVYSYA_20241014_A",
@@ -1121,11 +1158,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 808.05,
-    "pnl_pct": 1.78,
-    "pnl_r": 0.07,
+    "current_price": 805.2,
+    "pnl_pct": 1.42,
+    "pnl_r": 0.06,
     "max_price_seen": 834.5,
-    "days_held": 17,
+    "days_held": 18,
     "notes": "Cleared 20D pivot \u20b9778.18 with 1.97x volume and strong institutional volume. Strong close in top 8% of day range; outperforming Nifty 500 by +18.6% over 3M."
   },
   {
@@ -1151,11 +1188,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 3833.5,
-    "pnl_pct": -3.6,
-    "pnl_r": -0.14,
+    "current_price": 3875.0,
+    "pnl_pct": -2.56,
+    "pnl_r": -0.1,
     "max_price_seen": 4130.0,
-    "days_held": 16,
+    "days_held": 17,
     "notes": "Cleared 20D pivot \u20b93975.0 with 4.06x volume and strong institutional volume. Strong close in top 15% of day range; outperforming Nifty 500 by +25.8% over 3M."
   },
   {
@@ -1243,11 +1280,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 1740.7,
-    "pnl_pct": -4.2,
-    "pnl_r": -0.32,
+    "current_price": 1777.5,
+    "pnl_pct": -2.17,
+    "pnl_r": -0.16,
     "max_price_seen": 1836.0,
-    "days_held": 11,
+    "days_held": 12,
     "notes": "Cleared 20D pivot \u20b91790.0 with 6.68x volume and strong institutional volume. Strong close in top 14% of day range; outperforming Nifty 500 by +17.9% over 3M."
   },
   {
@@ -1273,11 +1310,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 1435.5,
-    "pnl_pct": 7.22,
-    "pnl_r": 0.56,
-    "max_price_seen": 1470.0,
-    "days_held": 10,
+    "current_price": 1479.4,
+    "pnl_pct": 10.5,
+    "pnl_r": 0.81,
+    "max_price_seen": 1535.0,
+    "days_held": 11,
     "notes": "Cleared 20D pivot \u20b91351.4 with 2.48x volume and strong institutional volume. Strong close in top 10% of day range; outperforming Nifty 500 by +28.4% over 3M."
   },
   {
@@ -1303,11 +1340,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 660.6,
-    "pnl_pct": -4.88,
-    "pnl_r": -0.16,
+    "current_price": 680.5,
+    "pnl_pct": -2.02,
+    "pnl_r": -0.07,
     "max_price_seen": 736.5,
-    "days_held": 6,
+    "days_held": 7,
     "notes": "Cleared 20D pivot \u20b9681.55 with 3.4x volume and strong institutional volume. Strong close in top 25% of day range; outperforming Nifty 500 by +14.0% over 3M."
   },
   {
@@ -1334,11 +1371,11 @@
     "status": "PENDING_TRIGGER",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 1746.2,
+    "current_price": 1777.5,
     "pnl_pct": 0.0,
     "pnl_r": 0.0,
     "max_price_seen": 1787.0,
-    "days_held": 5,
+    "days_held": 6,
     "notes": "Consolidating tightly 3.92% under 20D pivot with deep historical coil (BBW: 0.0th percentile) and extreme dry-up (5D Vol: 0.44x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
   },
   {
@@ -1350,7 +1387,7 @@
     "track": "Track B",
     "signal_type": "HALO_SQUEEZE",
     "detected_date": "2026-11-17",
-    "entry_date": null,
+    "entry_date": "2026-11-23",
     "score": 72,
     "signal_price": 5911.0,
     "entry_price": 6246.2,
@@ -1362,14 +1399,14 @@
     "risk_per_share": 219.0,
     "risk_pct": 3.51,
     "be_retest_anchor": 6227.5,
-    "status": "PENDING_TRIGGER",
+    "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 6124.0,
-    "pnl_pct": 0.0,
-    "pnl_r": 0.0,
-    "max_price_seen": 5911.0,
-    "days_held": 4,
+    "current_price": 6282.5,
+    "pnl_pct": 0.58,
+    "pnl_r": 0.17,
+    "max_price_seen": 6339.5,
+    "days_held": 5,
     "notes": "Consolidating tightly 5.27% under 20D pivot with volatility contraction (BBW: 19.2th percentile) and extreme dry-up (5D Vol: 0.51x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
   },
   {
@@ -1395,11 +1432,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 10077.0,
-    "pnl_pct": -1.96,
-    "pnl_r": -0.07,
+    "current_price": 10154.0,
+    "pnl_pct": -1.21,
+    "pnl_r": -0.04,
     "max_price_seen": 10360.0,
-    "days_held": 3,
+    "days_held": 4,
     "notes": "Cleared 20D pivot \u20b910165.0 with 1.56x volume and strong institutional volume. Strong close in top 3% of day range; outperforming Nifty 500 by +24.8% over 3M."
   },
   {
@@ -1425,11 +1462,11 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 753.2,
-    "pnl_pct": 0.0,
-    "pnl_r": 0.0,
-    "max_price_seen": 753.2,
-    "days_held": 0,
+    "current_price": 727.2,
+    "pnl_pct": -3.45,
+    "pnl_r": -0.55,
+    "max_price_seen": 762.0,
+    "days_held": 1,
     "notes": "Cleared 20D pivot \u20b9742.0 with 2.0x volume and strong institutional volume. Strong close in top 19% of day range; outperforming Nifty 500 by +2.5% over 3M."
   },
   {
@@ -1455,18 +1492,49 @@
     "status": "ACTIVE",
     "exit_date": null,
     "exit_price": null,
-    "current_price": 178.28,
+    "current_price": 174.88,
+    "pnl_pct": -1.91,
+    "pnl_r": -0.4,
+    "max_price_seen": 178.28,
+    "days_held": 1,
+    "notes": "Cleared 20D pivot \u20b9175.51 with 2.56x volume and strong institutional volume. Strong close in top 44% of day range; outperforming Nifty 500 by +15.8% over 3M."
+  },
+  {
+    "id": "LTTS_20261125_B",
+    "symbol": "LTTS",
+    "name": "L&T Technology Services Ltd.",
+    "sector": "Information Technology",
+    "bucket": "Midcap 150",
+    "track": "Track B",
+    "signal_type": "HALO_SQUEEZE",
+    "detected_date": "2026-11-25",
+    "entry_date": null,
+    "score": 83,
+    "signal_price": 4222.6,
+    "entry_price": 4364.8,
+    "entry_trigger": 4364.8,
+    "initial_sl": 4190.6,
+    "current_sl": 4190.6,
+    "target_1_2r": 4713.2,
+    "target_2_3r": 4907.9,
+    "risk_per_share": 174.2,
+    "risk_pct": 3.99,
+    "be_retest_anchor": 4338.7,
+    "status": "PENDING_TRIGGER",
+    "exit_date": null,
+    "exit_price": null,
+    "current_price": 4222.6,
     "pnl_pct": 0.0,
     "pnl_r": 0.0,
-    "max_price_seen": 178.28,
+    "max_price_seen": 4222.6,
     "days_held": 0,
-    "notes": "Cleared 20D pivot \u20b9175.51 with 2.56x volume and strong institutional volume. Strong close in top 44% of day range; outperforming Nifty 500 by +15.8% over 3M."
+    "notes": "Consolidating tightly 2.87% under 20D pivot with deep historical coil (BBW: 12.5th percentile) and extreme dry-up (5D Vol: 0.59x SMA). Macro trend supported by rising 30W SMA; institutional quality confirmed."
   }
 ];
     const strategyMetrics = {
-  "total_signals": 18,
+  "total_signals": 19,
   "closed_trades_count": 7,
-  "active_trades_count": 8,
+  "active_trades_count": 9,
   "pending_trades_count": 2,
   "win_count": 3,
   "loss_count": 4,
@@ -1479,7 +1547,7 @@
   "avg_loss_pct": 5.37,
   "edge_ratio": 1.79,
   "track_a_count": 11,
-  "track_b_count": 7
+  "track_b_count": 8
 };
 
     let currentTab = 'b';
