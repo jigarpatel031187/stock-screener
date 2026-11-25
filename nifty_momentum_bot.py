@@ -366,12 +366,12 @@ def calculate_halo_squeeze_score(hist, nifty500_hist=None):
     # -------------------------------------------------------------
     # 1. ATR Contraction (Rule 1)
     # -------------------------------------------------------------
-    # True Range
+    # True Range & Wilder's Smoothing (RMA 14) matching TradingView ta.atr(14)
     tr1 = high_series - low_series
     tr2 = (high_series - close_series.shift(1)).abs()
     tr3 = (low_series - close_series.shift(1)).abs()
     tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
-    atr14 = tr.rolling(window=14).mean()
+    atr14 = tr.ewm(alpha=1/14, adjust=False).mean()
     atr_pct = (100.0 * atr14 / close_series)
 
     curr_atr14 = float(atr14.iloc[-1])
@@ -588,13 +588,13 @@ def calculate_active_breakout_score(hist, nifty500_hist=None, delivery_pct=None)
     base_low = float(prior_20d_lows.min())
 
     # -------------------------------------------------------------
-    # 2. ATR(14) calculation prior to today (t-1)
+    # 2. ATR(14) calculation prior to today (t-1) using Wilder RMA (TradingView match)
     # -------------------------------------------------------------
     tr1 = high_series - low_series
     tr2 = (high_series - close_series.shift(1)).abs()
     tr3 = (low_series - close_series.shift(1)).abs()
     tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
-    atr14_series = tr.rolling(window=14).mean()
+    atr14_series = tr.ewm(alpha=1/14, adjust=False).mean()
     atr_t_minus_1 = float(atr14_series.iloc[-2]) if len(atr14_series) >= 2 else float(atr14_series.iloc[-1])
     curr_atr = float(atr14_series.iloc[-1])
 
@@ -770,7 +770,7 @@ def calculate_active_breakout_score(hist, nifty500_hist=None, delivery_pct=None)
     # -------------------------------------------------------------
     # 10. Structural Stop-Loss Engine (5D Shelf / 1.5x ATR, 3.5% to 6.5% Cap)
     # -------------------------------------------------------------
-    shelf_low_5d = float(low_series.iloc[-5:].min())
+    shelf_low_5d = float(low_series.iloc[-6:-1].min())  # Matches TradingView ta.lowest(low[1], 5)
     anchor_low = retest_low if retest_holding else shelf_low_5d
     atr_sl_floor = today_close - (1.5 * curr_atr)
     raw_sl = max(anchor_low - (0.25 * curr_atr), atr_sl_floor)
@@ -1027,7 +1027,7 @@ def run_nse_market_lens_screen():
                 # Volatility-adjusted entry trigger: Pivot + max(0.1% tick, 0.15 * ATR)
                 atr_buffer = round(max(pivot * 0.001, 0.15 * atr_val), 1)
                 entry_trigger = round(pivot + atr_buffer, 1)
-                base_low_5d = float(hist["Low"].iloc[-5:].min())
+                base_low_5d = float(hist["Low"].iloc[-6:-1].min())  # Matches TradingView ta.lowest(low[1], 5)
                 sl_atr = entry_trigger - (1.5 * atr_val)
                 raw_sl = max(base_low_5d - (0.25 * atr_val), sl_atr)
                 raw_risk = entry_trigger - raw_sl
