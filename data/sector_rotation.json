@@ -1,5 +1,5 @@
 {
-  "generated_at": "Nov 26, 2026 (02:08 AM IST)",
+  "generated_at": "Nov 26, 2026 (02:10 AM IST)",
   "benchmark_name": "NIFTY 500",
   "tape": {
     "nifty50": {
@@ -27,7 +27,7 @@
     "fii_day_cr": 4479.08,
     "dii_day_cr": 4018.72,
     "fii_dii_date": "25-Nov-2026",
-    "date_label": "Nov 26, 2026 (02:08 AM IST)"
+    "date_label": "Nov 26, 2026 (02:10 AM IST)"
   },
   "universe_nodes": [
     {
