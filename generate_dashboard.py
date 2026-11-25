@@ -9,7 +9,7 @@ import os
 import json
 import datetime
 
-def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=None, total_scanned=750, trades=None, strategy_metrics=None):
+def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=None, total_scanned=750, trades=None, strategy_metrics=None, sector_rotation=None):
     """
     Renders a futuristic dark-mode HTML dashboard with embedded JSON data,
     TradingView mini widgets, search/filter controls, and statistics.
@@ -63,6 +63,25 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
     track_a_count = len(active_breakouts)
     track_b_count = len(pre_breakout_squeezes)
     total_trades_count = len(trades)
+
+    if sector_rotation is None:
+        try:
+            from sector_rotation_engine import (
+                load_sector_rotation_cache,
+                compute_sector_rotation_payload,
+            )
+            sector_rotation = load_sector_rotation_cache()
+            if sector_rotation is None:
+                sector_rotation = compute_sector_rotation_payload(
+                    active_breakouts=active_breakouts,
+                    pre_breakout_squeezes=pre_breakout_squeezes,
+                )
+        except Exception:
+            sector_rotation = {"universe_nodes": [], "curated_stocks": [], "sector_constituents": {}, "tape": {}}
+
+    from tab4_sector_rotation import render_tab4_fragments
+    sr_css, sr_html, sr_js = render_tab4_fragments(sector_rotation)
+    sector_nodes_count = len((sector_rotation or {}).get("universe_nodes", []))
 
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
@@ -790,6 +809,7 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
       border-top: 1px solid var(--border-subtle);
       padding-top: 24px;
     }}
+{sr_css}
   </style>
 </head>
 <body>
@@ -849,10 +869,14 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
         📈 Strategy Performance & Trade Ledger
         <span class="tab-badge" id="badge-ledger">{total_trades_count}</span>
       </button>
+      <button class="tab-btn" id="tab-btn-sector" onclick="switchTab('sector')">
+        🧭 Sector Rotation & RRG
+        <span class="tab-badge" id="badge-sector">{sector_nodes_count}</span>
+      </button>
     </div>
 
     <!-- Search Input -->
-    <div class="search-bar">
+    <div class="search-bar" id="main-search-bar">
       <input type="text" class="search-input" id="search-input" placeholder="Search by Symbol, Company Name, or Sector..." onkeyup="filterCards()">
     </div>
 
@@ -971,6 +995,8 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
       </div>
 
     </div>
+
+{sr_html}
 
     <footer>
       ⚡ AntiGravity Smart Money Dual Track Radar · Automated daily at 05:00 PM IST via GitHub Actions · Official NSE India EOD Data & Git Persistent Trade Ledger
@@ -1344,33 +1370,49 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
       const btnA = document.getElementById('tab-btn-a');
       const btnB = document.getElementById('tab-btn-b');
       const btnLedger = document.getElementById('tab-btn-ledger');
+      const btnSector = document.getElementById('tab-btn-sector');
       const gridA = document.getElementById('grid-track-a');
       const gridB = document.getElementById('grid-track-b');
       const viewLedger = document.getElementById('view-ledger');
+      const viewSector = document.getElementById('view-sector');
+      const searchBar = document.getElementById('main-search-bar');
       const searchInput = document.getElementById('search-input');
 
       btnA.classList.remove('active');
       btnB.classList.remove('active');
       btnLedger.classList.remove('active');
+      if (btnSector) btnSector.classList.remove('active');
       gridA.style.display = 'none';
       gridB.style.display = 'none';
       viewLedger.style.display = 'none';
+      if (viewSector) viewSector.style.display = 'none';
 
       if (tab === 'b') {{
         btnB.classList.add('active');
         gridB.style.display = 'grid';
+        if (searchBar) searchBar.style.display = 'flex';
         searchInput.placeholder = "Search Track B by Symbol, Company Name, or Sector...";
         filterCards();
       }} else if (tab === 'a') {{
         btnA.classList.add('active');
         gridA.style.display = 'grid';
+        if (searchBar) searchBar.style.display = 'flex';
         searchInput.placeholder = "Search Track A by Symbol, Company Name, or Sector...";
         filterCards();
       }} else if (tab === 'ledger') {{
         btnLedger.classList.add('active');
         viewLedger.style.display = 'flex';
+        if (searchBar) searchBar.style.display = 'flex';
         searchInput.placeholder = "Search trade ledger by Symbol, Company, Sector, or Notes...";
         renderLedgerTable(tradesData);
+      }} else if (tab === 'sector') {{
+        if (btnSector) btnSector.classList.add('active');
+        if (viewSector) viewSector.style.display = 'block';
+        if (searchBar) searchBar.style.display = 'none';
+        if (window.SR) {{
+          SR.app.init();
+          SR.app.switchTab(SR.app.currentTab);
+        }}
       }}
     }}
 
@@ -1400,19 +1442,26 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
     renderTrackBCards(trackBData);
     renderTrackACards(trackAData);
     renderLedgerTable(tradesData);
+
+{sr_js}
+
+    if (window.SR) {{
+      try {{ SR.app.init(); }} catch (err) {{ console.error('Tab 4 init error:', err); }}
+    }}
   </script>
 </body>
 </html>"""
     return html_content
 
-def save_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=None, output_dir=None, total_scanned=750, trades=None, strategy_metrics=None):
+def save_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=None, output_dir=None, total_scanned=750, trades=None, strategy_metrics=None, sector_rotation=None):
     """Saves generated dashboard to docs/index.html and root dashboard.html."""
     if output_dir is None:
         output_dir = os.path.dirname(os.path.abspath(__file__))
     
     html = generate_html_dashboard(
         active_breakouts, pre_breakout_squeezes, benchmark_indices,
-        total_scanned=total_scanned, trades=trades, strategy_metrics=strategy_metrics
+        total_scanned=total_scanned, trades=trades, strategy_metrics=strategy_metrics,
+        sector_rotation=sector_rotation
     )
     
     # 1. Save to docs/index.html for GitHub Pages

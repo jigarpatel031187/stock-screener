@@ -814,6 +814,8 @@ def calculate_active_breakout_score(hist, nifty500_hist=None, delivery_pct=None)
 # ==============================================================================
 # SCREENING LOGIC ENGINE
 # ==============================================================================
+LAST_RUN_CONTEXT = {}
+
 def run_nse_market_lens_screen():
     """
     Executes Dual-Track Screener across the complete Nifty 750 Universe:
@@ -1082,6 +1084,9 @@ def run_nse_market_lens_screen():
     # Sort Track B by 100-point HALO score descending (highest quality coil first)
     pre_breakout_squeezes.sort(key=lambda x: x["halo_score"], reverse=True)
 
+    LAST_RUN_CONTEXT["universe"] = universe
+    LAST_RUN_CONTEXT["nifty500_hist"] = nifty500_hist
+    LAST_RUN_CONTEXT["nse_session"] = nse_session
     return active_breakouts, pre_breakout_squeezes, len(universe), all_hist
 
 # ==============================================================================
@@ -1208,6 +1213,10 @@ def build_daily_evening_report(active_breakouts, pre_breakout_squeezes, total_sc
     return msg
 
 from generate_dashboard import save_dashboard
+from sector_rotation_engine import (
+    compute_sector_rotation_payload,
+    save_sector_rotation_cache,
+)
 from trade_tracker import (
     load_trade_ledger,
     save_trade_ledger,
@@ -1244,11 +1253,27 @@ def main():
     save_trade_ledger(trades)
     logger.info(f"Strategy Metrics: Win Rate: {strategy_metrics['win_rate_pct']}% | Net R: {strategy_metrics['net_r_multiple']:+}R | PF: {strategy_metrics['profit_factor']}x")
 
-    # 4. Generate & Update HTML Dashboard (for GitHub Pages and Local view)
+    # 4. Compute Live Sector Rotation & JdK RRG Payload
+    sector_rotation_payload = None
+    try:
+        sector_rotation_payload = compute_sector_rotation_payload(
+            universe=LAST_RUN_CONTEXT.get("universe"),
+            all_hist=all_hist,
+            nifty500_hist=LAST_RUN_CONTEXT.get("nifty500_hist"),
+            nse_session=LAST_RUN_CONTEXT.get("nse_session"),
+            active_breakouts=active_breakouts,
+            pre_breakout_squeezes=pre_breakout_squeezes,
+        )
+        save_sector_rotation_cache(sector_rotation_payload)
+        logger.info(f"Sector Rotation & RRG updated for {len(sector_rotation_payload.get('universe_nodes', []))} nodes.")
+    except Exception as e:
+        logger.warning(f"Error computing sector rotation payload: {e}")
+
+    # 5. Generate & Update HTML Dashboard (for GitHub Pages and Local view)
     try:
         docs_path, local_path = save_dashboard(
             active_breakouts, pre_breakout_squeezes, BENCHMARK_INDICES, total_scanned=total_scanned,
-            trades=trades, strategy_metrics=strategy_metrics
+            trades=trades, strategy_metrics=strategy_metrics, sector_rotation=sector_rotation_payload
         )
         logger.info(f"Dashboard generated successfully for {total_scanned} stocks at {docs_path}")
     except Exception as e:
