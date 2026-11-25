@@ -1,5 +1,5 @@
 {
-  "generated_at": "Nov 25, 2026 (04:43 PM IST)",
+  "generated_at": "Nov 25, 2026 (04:55 PM IST)",
   "benchmark_name": "NIFTY 500",
   "tape": {
     "nifty50": {
@@ -27,7 +27,7 @@
     "fii_day_cr": 5672.99,
     "dii_day_cr": -2760.12,
     "fii_dii_date": "23-Nov-2026",
-    "date_label": "Nov 25, 2026 (04:43 PM IST)"
+    "date_label": "Nov 25, 2026 (04:55 PM IST)"
   },
   "universe_nodes": [
     {
@@ -325,7 +325,7 @@
       "pctAbove50": 59,
       "pctAbove200": 48,
       "trackACount": 0,
-      "trackBCount": 0,
+      "trackBCount": 1,
       "angle": 151.0,
       "radius": 105.38,
       "dailyTail": [
@@ -466,7 +466,7 @@
       "pctAbove50": 50,
       "pctAbove200": 46,
       "trackACount": 0,
-      "trackBCount": 0,
+      "trackBCount": 1,
       "angle": 158.3,
       "radius": 106.48,
       "dailyTail": [
@@ -1171,7 +1171,7 @@
       "pctAbove50": 51,
       "pctAbove200": 44,
       "trackACount": 0,
-      "trackBCount": 0,
+      "trackBCount": 1,
       "angle": 206.2,
       "radius": 105.07,
       "dailyTail": [
@@ -1594,7 +1594,7 @@
       "pctAbove50": 69,
       "pctAbove200": 75,
       "trackACount": 0,
-      "trackBCount": 0,
+      "trackBCount": 1,
       "angle": 202.7,
       "radius": 106.27,
       "dailyTail": [
@@ -4588,7 +4588,8 @@
           "x": 4.56,
           "y": -6.23
         }
-      ]
+      ],
+      "signalTag": "TRACK B"
     },
     {
       "ticker": "COFORGE",
@@ -12284,7 +12285,7 @@
             "y": -6.23
           }
         ],
-        "signalTag": null
+        "signalTag": "TRACK B"
       },
       {
         "ticker": "PETRONET",
@@ -14054,7 +14055,7 @@
             "y": 2.59
           }
         ],
-        "signalTag": null
+        "signalTag": "TRACK B"
       },
       {
         "ticker": "EMCURE",
@@ -22088,7 +22089,7 @@
             "y": -6.23
           }
         ],
-        "signalTag": null
+        "signalTag": "TRACK B"
       },
       {
         "ticker": "TANLA",
@@ -27806,7 +27807,7 @@
             "y": 2.59
           }
         ],
-        "signalTag": null
+        "signalTag": "TRACK B"
       },
       {
         "ticker": "AARTIPHARM",
