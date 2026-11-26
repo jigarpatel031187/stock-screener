@@ -579,10 +579,10 @@ def compute_sector_pre_explosion(
     sig_b: int,
 ):
     """
-    Computes a 0-100 Pre-Explosion Probability Score for a sector node by combining:
+    Computes a 0-100 Pre-Explosion Probability Score for a sector or market-cap index node by combining:
     1. RRG rotation inflection (0-30 pts)
-    2. Sector index volatility compression - BBW 120D rank & ATR(14) decay (0-20 pts)
-    3. 1D/1W relative alpha acceleration vs Nifty 50 (0-20 pts)
+    2. Index volatility compression - BBW 120D rank & ATR(14) decay (0-20 pts)
+    3. 1D/1W relative alpha acceleration vs Nifty 50 / Nifty 500 (0-20 pts)
     4. Constituent breadth building above 50/200-DMA (0-15 pts)
     5. Constituent Track B HALO squeeze / Track A breakout confluence (0-15 pts)
     Returns (score, tier, bbw_pct, atr_decay, reasons).
@@ -735,6 +735,7 @@ def compute_sector_rotation_payload(
 
     nifty50_df = get_hist("^NSEI")
     nifty50_rets = _compute_period_returns(nifty50_df["Close"]) if nifty50_df is not None else {"d1": 0.0, "w1": 0.0, "m1": 0.0, "m3": 0.0, "y1": 0.0, "last": 0.0}
+    bench_rets = _compute_period_returns(bench_close) if not bench_close.empty else nifty50_rets
 
     # Optional NSE live quotes + FII/DII cash flow
     nse_indices, fii_dii_live = _fetch_nse_live_snapshots(nse_session)
@@ -917,21 +918,22 @@ def compute_sector_rotation_payload(
         alpha_1d = round(rets["d1"] - nifty50_rets["d1"], 2)
         alpha_1w = round(rets["w1"] - nifty50_rets["w1"], 2)
 
-        if node_kind == "sector":
-            pe_score, pe_tier, bbw_pct, atr_decay, pe_reasons = compute_sector_pre_explosion(
-                price_series=price_series,
-                daily_tail=daily_tail,
-                angle=angle,
-                d1_alpha=alpha_1d,
-                w1_alpha=alpha_1w,
-                m1_ret=rets["m1"],
-                pct50=pct50,
-                pct200=pct200,
-                sig_a=sig_a,
-                sig_b=sig_b,
-            )
-        else:
-            pe_score, pe_tier, bbw_pct, atr_decay, pe_reasons = 0, "STANDARD", 50.0, 1.0, []
+        # For NIFTY 50, score relative alpha against Nifty 500 (same benchmark used by RRG)
+        pe_d1_alpha = round(rets["d1"] - bench_rets["d1"], 2) if spec["id"] == "NIFTY_50" else alpha_1d
+        pe_w1_alpha = round(rets["w1"] - bench_rets["w1"], 2) if spec["id"] == "NIFTY_50" else alpha_1w
+
+        pe_score, pe_tier, bbw_pct, atr_decay, pe_reasons = compute_sector_pre_explosion(
+            price_series=price_series,
+            daily_tail=daily_tail,
+            angle=angle,
+            d1_alpha=pe_d1_alpha,
+            w1_alpha=pe_w1_alpha,
+            m1_ret=rets["m1"],
+            pct50=pct50,
+            pct200=pct200,
+            sig_a=sig_a,
+            sig_b=sig_b,
+        )
 
         desc_str = f"{spec['desc']} ({rets['last']:,.2f})" if rets["last"] > 0 else spec["desc"]
         universe_nodes.append({
