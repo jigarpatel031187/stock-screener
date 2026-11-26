@@ -566,6 +566,130 @@ def _stock_technicals_from_hist(hist_df):
     }
 
 
+def compute_sector_pre_explosion(
+    price_series: pd.Series,
+    daily_tail: list,
+    angle: float,
+    d1_alpha: float,
+    w1_alpha: float,
+    m1_ret: float,
+    pct50: int,
+    pct200: int,
+    sig_a: int,
+    sig_b: int,
+):
+    """
+    Computes a 0-100 Pre-Explosion Probability Score for a sector node by combining:
+    1. RRG rotation inflection (0-30 pts)
+    2. Sector index volatility compression - BBW 120D rank & ATR(14) decay (0-20 pts)
+    3. 1D/1W relative alpha acceleration vs Nifty 50 (0-20 pts)
+    4. Constituent breadth building above 50/200-DMA (0-15 pts)
+    5. Constituent Track B HALO squeeze / Track A breakout confluence (0-15 pts)
+    Returns (score, tier, bbw_pct, atr_decay, reasons).
+    """
+    # 1. Sector Volatility Compression (BBW 120D percentile + ATR14 20-day decay)
+    bbw_pct = 50.0
+    atr_decay = 1.0
+    s = _normalize_series_index(price_series) if price_series is not None else pd.Series(dtype=float)
+    if len(s) < 60:
+        return 0, "STANDARD", bbw_pct, atr_decay, []
+
+    bb_mid = s.rolling(20).mean()
+    bb_std = s.rolling(20).std()
+    bbw = (100.0 * (4.0 * bb_std) / bb_mid).dropna()
+    if len(bbw) >= 30:
+        curr_bbw = float(bbw.iloc[-1])
+        hist_bbw = bbw.iloc[-121:-1] if len(bbw) > 30 else bbw.iloc[:-1]
+        if len(hist_bbw) >= 15:
+            bbw_pct = round(float((hist_bbw < curr_bbw).mean() * 100.0), 1)
+    tr_proxy = s.diff().abs()
+    atr_proxy = tr_proxy.ewm(alpha=1.0 / 14.0, adjust=False).mean()
+    if len(atr_proxy) >= 22 and float(atr_proxy.iloc[-21]) > 0:
+        atr_decay = round(float(atr_proxy.iloc[-1]) / float(atr_proxy.iloc[-21]), 2)
+
+    # 2. Quadrant & Heading
+    a = angle % 360.0
+    quad = "Leading" if a < 90 else ("Improving" if a < 180 else ("Lagging" if a < 270 else "Weakening"))
+    heading = "E"
+    if daily_tail and len(daily_tail) >= 2:
+        p1, p2 = daily_tail[-2], daily_tail[-1]
+        deg = (math.degrees(math.atan2(p2["y"] - p1["y"], p2["x"] - p1["x"])) + 360.0) % 360.0
+        if deg > 337.5 or deg <= 22.5: heading = "E"
+        elif deg <= 67.5: heading = "NE"
+        elif deg <= 112.5: heading = "N"
+        elif deg <= 157.5: heading = "NW"
+        elif deg <= 202.5: heading = "W"
+        elif deg <= 247.5: heading = "SW"
+        elif deg <= 292.5: heading = "S"
+        else: heading = "SE"
+
+    reasons = []
+    score = 0
+
+    # Factor A: RRG Inflection (max 30)
+    if quad == "Improving" and heading in ("NE", "E", "N"):
+        score += 30
+        reasons.append(f"Improving ({heading})")
+    elif quad == "Lagging" and heading in ("N", "NE", "E"):
+        score += 24
+        reasons.append(f"Bottom Turn ({heading})")
+    elif quad == "Improving":
+        score += 22
+        reasons.append(f"Improving ({heading})")
+    elif quad == "Leading" and a <= 45.0 and heading in ("NE", "E"):
+        score += 15
+        reasons.append(f"Early Leading ({heading})")
+
+    # Factor B: Sector Compression (max 20)
+    if bbw_pct <= 25.0:
+        score += 12
+        reasons.append(f"BBW {bbw_pct:.0f}% Coil")
+    elif bbw_pct <= 40.0:
+        score += 7
+    if atr_decay <= 0.85:
+        score += 8
+        reasons.append(f"ATR {atr_decay:.2f}x")
+    elif atr_decay <= 0.95:
+        score += 4
+
+    # Factor C: Relative Alpha Acceleration (max 20)
+    if d1_alpha > 0 and w1_alpha > 0:
+        score += 20
+        reasons.append("+1D/1W Alpha")
+    elif d1_alpha > 0 or w1_alpha > 0:
+        score += 12
+        reasons.append("+Alpha Turn")
+
+    # Factor D: Constituent Breadth (max 15)
+    if pct50 >= 50 and pct200 >= 45:
+        score += 15
+        reasons.append(f"{pct50}% >50D")
+    elif pct50 >= 35:
+        score += 8
+
+    # Factor E: Track B / Track A Confluence (max 15)
+    sig_pts = min(15, sig_b * 10 + sig_a * 8)
+    if sig_pts > 0:
+        score += sig_pts
+        if sig_b:
+            reasons.append(f"{sig_b} Squeeze")
+        if sig_a:
+            reasons.append(f"{sig_a} Breakout")
+
+    # Early-stage guard: avoid flagging sectors already >16% over 1M in Leading/Weakening
+    is_extended = (m1_ret > 16.0 and quad in ("Leading", "Weakening"))
+    if is_extended:
+        tier = "EXTENDED"
+    elif score >= 60:
+        tier = "IGNITION"
+    elif score >= 45:
+        tier = "COILING"
+    else:
+        tier = "STANDARD"
+
+    return score, tier, bbw_pct, atr_decay, reasons
+
+
 def compute_sector_rotation_payload(
     universe=None,
     all_hist=None,
@@ -791,13 +915,30 @@ def compute_sector_rotation_payload(
         pct50 = round((above_50 / valid_breadth) * 100) if valid_breadth else 0
         pct200 = round((above_200 / valid_breadth) * 100) if valid_breadth else 0
         alpha_1d = round(rets["d1"] - nifty50_rets["d1"], 2)
+        alpha_1w = round(rets["w1"] - nifty50_rets["w1"], 2)
+
+        if node_kind == "sector":
+            pe_score, pe_tier, bbw_pct, atr_decay, pe_reasons = compute_sector_pre_explosion(
+                price_series=price_series,
+                daily_tail=daily_tail,
+                angle=angle,
+                d1_alpha=alpha_1d,
+                w1_alpha=alpha_1w,
+                m1_ret=rets["m1"],
+                pct50=pct50,
+                pct200=pct200,
+                sig_a=sig_a,
+                sig_b=sig_b,
+            )
+        else:
+            pe_score, pe_tier, bbw_pct, atr_decay, pe_reasons = 0, "STANDARD", 50.0, 1.0, []
 
         desc_str = f"{spec['desc']} ({rets['last']:,.2f})" if rets["last"] > 0 else spec["desc"]
         universe_nodes.append({
             "id": spec["id"],
             "kind": node_kind,
             "curated": spec["curated"],
-            "topMover": spec["topMover"] or abs(alpha_1d) >= 1.0,
+            "topMover": spec["topMover"] or abs(alpha_1d) >= 1.0 or pe_tier in ("IGNITION", "COILING"),
             "group": spec["group"],
             "short": spec["short"],
             "desc": desc_str,
@@ -807,6 +948,11 @@ def compute_sector_rotation_payload(
             "pctAbove200": pct200,
             "trackACount": sig_a,
             "trackBCount": sig_b,
+            "preExplodeScore": pe_score,
+            "preExplodeTier": pe_tier,
+            "bbwPct": bbw_pct,
+            "atrDecay": atr_decay,
+            "preExplodeReasons": pe_reasons,
             "angle": angle,
             "radius": radius,
             "dailyTail": daily_tail,

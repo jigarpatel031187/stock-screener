@@ -144,7 +144,21 @@ def render_tab4_fragments(sector_rotation_data):
     #view-sector .pill-amber { background: rgba(255, 179, 0, 0.12); color: #ffb300; border-color: rgba(255, 179, 0, 0.35); }
     #view-sector .pill-crimson { background: rgba(255, 59, 92, 0.12); color: #ff3b5c; border-color: rgba(255, 59, 92, 0.35); }
     #view-sector .pill-violet { background: rgba(168, 85, 247, 0.15); color: #d8b4fe; border-color: rgba(168, 85, 247, 0.38); }
+    #view-sector .pill-ignite {
+      background: rgba(232, 121, 249, 0.16); color: #f5d0fe; border-color: rgba(232, 121, 249, 0.78);
+      box-shadow: 0 0 8px rgba(232, 121, 249, 0.28);
+    }
+    #view-sector .pill-coil {
+      background: rgba(168, 85, 247, 0.16); color: #e9d5ff; border-color: rgba(168, 85, 247, 0.62);
+    }
     #view-sector .pill-neutral { background: #121822; color: #8c99ad; border-color: #1d2738; }
+
+    #view-sector .sr-ignite-bar {
+      background: linear-gradient(90deg, rgba(232, 121, 249, 0.12), rgba(168, 85, 247, 0.08), rgba(13, 18, 26, 0.96));
+      border: 1px solid rgba(232, 121, 249, 0.55); border-radius: 6px;
+      padding: 8px 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 0 14px rgba(232, 121, 249, 0.12);
+    }
 
     #view-sector .sr-gann-pill {
       display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px;
@@ -210,6 +224,8 @@ def render_tab4_fragments(sector_rotation_data):
     }
     #view-sector .sr-dock-card:hover { border-color: #00d4ff; background: #131a26; }
     #view-sector .sr-dock-card.highlighted { border-color: #00d4ff; background: rgba(0, 212, 255, 0.1); box-shadow: inset 3px 0 0 #00d4ff; }
+    #view-sector .sr-dock-card.sr-dock-ignite { border-color: rgba(232, 121, 249, 0.72); background: rgba(232, 121, 249, 0.07); box-shadow: inset 3px 0 0 #e879f9; }
+    #view-sector .sr-dock-card.sr-dock-coil { border-color: rgba(168, 85, 247, 0.58); background: rgba(168, 85, 247, 0.06); box-shadow: inset 3px 0 0 #a855f7; }
 
     #view-sector .sr-flow-track { height: 5px; background: #162030; border-radius: 3px; overflow: hidden; margin-top: 4px; }
     #view-sector .sr-flow-pos { height: 100%; background: #00e676; }
@@ -228,6 +244,10 @@ def render_tab4_fragments(sector_rotation_data):
       padding: 7px 9px; border-bottom: 1px solid #141c28; white-space: nowrap; vertical-align: middle;
     }
     #view-sector table.sr-table tr:hover td { background: rgba(0, 212, 255, 0.045); }
+    #view-sector table.sr-table tr.sr-row-ignite td { background: rgba(232, 121, 249, 0.075); }
+    #view-sector table.sr-table tr.sr-row-ignite td:first-child { border-left: 3px solid #e879f9; }
+    #view-sector table.sr-table tr.sr-row-coil td { background: rgba(168, 85, 247, 0.055); }
+    #view-sector table.sr-table tr.sr-row-coil td:first-child { border-left: 3px solid #a855f7; }
     #view-sector .sr-row-click { cursor: pointer; }
     #view-sector .sr-ticker-btn { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #e8eef5; cursor: pointer; }
     #view-sector .sr-ticker-btn:hover { color: #00d4ff; text-decoration: underline; }
@@ -380,6 +400,8 @@ def render_tab4_fragments(sector_rotation_data):
             </div>
           </div>
 
+          <div id="sr-f1-ignite-bar" class="sr-ignite-bar" style="display:none;"></div>
+
           <div class="sr-panel">
             <div class="sr-panel-hdr">
               <span class="sr-panel-title">◆ MARKET-CAP &amp; BENCHMARK ROTATION (CLICK ANY CAP INDEX TO LAUNCH CONSTITUENT STOCK RRG)</span>
@@ -445,6 +467,7 @@ def render_tab4_fragments(sector_rotation_data):
                 <select id="sr-rrg-universe-select" class="sr-select" onchange="SR.rrgEngine.setUniverse(this.value)">
                   <option value="curated_10">Curated Leaders &amp; Market Cap Indices</option>
                   <option value="all_23" selected>All NSE Sectors + Market Cap Indices</option>
+                  <option value="pre_explode">⚡ Pre-Explosion Watchlist (Ignition / Coiling)</option>
                   <option value="cap_5">Market Cap Indices Only (5 Nodes)</option>
                   <option value="sectors_18">All NSE Sectors Only</option>
                   <option value="leading_only">Leading Quadrant Only</option>
@@ -478,7 +501,7 @@ def render_tab4_fragments(sector_rotation_data):
             <div class="sr-panel">
               <div class="sr-panel-hdr">
                 <span class="sr-panel-title" id="sr-rrg-canvas-title">JdK RELATIVE ROTATION GRAPH — SCROLL TO ZOOM • DRAG TO PAN • CLICK NODE FOR STOCK RRG</span>
-                <span class="sr-mono sr-muted" style="font-size:10px;">◆ Benchmark/Cap | ● Sector/Stock</span>
+                <span class="sr-mono sr-muted" style="font-size:10px;">◆ Cap | ● Sector | <span style="color:#e879f9;">⚡ Ring = Pre-Explode</span></span>
               </div>
               <div class="sr-canvas-wrap">
                 <canvas id="sr-main-rrg-canvas" width="840" height="550"></canvas>
@@ -513,6 +536,7 @@ def render_tab4_fragments(sector_rotation_data):
                 <button class="sr-btn" id="sr-hm-btn-alpha" onclick="SR.heatmapEngine.setMetric('alpha')">Alpha vs NIFTY 50</button>
                 <select id="sr-hm-filter-type" class="sr-select" onchange="SR.heatmapEngine.render()">
                   <option value="all">All Sectors &amp; Cap Indices</option>
+                  <option value="pre_explode">⚡ Pre-Explosion Only (Ignition / Coiling)</option>
                   <option value="cap">Market Cap &amp; Benchmark Indices</option>
                   <option value="sector">NSE Sectors Only</option>
                 </select>
@@ -1070,6 +1094,16 @@ def render_tab4_fragments(sector_rotation_data):
           if (tab === 'f6') { astroEngine.render(); tgModule.render(); }
         },
 
+        openPreExplodeInRRG: () => {
+          app.switchTab('f2');
+          rrgEngine.mode = 'macro';
+          rrgEngine.universe = 'all_23';
+          const uSel = document.getElementById('sr-rrg-universe-select');
+          if (uSel) uSel.value = 'all_23';
+          rrgEngine.renderAll();
+          ui.toast('Highlighted ⚡ Pre-Explosion (Ignition / Coiling) sectors on RRG');
+        },
+
         openCapInRRG: () => {
           app.switchTab('f2');
           rrgEngine.exitDrilldown();
@@ -1119,11 +1153,41 @@ def render_tab4_fragments(sector_rotation_data):
           const sectors = rrgEngine.macroNodes.filter(n => n.kind === 'sector');
           const leadCount = sectors.filter(n => n.quadrant === 'Leading').length;
           const impCount = sectors.filter(n => n.quadrant === 'Improving').length;
-          document.getElementById('sr-f1-quad-count').textContent = `${leadCount} Leading • ${impCount} Improving`;
+          const igniteSectors = sectors
+            .filter(n => n.preExplodeTier === 'IGNITION' || n.preExplodeTier === 'COILING')
+            .sort((a, b) => (b.preExplodeScore || 0) - (a.preExplodeScore || 0));
+          const ignCount = igniteSectors.filter(n => n.preExplodeTier === 'IGNITION').length;
+          const coilCount = igniteSectors.length - ignCount;
+          document.getElementById('sr-f1-quad-count').textContent = `${leadCount} Lead • ${impCount} Imp • ⚡${ignCount} Ign/${coilCount} Coil`;
           document.getElementById('sr-f1-quad-sub').textContent = `Out of ${sectors.length} NSE Sectors (JdK vs ${BENCH_NAME})`;
 
+          const ignBar = document.getElementById('sr-f1-ignite-bar');
+          if (ignBar) {
+            if (!igniteSectors.length) {
+              ignBar.style.display = 'none';
+            } else {
+              ignBar.style.display = 'flex';
+              const chips = igniteSectors.map(n => {
+                const isIgn = n.preExplodeTier === 'IGNITION';
+                const safeId = ui.escAttr(n.id);
+                const reasons = (n.preExplodeReasons || []).join(' • ');
+                return `<button class="sr-pill ${isIgn ? 'pill-ignite' : 'pill-coil'}" style="cursor:pointer;" onclick="SR.app.drillSectorFromAnywhere('${safeId}')" title="${ui.escAttr(reasons)}">${isIgn ? '⚡' : '◈'} ${n.short} ${n.preExplodeScore}/100 (${n.preExplodeTier})</button>`;
+              }).join('');
+              ignBar.innerHTML = `
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; width:100%; justify-content:space-between;">
+                  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <span class="sr-mono" style="color:#f5d0fe; font-weight:800; font-size:11px; letter-spacing:0.4px;">⚡ PRE-EXPLOSION SECTOR RADAR (${igniteSectors.length}):</span>
+                    ${chips}
+                    <span class="sr-muted sr-mono" style="font-size:10px;">(Hover pill for factors • Click for constituent stocks)</span>
+                  </div>
+                  <button class="sr-btn" style="border-color:#e879f9; color:#f5d0fe; padding:3px 9px; font-size:10.5px;" onclick="SR.app.openPreExplodeInRRG()">Highlight on RRG [F2] →</button>
+                </div>
+              `;
+            }
+          }
+
           const badgeEl = document.getElementById('badge-sector');
-          if (badgeEl) badgeEl.textContent = `${leadCount} Lead`;
+          if (badgeEl) badgeEl.textContent = ignCount > 0 ? `${leadCount} Lead • ⚡${ignCount}` : `${leadCount} Lead`;
 
           const avgUp = STOCK_DB.length
             ? STOCK_DB.reduce((a, s) => a + ((s.fairValue - s.price) / s.price) * 100, 0) / STOCK_DB.length
@@ -1395,6 +1459,7 @@ def render_tab4_fragments(sector_rotation_data):
           if (rrgEngine.mode === 'stock') return rrgEngine.stockNodes;
           const u = rrgEngine.universe;
           if (u === 'curated_10') return rrgEngine.macroNodes.filter(n => n.curated);
+          if (u === 'pre_explode') return rrgEngine.macroNodes.filter(n => n.preExplodeTier === 'IGNITION' || n.preExplodeTier === 'COILING');
           if (u === 'cap_5') return rrgEngine.macroNodes.filter(n => n.kind === 'cap');
           if (u === 'sectors_18') return rrgEngine.macroNodes.filter(n => n.kind === 'sector');
           if (u === 'leading_only') return rrgEngine.macroNodes.filter(n => n.quadrant === 'Leading');
@@ -1520,14 +1585,18 @@ def render_tab4_fragments(sector_rotation_data):
             if (!sub.length) return;
 
             const isFocus = node.id === focusId;
+            const peTier = node.preExplodeTier || 'STANDARD';
+            const isIgn = (rrgEngine.mode === 'macro' && peTier === 'IGNITION');
+            const isCoil = (rrgEngine.mode === 'macro' && peTier === 'COILING');
+            const isPE = (isIgn || isCoil);
             const alpha = focusId && !isFocus ? 0.13 : 1.0;
 
             ctx.save();
             ctx.globalAlpha = alpha;
 
             const pts = sub.map(p => ({ x: cx + p.x * scale, y: cy - p.y * scale }));
-            ctx.strokeStyle = isFocus ? '#00d4ff' : color;
-            ctx.lineWidth = isFocus ? 2.8 : (node.kind === 'cap' ? 2.1 : 1.6);
+            ctx.strokeStyle = isFocus ? '#00d4ff' : (isIgn ? '#e879f9' : color);
+            ctx.lineWidth = isFocus ? 2.8 : (isIgn ? 2.4 : (node.kind === 'cap' ? 2.1 : 1.6));
             if (node.kind === 'cap') ctx.setLineDash([4, 2]);
             else ctx.setLineDash([]);
 
@@ -1567,6 +1636,17 @@ def render_tab4_fragments(sector_rotation_data):
               ctx.fill();
             }
 
+            if (isPE && !isFocus) {
+              ctx.save();
+              ctx.strokeStyle = isIgn ? '#e879f9' : '#a855f7';
+              ctx.lineWidth = isIgn ? (opts.isMini ? 1.8 : 2.5) : (opts.isMini ? 1.3 : 1.8);
+              if (!isIgn) ctx.setLineDash([3, 2]);
+              ctx.beginPath();
+              ctx.arc(head.x, head.y, opts.isMini ? (isIgn ? 8.5 : 7.2) : (isIgn ? 12.0 : 9.8), 0, Math.PI * 2);
+              ctx.stroke();
+              ctx.restore();
+            }
+
             if (isFocus) {
               ctx.strokeStyle = '#00d4ff';
               ctx.lineWidth = 2;
@@ -1590,16 +1670,17 @@ def render_tab4_fragments(sector_rotation_data):
               ctx.stroke();
             } else {
               ctx.fillStyle = color;
-              ctx.strokeStyle = isFocus ? '#00d4ff' : '#070a0f';
-              ctx.lineWidth = 1.6;
+              ctx.strokeStyle = isFocus ? '#00d4ff' : (isIgn ? '#e879f9' : (isCoil ? '#a855f7' : '#070a0f'));
+              ctx.lineWidth = isPE ? 2.0 : 1.6;
               ctx.beginPath();
-              ctx.arc(head.x, head.y, opts.isMini ? 4.3 : 5.8, 0, Math.PI * 2);
+              ctx.arc(head.x, head.y, opts.isMini ? (isIgn ? 4.8 : 4.3) : (isIgn ? 6.5 : 5.8), 0, Math.PI * 2);
               ctx.fill();
               ctx.stroke();
             }
 
             const showLabel =
               isFocus ||
+              isPE ||
               opts.labelMode === 'all' ||
               (opts.labelMode === 'top' && (node.topMover || node.kind === 'cap'));
 
@@ -1607,7 +1688,7 @@ def render_tab4_fragments(sector_rotation_data):
               ctx.font = node.kind === 'cap'
                 ? (opts.isMini ? '700 8.5px JetBrains Mono, monospace' : '700 10px JetBrains Mono, monospace')
                 : (opts.isMini ? '600 8.5px Plus Jakarta Sans, sans-serif' : '600 10px JetBrains Mono, monospace');
-              const text = node.short;
+              const text = (isIgn ? '⚡ ' : (isCoil ? '◈ ' : '')) + node.short;
               const tw = ctx.measureText(text).width + 8;
               const th = 15;
 
@@ -1650,16 +1731,20 @@ def render_tab4_fragments(sector_rotation_data):
                 ctx.stroke();
               }
 
-              ctx.fillStyle = isFocus ? 'rgba(0, 212, 255, 0.22)' : 'rgba(9, 13, 20, 0.86)';
-              ctx.strokeStyle = isFocus ? '#00d4ff' : 'rgba(30, 41, 59, 0.95)';
-              ctx.lineWidth = 1;
+              ctx.fillStyle = isFocus
+                ? 'rgba(0, 212, 255, 0.22)'
+                : (isIgn ? 'rgba(232, 121, 249, 0.22)' : (isCoil ? 'rgba(168, 85, 247, 0.18)' : 'rgba(9, 13, 20, 0.86)'));
+              ctx.strokeStyle = isFocus
+                ? '#00d4ff'
+                : (isIgn ? '#e879f9' : (isCoil ? '#a855f7' : 'rgba(30, 41, 59, 0.95)'));
+              ctx.lineWidth = isIgn ? 1.6 : (isCoil ? 1.3 : 1);
               ctx.beginPath();
               if (typeof ctx.roundRect === 'function') ctx.roundRect(bestBox.x, bestBox.y, bestBox.w, bestBox.h, 3);
               else ctx.rect(bestBox.x, bestBox.y, bestBox.w, bestBox.h);
               ctx.fill();
               ctx.stroke();
 
-              ctx.fillStyle = node.kind === 'cap' ? '#00d4ff' : '#f1f5f9';
+              ctx.fillStyle = node.kind === 'cap' ? '#00d4ff' : (isIgn ? '#fdf4ff' : (isCoil ? '#f3e8ff' : '#f1f5f9'));
               ctx.textAlign = 'left';
               ctx.fillText(text, bestBox.x + 4, bestBox.y + 11);
             }
@@ -1692,12 +1777,20 @@ def render_tab4_fragments(sector_rotation_data):
           tip.style.top = Math.min(window.innerHeight - 210, e.clientY + 14) + 'px';
 
           if (rrgEngine.mode === 'macro') {
+            const peTier = node.preExplodeTier || 'STANDARD';
+            const peCol = peTier === 'IGNITION' ? '#e879f9' : (peTier === 'COILING' ? '#a855f7' : (peTier === 'EXTENDED' ? '#ffb300' : '#8c99ad'));
+            const peBadge = (peTier === 'IGNITION' || peTier === 'COILING')
+              ? `${peTier === 'IGNITION' ? '⚡ ' : '◈ '}${peTier} (${node.preExplodeScore}/100)`
+              : `${peTier} (${node.preExplodeScore || 0}/100)`;
+            const reasonsStr = (node.preExplodeReasons || []).join(' • ');
             tip.innerHTML = `
               <div style="color:${node.kind === 'cap' ? '#ffb300' : '#00d4ff'}; font-weight:700; border-bottom:1px solid #1d2738; padding-bottom:4px; margin-bottom:5px;">
                 ${node.kind === 'cap' ? '◆ CAP BENCHMARK: ' : '● NSE SECTOR: '}${node.group}
               </div>
               <div style="display:flex; justify-content:space-between;"><span class="sr-muted">JdK RS-RATIO / MOM:</span><span>${(100 + rawHead.x).toFixed(2)} / ${(100 + rawHead.y).toFixed(2)}</span></div>
               <div style="display:flex; justify-content:space-between;"><span class="sr-muted">QUADRANT / HEADING:</span><span style="color:${quadColor(node.quadrant)}; font-weight:700;">${node.quadrant} (${node.heading})</span></div>
+              ${node.kind === 'sector' ? `<div style="display:flex; justify-content:space-between;"><span class="sr-muted">PRE-EXPLOSION:</span><span style="color:${peCol}; font-weight:700;">${peBadge}</span></div>` : ''}
+              ${node.kind === 'sector' && reasonsStr ? `<div class="sr-muted" style="font-size:9.5px; margin-top:2px;">BBW ${node.bbwPct ?? '--'}% • ATR ${node.atrDecay ?? '--'}x • ${reasonsStr}</div>` : ''}
               <div style="display:flex; justify-content:space-between;"><span class="sr-muted">1D / 1M RETURN:</span><span class="${node.chg >= 0 ? 'sr-pos' : 'sr-neg'}">${node.chg > 0 ? '+' : ''}${node.chg.toFixed(2)}% / ${node.m1 > 0 ? '+' : ''}${node.m1.toFixed(1)}%</span></div>
               <div style="display:flex; justify-content:space-between; margin-top:4px; padding-top:4px; border-top:1px solid #1d2738;"><span class="sr-muted">&gt;50DMA / &gt;200DMA:</span><span>${node.pctAbove50 ?? '--'}% / ${node.pctAbove200 ?? '--'}%</span></div>
               <div style="display:flex; justify-content:space-between;"><span class="sr-muted">SCANNER SIGNALS:</span><span>Track A: ${node.trackACount || 0} | Track B: ${node.trackBCount || 0}</span></div>
@@ -1811,23 +1904,31 @@ def render_tab4_fragments(sector_rotation_data):
 
         macroDockCard: (n) => {
           const safeId = ui.escAttr(n.id);
+          const peTier = n.preExplodeTier || 'STANDARD';
+          const isIgn = peTier === 'IGNITION';
+          const isCoil = peTier === 'COILING';
+          const dockCls = isIgn ? 'sr-dock-ignite' : (isCoil ? 'sr-dock-coil' : '');
+          const pePill = isIgn
+            ? `<span class="sr-pill pill-ignite" style="font-size:9px;">⚡ ${n.preExplodeScore} IGN</span>`
+            : (isCoil ? `<span class="sr-pill pill-coil" style="font-size:9px;">◈ ${n.preExplodeScore} COIL</span>` : '');
           const sigTxt = (n.trackACount || n.trackBCount)
             ? ` • <span class="sr-pos">A:${n.trackACount || 0}</span>/<span class="sr-vio">B:${n.trackBCount || 0}</span>`
             : '';
+          const bbwTxt = (n.kind === 'sector' && n.bbwPct !== undefined) ? ` • BBW ${Math.round(n.bbwPct)}%` : '';
           return `
-            <div class="sr-dock-card" data-id="${safeId}"
+            <div class="sr-dock-card ${dockCls}" data-id="${safeId}"
                  onmouseenter="SR.rrgEngine.highlightFromDock('${safeId}')"
                  onmouseleave="SR.rrgEngine.highlightFromDock(null)"
                  onclick="SR.rrgEngine.drillIntoNode('${safeId}')">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span class="sr-bold" style="font-size:11.5px; color:${n.kind === 'cap' ? '#00d4ff' : '#e8eef5'};">
-                  ${n.kind === 'cap' ? '◆' : '●'} ${n.group}
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:5px;">
+                <span class="sr-bold" style="font-size:11.5px; color:${n.kind === 'cap' ? '#00d4ff' : (isIgn ? '#f5d0fe' : '#e8eef5')};">
+                  ${n.kind === 'cap' ? '◆' : '●'} ${n.group} ${pePill}
                 </span>
                 <span class="sr-pill ${quadPill(n.quadrant)}" style="font-size:9.5px;">${n.quadrant} (${n.heading})</span>
               </div>
               <div class="sr-mono sr-muted" style="display:flex; justify-content:space-between; font-size:10px; margin-top:4px;">
                 <span>1D <strong class="${n.chg >= 0 ? 'sr-pos' : 'sr-neg'}">${n.chg > 0 ? '+' : ''}${n.chg.toFixed(2)}%</strong> | 1M <strong class="${n.m1 >= 0 ? 'sr-pos' : 'sr-neg'}">${n.m1 > 0 ? '+' : ''}${n.m1.toFixed(1)}%</strong></span>
-                <span>&gt;50D <strong>${n.pctAbove50 ?? '--'}%</strong>${sigTxt}</span>
+                <span>&gt;50D <strong>${n.pctAbove50 ?? '--'}%</strong>${bbwTxt}${sigTxt}</span>
               </div>
             </div>
           `;
@@ -1869,7 +1970,11 @@ def render_tab4_fragments(sector_rotation_data):
           const alphaBtn = document.getElementById('sr-hm-btn-alpha');
           if (alphaBtn) alphaBtn.textContent = `Alpha vs NIFTY 50 (${b.d1 > 0 ? '+' : ''}${b.d1.toFixed(2)}%)`;
 
-          let rows = rrgEngine.macroNodes.filter(n => flt === 'all' || n.kind === flt).map(n => ({
+          let rows = rrgEngine.macroNodes.filter(n => {
+            if (flt === 'all') return true;
+            if (flt === 'pre_explode') return n.preExplodeTier === 'IGNITION' || n.preExplodeTier === 'COILING';
+            return n.kind === flt;
+          }).map(n => ({
             ...n,
             v1d: isAlp ? +(n.chg - b.d1).toFixed(2) : n.chg,
             v1w: isAlp ? +(n.w1 - b.w1).toFixed(2) : n.w1,
@@ -1884,6 +1989,17 @@ def render_tab4_fragments(sector_rotation_data):
             return ((a[c] || 0) - (b2[c] || 0)) * heatmapEngine.sortDir;
           });
 
+          const renderPreExplodeCell = (r) => {
+            if (r.kind !== 'sector') return `<span class="sr-muted sr-mono" style="font-size:10px;">—</span>`;
+            const tier = r.preExplodeTier || 'STANDARD';
+            const sc = r.preExplodeScore || 0;
+            const reasons = ui.escAttr((r.preExplodeReasons || []).join(' • ') || `BBW ${r.bbwPct ?? '--'}%`);
+            if (tier === 'IGNITION') return `<span class="sr-pill pill-ignite" title="${reasons}">⚡ ${sc} IGNITE</span>`;
+            if (tier === 'COILING') return `<span class="sr-pill pill-coil" title="${reasons}">◈ ${sc} COIL</span>`;
+            if (tier === 'EXTENDED') return `<span class="sr-pill pill-amber" title="${reasons}">${sc} EXTENDED</span>`;
+            return `<span class="sr-muted sr-mono" style="font-size:10px;" title="${reasons}">${sc}</span>`;
+          };
+
           document.getElementById('sr-heatmap-table-wrap').innerHTML = `
             <table class="sr-table">
               <thead>
@@ -1891,6 +2007,7 @@ def render_tab4_fragments(sector_rotation_data):
                   <th onclick="SR.heatmapEngine.sortBy('group')">Sector / Market Cap Index ⇅</th>
                   <th>Category</th>
                   <th>RRG Quadrant</th>
+                  <th class="sr-num" onclick="SR.heatmapEngine.sortBy('preExplodeScore')">Pre-Explode ⇅</th>
                   <th>Astro Ruler</th>
                   <th class="sr-num" onclick="SR.heatmapEngine.sortBy('v1d')">1D ⇅</th>
                   <th class="sr-num" onclick="SR.heatmapEngine.sortBy('v1w')">1W ⇅</th>
@@ -1903,14 +2020,17 @@ def render_tab4_fragments(sector_rotation_data):
                 </tr>
               </thead>
               <tbody>
-                ${rows.map(r => `
-                  <tr class="sr-row-click" onclick="SR.app.drillSectorFromAnywhere('${ui.escAttr(r.id)}')">
+                ${rows.map(r => {
+                  const rowCls = r.preExplodeTier === 'IGNITION' ? 'sr-row-ignite' : (r.preExplodeTier === 'COILING' ? 'sr-row-coil' : '');
+                  return `
+                  <tr class="sr-row-click ${rowCls}" onclick="SR.app.drillSectorFromAnywhere('${ui.escAttr(r.id)}')">
                     <td>
-                      <span class="sr-bold" style="color:${r.kind === 'cap' ? '#00d4ff' : '#e8eef5'};">${r.kind === 'cap' ? '◆ ' : '● '}${r.group}</span>
+                      <span class="sr-bold" style="color:${r.kind === 'cap' ? '#00d4ff' : (r.preExplodeTier === 'IGNITION' ? '#f5d0fe' : '#e8eef5')};">${r.kind === 'cap' ? '◆ ' : '● '}${r.group}</span>
                       <div class="sr-muted" style="font-size:10px;">${r.desc} • ${r.source || ''}</div>
                     </td>
                     <td><span class="sr-pill ${r.kind === 'cap' ? 'pill-amber' : 'pill-neutral'}">${r.kind === 'cap' ? 'CAP INDEX' : 'SECTOR'}</span></td>
                     <td><span class="sr-pill ${quadPill(r.quadrant)}">${r.quadrant} (${r.heading})</span></td>
+                    <td class="sr-num">${renderPreExplodeCell(r)}</td>
                     <td class="sr-mono sr-vio" style="font-size:10.5px;">${r.ruler}</td>
                     ${[r.v1d, r.v1w, r.v1m, r.v3m, r.v1y].map(v =>
                       `<td class="sr-num ${v >= 0 ? 'sr-pos' : 'sr-neg'}" style="${heatmapEngine.tint(v)}">${v > 0 ? '+' : ''}${v.toFixed(2)}%</td>`
@@ -1919,7 +2039,8 @@ def render_tab4_fragments(sector_rotation_data):
                     <td class="sr-num sr-mono">${r.pctAbove200 ?? '--'}%</td>
                     <td class="sr-num sr-mono"><span class="sr-pos">${r.trackACount || 0}A</span> / <span class="sr-vio">${r.trackBCount || 0}B</span></td>
                   </tr>
-                `).join('')}
+                `;
+                }).join('')}
               </tbody>
             </table>
           `;

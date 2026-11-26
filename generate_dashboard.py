@@ -1464,16 +1464,20 @@ def save_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=No
         sector_rotation=sector_rotation
     )
     
-    # 1. Save to docs/index.html for GitHub Pages
+    # 1. Save to docs/index.html for GitHub Pages (atomic replace avoids OneDrive ReparsePoint Errno 22)
     docs_path = os.path.join(output_dir, "docs", "index.html")
     os.makedirs(os.path.dirname(docs_path), exist_ok=True)
-    with open(docs_path, "w", encoding="utf-8") as f:
+    docs_tmp = docs_path + ".tmp"
+    with open(docs_tmp, "w", encoding="utf-8") as f:
         f.write(html)
-        
+    os.replace(docs_tmp, docs_path)
+
     # 2. Also save to root dashboard.html for easy local double-click opening
     local_path = os.path.join(output_dir, "dashboard.html")
-    with open(local_path, "w", encoding="utf-8") as f:
+    local_tmp = local_path + ".tmp"
+    with open(local_tmp, "w", encoding="utf-8") as f:
         f.write(html)
+    os.replace(local_tmp, local_path)
         
     return docs_path, local_path
 
