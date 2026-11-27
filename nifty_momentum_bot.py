@@ -768,22 +768,23 @@ def calculate_active_breakout_score(hist, nifty500_hist=None, delivery_pct=None)
         score += 3  # Mild penalty for over-extension
 
     # -------------------------------------------------------------
-    # 10. Structural Stop-Loss Engine (5D Shelf / 1.5x ATR, 3.5% to 6.5% Cap)
+    # 10. Anti-Stop-Hunt Structural SL Engine (1.5x ATR / 0.75x Below Shelf, 4% to 8% Cap)
     # -------------------------------------------------------------
     shelf_low_5d = float(low_series.iloc[-6:-1].min())  # Matches TradingView ta.lowest(low[1], 5)
     anchor_low = retest_low if retest_holding else shelf_low_5d
     atr_sl_floor = today_close - (1.5 * curr_atr)
-    raw_sl = max(anchor_low - (0.25 * curr_atr), atr_sl_floor)
-    
+    raw_sl = min(anchor_low - (0.75 * curr_atr), atr_sl_floor)
+
     raw_risk = today_close - raw_sl
-    max_risk = today_close * 0.065  # Institutional 6.5% max risk cap
-    min_risk = today_close * 0.035  # 3.5% min risk floor to avoid noise
-    
+    max_risk = today_close * 0.080  # 8.0% max risk cap for Sweep-Proof SL
+    min_risk = today_close * 0.040  # 4.0% min risk floor to clear opening noise
+
     unit_risk = round(max(min(raw_risk, max_risk), min_risk), 1)
     structural_sl = round(today_close - unit_risk, 1)
+    catastrophe_sl = round(structural_sl - (0.5 * curr_atr), 1)
     risk_pct = round((unit_risk / today_close) * 100, 2)
     t1_2r = round(today_close + (2.0 * unit_risk), 1)
-    
+
     # Dynamic Fibonacci 1.618 Base Extension Target (Adaptive to Base Depth)
     base_depth = max(pivot - anchor_low, 2.0 * curr_atr)
     fib_t2 = round(pivot + (1.618 * base_depth), 1) if base_depth > 0 else round(today_close + (3.0 * unit_risk), 1)
@@ -802,6 +803,7 @@ def calculate_active_breakout_score(hist, nifty500_hist=None, delivery_pct=None)
         "delivery_pct": delivery_pct,
         "rs_spread": f"+{rs_spread}%" if rs_spread > 0 else f"{rs_spread}%",
         "structural_sl": structural_sl,
+        "catastrophe_sl": catastrophe_sl,
         "unit_risk": unit_risk,
         "risk_pct": risk_pct,
         "t1_2r": t1_2r,
@@ -1015,11 +1017,12 @@ def run_nse_market_lens_screen():
                 a_payload["range_ratio"] = f"{b_metrics['range_ratio']}x"
                 a_payload["rs_spread"] = b_metrics["rs_spread"]
                 a_payload["structural_sl"] = b_metrics["structural_sl"]
+                a_payload["catastrophe_sl"] = b_metrics.get("catastrophe_sl", round(b_metrics["structural_sl"] * 0.97, 1))
                 a_payload["unit_risk"] = b_metrics["unit_risk"]
                 a_payload["risk_pct"] = b_metrics["risk_pct"]
                 a_payload["t1_2r"] = b_metrics["t1_2r"]
                 a_payload["t2_3r"] = b_metrics["t2_3r"]
-                a_payload["be_cost_anchor"] = round(today_close * 1.0035, 1)
+                a_payload["be_cost_anchor"] = round(today_close * 0.996, 1)  # Avoid tight 0.3% sweep stops after T1
                 a_payload["rationale"] = a_rationale
                 active_breakouts.append(a_payload)
 
@@ -1031,12 +1034,13 @@ def run_nse_market_lens_screen():
                 entry_trigger = round(pivot + atr_buffer, 1)
                 base_low_5d = float(hist["Low"].iloc[-6:-1].min())  # Matches TradingView ta.lowest(low[1], 5)
                 sl_atr = entry_trigger - (1.5 * atr_val)
-                raw_sl = max(base_low_5d - (0.25 * atr_val), sl_atr)
+                raw_sl = min(base_low_5d - (0.75 * atr_val), sl_atr)
                 raw_risk = entry_trigger - raw_sl
-                max_risk = entry_trigger * 0.065
-                min_risk = entry_trigger * 0.035
+                max_risk = entry_trigger * 0.080
+                min_risk = entry_trigger * 0.040
                 risk_1r = round(max(min(raw_risk, max_risk), min_risk), 1)
                 initial_sl = round(entry_trigger - risk_1r, 1)
+                catastrophe_sl = round(initial_sl - (0.5 * atr_val), 1)
                 risk_pct = round((risk_1r / entry_trigger) * 100, 2)
 
                 target_1_2r = round(entry_trigger + (2.0 * risk_1r), 1)
@@ -1045,7 +1049,7 @@ def run_nse_market_lens_screen():
                 base_depth = max(pivot - base_low_5d, 2.0 * atr_val)
                 fib_ext_target = round(pivot + (1.618 * base_depth), 1) if base_depth > 0 else round(entry_trigger + (3.0 * risk_1r), 1)
                 target_2_3r = round(max(entry_trigger + (3.0 * risk_1r), fib_ext_target), 1)
-                be_retest_anchor = round(pivot * 0.998, 1)
+                be_retest_anchor = round(max(pivot - (0.5 * atr_val), initial_sl + (0.5 * risk_1r)), 1)
 
                 dry_desc = "extreme dry-up" if halo_metrics['vol_dryup_ratio'] <= 0.60 else "supply drying"
                 bbw_desc = "deep historical coil" if halo_metrics['bbw_percentile'] <= 15.0 else "volatility contraction"
@@ -1066,6 +1070,7 @@ def run_nse_market_lens_screen():
                 squeeze_payload["pass_all_7"] = halo_metrics["pass_all_7"]
                 squeeze_payload["entry_trigger"] = entry_trigger
                 squeeze_payload["initial_sl"] = initial_sl
+                squeeze_payload["catastrophe_sl"] = catastrophe_sl
                 squeeze_payload["risk_1r"] = risk_1r
                 squeeze_payload["risk_pct"] = risk_pct
                 squeeze_payload["target_1_2r"] = target_1_2r
@@ -1093,30 +1098,42 @@ def run_nse_market_lens_screen():
 # TELEGRAM SENDER
 # ==============================================================================
 def send_telegram_alert(message_text: str):
-    """Sends message to Telegram via Bot API."""
+    """Sends message to Telegram via Bot API, chunking cleanly if over 4000 chars."""
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         logger.warning("Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID environment variables. Skipping alert.")
         return False
 
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": message_text,
-        "parse_mode": "Markdown",
-        "disable_web_page_preview": True
-    }
+    chunks = []
+    remaining = (message_text or "").strip()
+    while len(remaining) > 3950:
+        cut = remaining.rfind("\n", 0, 3950)
+        if cut < 1500:
+            cut = 3950
+        chunks.append(remaining[:cut])
+        remaining = remaining[cut:].lstrip()
+    if remaining:
+        chunks.append(remaining)
 
-    try:
-        response = requests.post(url, json=payload, timeout=20)
-        if response.status_code == 200:
-            logger.info("Daily 5:00 PM Telegram update sent successfully!")
-            return True
-        else:
-            logger.error(f"Telegram API Error: {response.status_code} - {response.text}")
-            return False
-    except Exception as e:
-        logger.error(f"Network error: {e}")
-        return False
+    all_ok = True
+    for part in chunks:
+        payload = {
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": part,
+            "parse_mode": "Markdown",
+            "disable_web_page_preview": True
+        }
+        try:
+            response = requests.post(url, json=payload, timeout=20)
+            if response.status_code == 200:
+                logger.info("Telegram alert dispatched successfully.")
+            else:
+                logger.error(f"Telegram API Error: {response.status_code} - {response.text}")
+                all_ok = False
+        except Exception as e:
+            logger.error(f"Network error: {e}")
+            all_ok = False
+    return all_ok
 
 # ==============================================================================
 # REPORT BUILDER
@@ -1217,6 +1234,11 @@ from sector_rotation_engine import (
     compute_sector_rotation_payload,
     save_sector_rotation_cache,
 )
+from trade_plan_agent import (
+    build_trade_plan_payload,
+    build_daily_trade_plan_telegram,
+    save_trade_plan_cache,
+)
 from trade_tracker import (
     load_trade_ledger,
     save_trade_ledger,
@@ -1269,17 +1291,36 @@ def main():
     except Exception as e:
         logger.warning(f"Error computing sector rotation payload: {e}")
 
-    # 5. Generate & Update HTML Dashboard (for GitHub Pages and Local view)
+    # 5. Compute Daily Trade Plan Agent (All 750 Stocks + Anti-Stop-Hunt + Open Ledger Audit)
+    trade_plan_payload = None
+    try:
+        trade_plan_payload = build_trade_plan_payload(
+            sector_rotation=sector_rotation_payload,
+            trades=trades,
+            active_breakouts=active_breakouts,
+            pre_breakout_squeezes=pre_breakout_squeezes,
+        )
+        save_trade_plan_cache(trade_plan_payload)
+        logger.info(
+            f"Trade Plan Agent built: {len(trade_plan_payload.get('swing_queue', []))} Swing, "
+            f"{len(trade_plan_payload.get('core_queue', []))} Core, "
+            f"{len(trade_plan_payload.get('stock_lookup', {}))} Universe Lookup."
+        )
+    except Exception as e:
+        logger.warning(f"Error building trade plan payload: {e}")
+
+    # 6. Generate & Update HTML Dashboard (for GitHub Pages and Local view)
     try:
         docs_path, local_path = save_dashboard(
             active_breakouts, pre_breakout_squeezes, BENCHMARK_INDICES, total_scanned=total_scanned,
-            trades=trades, strategy_metrics=strategy_metrics, sector_rotation=sector_rotation_payload
+            trades=trades, strategy_metrics=strategy_metrics,
+            sector_rotation=sector_rotation_payload, trade_plan=trade_plan_payload
         )
         logger.info(f"Dashboard generated successfully for {total_scanned} stocks at {docs_path}")
     except Exception as e:
         logger.warning(f"Error generating dashboard: {e}")
 
-    # 5. Build and Send Telegram Evening Brief
+    # 7. Build and Send Telegram Evening Brief + Daily Trade Plan Summary
     report = build_daily_evening_report(
         active_breakouts, pre_breakout_squeezes, total_scanned=total_scanned, strategy_metrics=strategy_metrics
     )
@@ -1289,6 +1330,14 @@ def main():
             logger.info("Telegram alert dispatched successfully.")
         else:
             logger.warning("Telegram alert dispatch failed or skipped.")
+
+        if trade_plan_payload:
+            try:
+                plan_msg = build_daily_trade_plan_telegram(trade_plan_payload)
+                if send_telegram_alert(plan_msg):
+                    logger.info("Telegram daily Trade Plan brief dispatched successfully.")
+            except Exception as e:
+                logger.warning(f"Failed sending Telegram Trade Plan brief: {e}")
     else:
         logger.info("Telegram credentials not configured; skipped Telegram broadcast.")
 

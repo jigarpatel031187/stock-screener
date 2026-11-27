@@ -382,27 +382,35 @@ def _normalize_series_index(s: pd.Series) -> pd.Series:
     return s
 
 
-def compute_jdk_rrg_trail(price_series: pd.Series, bench_series: pd.Series, is_weekly: bool = False, tail_len: int = 16):
+def compute_jdk_rrg_trail(
+    price_series: pd.Series,
+    bench_series: pd.Series,
+    is_weekly: bool = False,
+    tail_len: int = 16,
+    pre_normalized: bool = False,
+):
     """
     Computes genuine JdK RS-Ratio and RS-Momentum relative to benchmark.
     Returns (angle, radius, trail_points) where trail_points is a list of {x, y}
     centered around 0 (i.e. RS-Ratio - 100, RS-Momentum - 100).
     """
-    p = _normalize_series_index(price_series)
-    b = _normalize_series_index(bench_series)
-    df = pd.concat([p.rename("p"), b.rename("b")], axis=1).dropna()
-    if len(df) < 40:
+    p = price_series.dropna() if pre_normalized else _normalize_series_index(price_series)
+    b = bench_series.dropna() if pre_normalized else _normalize_series_index(bench_series)
+    if len(p) < 40 or len(b) < 40:
+        return None
+
+    rs = ((p / b) * 100.0).replace([float("inf"), float("-inf")], pd.NA).dropna()
+    if len(rs) < 40:
         return None
 
     if is_weekly:
-        df = df.resample("W-FRI").last().dropna()
-        if len(df) < 22:
+        rs = rs.resample("W-FRI").last().dropna()
+        if len(rs) < 22:
             return None
         short_span, long_span, z_win, mom_lag = 6, 14, 26, 4
     else:
         short_span, long_span, z_win, mom_lag = 10, 26, 63, 5
 
-    rs = (df["p"] / df["b"]) * 100.0
     rs_fast = rs.ewm(span=short_span, adjust=False).mean()
     rs_slow = rs.ewm(span=long_span, adjust=False).mean()
     rs_trend = ((rs_fast / rs_slow) - 1.0) * 100.0
@@ -419,20 +427,22 @@ def compute_jdk_rrg_trail(price_series: pd.Series, bench_series: pd.Series, is_w
     z_mom = ((mom_smooth - mom_mean) / mom_std).fillna(0.0).clip(-3.5, 3.5)
     jdk_mom = 100.0 + z_mom * 3.8
 
-    tail_df = pd.DataFrame({"x": jdk_ratio - 100.0, "y": jdk_mom - 100.0}).dropna().tail(tail_len)
-    if tail_df.empty:
+    x_vals = (jdk_ratio - 100.0).dropna().iloc[-tail_len:]
+    y_vals = (jdk_mom - 100.0).reindex(x_vals.index).dropna()
+    x_vals = x_vals.reindex(y_vals.index)
+    if x_vals.empty:
         return None
 
-    pts = [{"x": round(float(r.x), 2), "y": round(float(r.y), 2)} for r in tail_df.itertuples()]
+    pts = [{"x": round(float(xv), 2), "y": round(float(yv), 2)} for xv, yv in zip(x_vals.values, y_vals.values)]
     hx, hy = pts[-1]["x"], pts[-1]["y"]
     angle = (math.degrees(math.atan2(hy, hx)) + 360.0) % 360.0
     radius = 100.0 + math.hypot(hx, hy)
     return round(angle, 1), round(radius, 2), pts
 
 
-def _compute_period_returns(series: pd.Series):
+def _compute_period_returns(series: pd.Series, pre_normalized: bool = False):
     """Computes 1D, 1W, 1M, 3M, 1Y percentage returns from a daily close series."""
-    s = _normalize_series_index(series)
+    s = series.dropna() if pre_normalized else _normalize_series_index(series)
     if len(s) < 2:
         return {"d1": 0.0, "w1": 0.0, "m1": 0.0, "m3": 0.0, "y1": 0.0, "last": 0.0}
 
@@ -453,14 +463,18 @@ def _compute_period_returns(series: pd.Series):
     }
 
 
-def _build_equal_weight_series(symbols, all_hist):
+def _build_equal_weight_series(symbols, all_hist, norm_close_map=None):
     """Builds an equal-weight normalized price composite (base=100) from member tickers."""
     ret_cols = []
     for sym in symbols:
-        df = all_hist.get(sym)
-        if df is None or len(df) < 30:
+        c = norm_close_map.get(sym) if norm_close_map is not None else None
+        if c is None:
+            df = all_hist.get(sym)
+            if df is None or len(df) < 30:
+                continue
+            c = _normalize_series_index(df["Close"])
+        if len(c) < 30:
             continue
-        c = _normalize_series_index(df["Close"])
         r = c.pct_change().dropna()
         if not r.empty:
             ret_cols.append(r.rename(sym))
@@ -556,13 +570,333 @@ def _stock_technicals_from_hist(hist_df):
     dma20 = float(close.rolling(20, min_periods=10).mean().iloc[-1])
     dma150 = float(close.rolling(min(150, len(close)), min_periods=20).mean().iloc[-1])
     swing_low = float(low.iloc[-21:-1].min()) if len(low) >= 21 else float(low.min())
+    ema20 = float(close.ewm(span=20, adjust=False).mean().iloc[-1])
     return {
         "price": round(last, 2),
         "chg": chg,
         "atr14": round(atr14, 1),
         "dma20": round(dma20, 1),
+        "ema20": round(ema20, 1),
         "dma150": round(dma150, 1),
         "swingLow": round(swing_low, 1),
+    }
+
+
+def _derive_quad_and_heading(daily_tail: list, angle: float):
+    """Computes JdK Quadrant and 8-point compass heading from angle and recent RRG trail."""
+    a = angle % 360.0
+    quad = "Leading" if a < 90 else ("Improving" if a < 180 else ("Lagging" if a < 270 else "Weakening"))
+    heading = "E"
+    if daily_tail and len(daily_tail) >= 2:
+        p1, p2 = daily_tail[-2], daily_tail[-1]
+        deg = (math.degrees(math.atan2(p2["y"] - p1["y"], p2["x"] - p1["x"])) + 360.0) % 360.0
+        if deg > 337.5 or deg <= 22.5: heading = "E"
+        elif deg <= 67.5: heading = "NE"
+        elif deg <= 112.5: heading = "N"
+        elif deg <= 157.5: heading = "NW"
+        elif deg <= 202.5: heading = "W"
+        elif deg <= 247.5: heading = "SW"
+        elif deg <= 292.5: heading = "S"
+        else: heading = "SE"
+    return quad, heading
+
+
+def _bbw_and_atr_stats(price_series: pd.Series, high_series: pd.Series = None, low_series: pd.Series = None):
+    """Computes 120-day Bollinger Band Width percentile rank and 20-day ATR(14) decay ratio."""
+    bbw_pct = 50.0
+    atr_decay = 1.0
+    s = _normalize_series_index(price_series) if price_series is not None else pd.Series(dtype=float)
+    if len(s) < 60:
+        return s, bbw_pct, atr_decay
+
+    bb_mid = s.rolling(20).mean()
+    bb_std = s.rolling(20).std()
+    bbw = (100.0 * (4.0 * bb_std) / bb_mid).dropna()
+    if len(bbw) >= 30:
+        curr_bbw = float(bbw.iloc[-1])
+        hist_bbw = bbw.iloc[-121:-1] if len(bbw) > 30 else bbw.iloc[:-1]
+        if len(hist_bbw) >= 15:
+            bbw_pct = round(float((hist_bbw < curr_bbw).mean() * 100.0), 1)
+
+    if high_series is not None and low_series is not None:
+        h = _normalize_series_index(high_series).reindex(s.index)
+        l = _normalize_series_index(low_series).reindex(s.index)
+        tr = pd.concat([(h - l), (h - s.shift(1)).abs(), (l - s.shift(1)).abs()], axis=1).max(axis=1)
+    else:
+        tr = s.diff().abs()
+    atr_s = tr.ewm(alpha=1.0 / 14.0, adjust=False).mean()
+    if len(atr_s) >= 22 and float(atr_s.iloc[-21]) > 0:
+        atr_decay = round(float(atr_s.iloc[-1]) / float(atr_s.iloc[-21]), 2)
+    return s, bbw_pct, atr_decay
+
+
+def _extract_stock_raw_features(hist_df: pd.DataFrame):
+    """Computes normalized close, returns, ATR/SMAs, BBW%, ATR decay, and volume footprint once per ticker."""
+    if hist_df is None or len(hist_df) < 22:
+        return None
+    df = hist_df.dropna(subset=["Close"])
+    if len(df) < 22:
+        return None
+    close = _normalize_series_index(df["Close"])
+    if len(close) < 22:
+        return None
+
+    norm_idx = pd.to_datetime(df.index)
+    if norm_idx.tz is not None:
+        norm_idx = norm_idx.tz_localize(None)
+    norm_idx = norm_idx.normalize()
+    df_norm = df.copy()
+    df_norm.index = norm_idx
+    df_norm = df_norm[~df_norm.index.duplicated(keep="last")].sort_index().reindex(close.index)
+
+    high = df_norm["High"].ffill()
+    low = df_norm["Low"].ffill()
+    vol = df_norm["Volume"].fillna(0.0) if "Volume" in df_norm.columns else pd.Series(0.0, index=close.index)
+
+    last_c = float(close.iloc[-1])
+    prev_c = float(close.iloc[-2]) if len(close) >= 2 else last_c
+    chg = round(((last_c - prev_c) / prev_c) * 100.0, 2) if prev_c > 0 else 0.0
+
+    tr = pd.concat([(high - low), (high - close.shift(1)).abs(), (low - close.shift(1)).abs()], axis=1).max(axis=1)
+    atr14 = float(tr.rolling(14, min_periods=5).mean().iloc[-1])
+    dma20 = float(close.rolling(20, min_periods=10).mean().iloc[-1])
+    ema20 = float(close.ewm(span=20, adjust=False).mean().iloc[-1])
+    dma50 = float(close.rolling(min(50, len(close))).mean().iloc[-1])
+    sma200 = float(close.rolling(min(200, len(close))).mean().iloc[-1])
+    dma150 = float(close.rolling(min(150, len(close)), min_periods=20).mean().iloc[-1])
+    swing_low = float(low.iloc[-21:-1].min()) if len(low) >= 21 else float(low.min())
+
+    tech = {
+        "price": round(last_c, 2),
+        "chg": chg,
+        "atr14": round(atr14, 1),
+        "dma20": round(dma20, 1),
+        "ema20": round(ema20, 1),
+        "dma150": round(dma150, 1),
+        "swingLow": round(swing_low, 1),
+    }
+    s_rets = _compute_period_returns(close, pre_normalized=True)
+
+    bbw_pct = 50.0
+    atr_decay = 1.0
+    dist_high_pct = 0.0
+    vol_dry = 1.0
+    up_dn_vol = 1.0
+    stage2_pass = False
+    dma50_s = dma50
+    dma150_s = dma150
+    has_60 = len(close) >= 60
+
+    if has_60:
+        bb_mid = close.rolling(20).mean()
+        bb_std = close.rolling(20).std()
+        bbw = (100.0 * (4.0 * bb_std) / bb_mid).dropna()
+        if len(bbw) >= 30:
+            curr_bbw = float(bbw.iloc[-1])
+            hist_bbw = bbw.iloc[-121:-1] if len(bbw) > 30 else bbw.iloc[:-1]
+            if len(hist_bbw) >= 15:
+                bbw_pct = round(float((hist_bbw < curr_bbw).mean() * 100.0), 1)
+
+        atr_s = tr.ewm(alpha=1.0 / 14.0, adjust=False).mean()
+        if len(atr_s) >= 22 and float(atr_s.iloc[-21]) > 0:
+            atr_decay = round(float(atr_s.iloc[-1]) / float(atr_s.iloc[-21]), 2)
+
+        high_50d = float(high.iloc[-min(50, len(high)):].max())
+        dist_high_pct = round(((high_50d - last_c) / high_50d) * 100.0, 1) if high_50d > 0 else 0.0
+
+        if len(vol) >= 21 and float(vol.iloc[-20:].mean()) > 0:
+            v20 = float(vol.iloc[-20:].mean())
+            v5 = float(vol.iloc[-5:].mean())
+            vol_dry = round(v5 / v20, 2) if v20 > 0 else 1.0
+            diffs = close.diff().iloc[-15:]
+            v15 = vol.iloc[-15:]
+            up_vol = float(v15[diffs >= 0].sum())
+            dn_vol = float(v15[diffs < 0].sum())
+            up_dn_vol = round(up_vol / max(1.0, dn_vol), 2) if up_vol > 0 else 0.5
+
+        dma50_s = float(close.rolling(50, min_periods=20).mean().iloc[-1])
+        dma150_s = float(close.rolling(min(150, len(close)), min_periods=25).mean().iloc[-1])
+        stage2_pass = (last_c >= dma50_s and last_c >= dma150_s and dma50_s >= dma150_s * 0.99)
+
+    return {
+        "close_norm": close,
+        "len_bars": len(close),
+        "last_c": last_c,
+        "sma50": dma50,
+        "sma200": sma200,
+        "tech": tech,
+        "s_rets": s_rets,
+        "has_60": has_60,
+        "bbw_pct": bbw_pct,
+        "atr_decay": atr_decay,
+        "vol_dry": vol_dry,
+        "up_dn_vol": up_dn_vol,
+        "dist_high_pct": dist_high_pct,
+        "dma20": dma20,
+        "dma50": dma50_s,
+        "dma150": dma150_s,
+        "atr14": atr14,
+        "stage2_pass": stage2_pass,
+    }
+
+
+def compute_stock_smart_money_phase(
+    hist_df: pd.DataFrame,
+    daily_tail: list,
+    angle: float,
+    stock_rets: dict,
+    sector_rets: dict,
+    sector_tier: str,
+    signal_tag: str = None,
+    precomputed_raw: dict = None,
+):
+    """
+    Computes a 0-100 3-Phase Smart Money Rotation Score for an individual stock:
+      1. Base Compression & Pivot Proximity (0-25): BBW 120D rank + ATR decay + dist to 50D high
+      2. Volume Footprint (0-25): 15D Up/Down Volume Demand Ratio + 5D/20D Supply Dry-Up
+      3. Dual Relative Strength (0-25): Stock RRG Turn vs Nifty 500 + Alpha vs Own Sector
+      4. Weinstein Stage-2 Structure (0-15): Close > 50-DMA & 50-DMA >= 150-DMA
+      5. Scanner Alignment (0-10): Track A Breakout / Track B HALO Squeeze
+    Guard: Extended >20% 1M or >2.5x ATR above 20-DMA -> EXTENDED.
+    Returns (score, tier, metrics_dict).
+    """
+    default_meta = {
+        "bbwPct": 50.0,
+        "atrDecay": 1.0,
+        "volDryRatio": 1.0,
+        "upDownVol": 1.0,
+        "distHighPct": 0.0,
+        "alphaSec1W": 0.0,
+        "alphaSec1M": 0.0,
+        "stage2Pass": False,
+        "confluence": "NEUTRAL",
+        "preExplodeReasons": [],
+    }
+    raw = precomputed_raw if precomputed_raw is not None else _extract_stock_raw_features(hist_df)
+    if not raw or not raw.get("has_60"):
+        return 0, "NEUTRAL", default_meta
+
+    last_c = raw["last_c"]
+    dma20 = raw["dma20"]
+    dma50 = raw["dma50"]
+    dma150 = raw["dma150"]
+    atr14 = raw["atr14"]
+    bbw_pct = raw["bbw_pct"]
+    atr_decay = raw["atr_decay"]
+    dist_high_pct = raw["dist_high_pct"]
+    vol_dry = raw["vol_dry"]
+    up_dn_vol = raw["up_dn_vol"]
+    stage2_pass = raw["stage2_pass"]
+
+    quad, heading = _derive_quad_and_heading(daily_tail, angle)
+    a = angle % 360.0
+    alpha_sec_1w = round(stock_rets.get("w1", 0.0) - sector_rets.get("w1", 0.0), 2)
+    alpha_sec_1m = round(stock_rets.get("m1", 0.0) - sector_rets.get("m1", 0.0), 2)
+    m1_ret = stock_rets.get("m1", 0.0)
+
+    score = 0
+    reasons = []
+
+    # 1. Base Contraction & Pivot Proximity (max 25)
+    if bbw_pct <= 25.0:
+        score += 12
+        reasons.append(f"BBW {bbw_pct:.0f}% Squeeze")
+    elif bbw_pct <= 40.0:
+        score += 7
+    if atr_decay <= 0.85:
+        score += 7
+        reasons.append(f"ATR {atr_decay:.2f}x")
+    elif atr_decay <= 0.95:
+        score += 4
+    if dist_high_pct <= 6.0:
+        score += 6
+        reasons.append(f"Near High ({dist_high_pct:.1f}%)")
+    elif dist_high_pct <= 12.0:
+        score += 3
+
+    # 2. Institutional Volume Footprint (max 25)
+    if up_dn_vol >= 1.35:
+        score += 15
+        reasons.append(f"Accum {up_dn_vol:.1f}x")
+    elif up_dn_vol >= 1.10:
+        score += 8
+    if vol_dry <= 0.75 and last_c >= dma20 * 0.99:
+        score += 10
+        reasons.append(f"VolDry {vol_dry:.2f}x")
+    elif vol_dry <= 0.90 and last_c >= dma20 * 0.99:
+        score += 5
+
+    # 3. Dual Relative Strength (max 25)
+    if quad == "Improving" and heading in ("NE", "E", "N"):
+        score += 15
+        reasons.append(f"RRG {quad} ({heading})")
+    elif quad == "Lagging" and heading in ("N", "NE", "E"):
+        score += 12
+        reasons.append(f"Bottom Turn ({heading})")
+    elif quad == "Improving":
+        score += 10
+    elif quad == "Leading" and a <= 45.0 and heading in ("NE", "E"):
+        score += 8
+
+    if alpha_sec_1w > 0 and alpha_sec_1m > 0:
+        score += 10
+        reasons.append("+Sec Leader")
+    elif alpha_sec_1w > 0 or alpha_sec_1m > 0:
+        score += 5
+
+    # 4. Stage-2 Trend Structure (max 15)
+    if last_c >= dma50:
+        score += 7
+    if last_c >= dma150 and dma50 >= dma150 * 0.99:
+        score += 8
+        reasons.append("Stage 2")
+
+    # 5. Scanner Match (max 10)
+    if signal_tag in ("TRACK A", "TRACK B"):
+        score += 10
+        reasons.append(signal_tag)
+
+    score = min(100, score)
+
+    # Anti-Chase Guard
+    ext_atr = ((last_c - dma20) / atr14) if atr14 > 0 else 0.0
+    is_extended = (
+        m1_ret > 20.0
+        or ext_atr > 2.5
+        or (dma20 > 0 and (last_c / dma20) > 1.12)
+    )
+    if is_extended:
+        tier = "EXTENDED"
+    elif score >= 65:
+        tier = "PHASE_3"
+    elif score >= 50:
+        tier = "PHASE_2"
+    elif score >= 35:
+        tier = "PHASE_1"
+    else:
+        tier = "NEUTRAL"
+
+    # Top-down Sector Confluence tag
+    if tier == "PHASE_3" and sector_tier in ("PHASE_3", "PHASE_2"):
+        confluence = "DUAL_CONFLUENCE"
+    elif tier in ("PHASE_3", "PHASE_2") and sector_tier in ("PHASE_3", "PHASE_2", "PHASE_1"):
+        confluence = "SECTOR_TAILWIND"
+    elif tier == "PHASE_3":
+        confluence = "SOLO_ALPHA"
+    else:
+        confluence = "STANDARD"
+
+    return score, tier, {
+        "bbwPct": bbw_pct,
+        "atrDecay": atr_decay,
+        "volDryRatio": vol_dry,
+        "upDownVol": up_dn_vol,
+        "distHighPct": dist_high_pct,
+        "alphaSec1W": alpha_sec_1w,
+        "alphaSec1M": alpha_sec_1m,
+        "stage2Pass": stage2_pass,
+        "confluence": confluence,
+        "preExplodeReasons": reasons[:5],
     }
 
 
@@ -589,41 +923,12 @@ def compute_sector_pre_explosion(
       PHASE_3 (Markup Ready >=65), PHASE_2 (Supply Absorption 50-64), PHASE_1 (Early Base 35-49),
       EXTENDED (Late Markup >16% 1M in Leading/Weakening), NEUTRAL (<35).
     """
-    # 1. Sector Volatility Compression (BBW 120D percentile + ATR14 20-day decay)
-    bbw_pct = 50.0
-    atr_decay = 1.0
-    s = _normalize_series_index(price_series) if price_series is not None else pd.Series(dtype=float)
+    s, bbw_pct, atr_decay = _bbw_and_atr_stats(price_series)
     if len(s) < 60:
         return 0, "NEUTRAL", bbw_pct, atr_decay, []
 
-    bb_mid = s.rolling(20).mean()
-    bb_std = s.rolling(20).std()
-    bbw = (100.0 * (4.0 * bb_std) / bb_mid).dropna()
-    if len(bbw) >= 30:
-        curr_bbw = float(bbw.iloc[-1])
-        hist_bbw = bbw.iloc[-121:-1] if len(bbw) > 30 else bbw.iloc[:-1]
-        if len(hist_bbw) >= 15:
-            bbw_pct = round(float((hist_bbw < curr_bbw).mean() * 100.0), 1)
-    tr_proxy = s.diff().abs()
-    atr_proxy = tr_proxy.ewm(alpha=1.0 / 14.0, adjust=False).mean()
-    if len(atr_proxy) >= 22 and float(atr_proxy.iloc[-21]) > 0:
-        atr_decay = round(float(atr_proxy.iloc[-1]) / float(atr_proxy.iloc[-21]), 2)
-
-    # 2. Quadrant & Heading
+    quad, heading = _derive_quad_and_heading(daily_tail, angle)
     a = angle % 360.0
-    quad = "Leading" if a < 90 else ("Improving" if a < 180 else ("Lagging" if a < 270 else "Weakening"))
-    heading = "E"
-    if daily_tail and len(daily_tail) >= 2:
-        p1, p2 = daily_tail[-2], daily_tail[-1]
-        deg = (math.degrees(math.atan2(p2["y"] - p1["y"], p2["x"] - p1["x"])) + 360.0) % 360.0
-        if deg > 337.5 or deg <= 22.5: heading = "E"
-        elif deg <= 67.5: heading = "NE"
-        elif deg <= 112.5: heading = "N"
-        elif deg <= 157.5: heading = "NW"
-        elif deg <= 202.5: heading = "W"
-        elif deg <= 247.5: heading = "SW"
-        elif deg <= 292.5: heading = "S"
-        else: heading = "SE"
 
     reasons = []
     score = 0
@@ -736,13 +1041,47 @@ def compute_sector_rotation_payload(
         else:
             bench_df = get_hist("^NSEI")
     bench_close = bench_df["Close"] if (bench_df is not None and not bench_df.empty) else pd.Series(dtype=float)
+    bench_norm = _normalize_series_index(bench_close) if not bench_close.empty else pd.Series(dtype=float)
 
     nifty50_df = get_hist("^NSEI")
     nifty50_rets = _compute_period_returns(nifty50_df["Close"]) if nifty50_df is not None else {"d1": 0.0, "w1": 0.0, "m1": 0.0, "m3": 0.0, "y1": 0.0, "last": 0.0}
-    bench_rets = _compute_period_returns(bench_close) if not bench_close.empty else nifty50_rets
+    bench_rets = _compute_period_returns(bench_norm, pre_normalized=True) if not bench_norm.empty else nifty50_rets
 
     # Optional NSE live quotes + FII/DII cash flow
     nse_indices, fii_dii_live = _fetch_nse_live_snapshots(nse_session)
+
+    # Per-symbol memoized feature / RRG caches (avoids redundant normalization & rolling windows across Cap+Sector)
+    raw_cache = {}
+    d_rrg_cache = {}
+    w_rrg_cache = {}
+    sym_by_clean = {}
+
+    def get_stock_raw(sym):
+        if sym not in raw_cache:
+            raw_cache[sym] = _extract_stock_raw_features(get_hist(sym))
+        return raw_cache[sym]
+
+    def get_stock_daily_rrg(sym):
+        if sym not in d_rrg_cache:
+            raw = get_stock_raw(sym)
+            if raw is not None and not bench_norm.empty:
+                d_rrg_cache[sym] = compute_jdk_rrg_trail(
+                    raw["close_norm"], bench_norm, is_weekly=False, tail_len=16, pre_normalized=True
+                )
+            else:
+                d_rrg_cache[sym] = None
+        return d_rrg_cache[sym]
+
+    def get_stock_weekly_rrg(sym):
+        if sym not in w_rrg_cache:
+            raw = get_stock_raw(sym)
+            if raw is not None and not bench_norm.empty:
+                w_rrg_cache[sym] = compute_jdk_rrg_trail(
+                    raw["close_norm"], bench_norm, is_weekly=True, tail_len=12, pre_normalized=True
+                )
+            else:
+                w_rrg_cache[sym] = None
+        return w_rrg_cache[sym]
 
     # 2. Universe breadth + lookup maps
     adv_count = 0
@@ -756,6 +1095,8 @@ def compute_sector_rotation_payload(
 
     for item in universe:
         sym = item["symbol"]
+        clean = sym.replace(".NS", "")
+        sym_by_clean[clean] = sym
         meta_by_sym[sym] = item
         by_bucket.setdefault(item.get("bucket", "NSE"), []).append(sym)
         by_industry.setdefault(item.get("sector", "Equities"), []).append(sym)
@@ -790,11 +1131,14 @@ def compute_sector_rotation_payload(
         "date_label": date_label,
     }
 
-    # 4. Build Live Sector & Market-Cap Universe Nodes (with real Daily & Weekly JdK RRG trails)
+    # 4. Build Live Sector & Market-Cap Universe Nodes (Sector first so Cap nodes reuse sector scores)
     universe_nodes = []
     sector_constituents = {}
+    all_stocks_by_ticker = {}
+    sector_context_map = {}
 
-    all_specs = CAP_INDEX_SPECS + SECTOR_SPECS
+    spec_order_map = {s["id"]: i for i, s in enumerate(CAP_INDEX_SPECS + SECTOR_SPECS)}
+    all_specs = SECTOR_SPECS + CAP_INDEX_SPECS
     for spec in all_specs:
         node_kind = spec.get("kind", "sector")
         # Determine member tickers for breadth & drill-down
@@ -826,15 +1170,19 @@ def compute_sector_rotation_payload(
         if spec.get("yf"):
             hdf = get_hist(spec["yf"])
             if hdf is not None and len(hdf) >= 60:
-                price_series = hdf["Close"]
+                price_series = _normalize_series_index(hdf["Close"])
                 source_tag = f"NSE Index ({spec['yf']})"
 
         if price_series.empty and member_syms:
-            merged_hist = {s: get_hist(s) for s in member_syms if get_hist(s) is not None}
-            price_series = _build_equal_weight_series(member_syms, merged_hist)
-            source_tag = f"Equal-Wt ({len(merged_hist)} stocks)"
+            norm_close_map = {}
+            for s in member_syms:
+                rw = get_stock_raw(s)
+                if rw is not None:
+                    norm_close_map[s] = rw["close_norm"]
+            price_series = _build_equal_weight_series(member_syms, all_hist, norm_close_map=norm_close_map)
+            source_tag = f"Equal-Wt ({len(norm_close_map)} stocks)"
 
-        rets = _compute_period_returns(price_series) if not price_series.empty else {"d1": 0.0, "w1": 0.0, "m1": 0.0, "m3": 0.0, "y1": 0.0, "last": 0.0}
+        rets = _compute_period_returns(price_series, pre_normalized=True) if not price_series.empty else {"d1": 0.0, "w1": 0.0, "m1": 0.0, "m3": 0.0, "y1": 0.0, "last": 0.0}
 
         # Overlay official NSE allIndices 1D / 1M / 1Y if available
         nse_row = nse_indices.get((spec.get("nse_name") or "").upper())
@@ -844,8 +1192,8 @@ def compute_sector_rotation_payload(
             if nse_row.get("last") is not None:
                 rets["last"] = round(float(nse_row["last"]), 2)
 
-        daily_rrg = compute_jdk_rrg_trail(price_series, bench_close, is_weekly=False, tail_len=16) if not bench_close.empty else None
-        weekly_rrg = compute_jdk_rrg_trail(price_series, bench_close, is_weekly=True, tail_len=12) if not bench_close.empty else None
+        daily_rrg = compute_jdk_rrg_trail(price_series, bench_norm, is_weekly=False, tail_len=16, pre_normalized=True) if not bench_norm.empty else None
+        weekly_rrg = compute_jdk_rrg_trail(price_series, bench_norm, is_weekly=True, tail_len=12, pre_normalized=True) if not bench_norm.empty else None
 
         angle, radius, daily_tail = daily_rrg if daily_rrg else (45.0, 100.0, [{"x": 0.0, "y": 0.0}])
         weekly_tail = weekly_rrg[2] if weekly_rrg else daily_tail
@@ -859,63 +1207,23 @@ def compute_sector_rotation_payload(
         const_rows = []
 
         for sym in member_syms:
-            hdf = get_hist(sym)
-            if hdf is None or len(hdf) < 30:
+            raw = get_stock_raw(sym)
+            if raw is None or raw["len_bars"] < 30:
                 continue
-            c = hdf["Close"]
-            last_c = float(c.iloc[-1])
-            sma50 = float(c.rolling(min(50, len(c))).mean().iloc[-1])
-            sma200 = float(c.rolling(min(200, len(c))).mean().iloc[-1])
             valid_breadth += 1
-            if last_c >= sma50:
+            if raw["last_c"] >= raw["sma50"]:
                 above_50 += 1
-            if last_c >= sma200:
+            if raw["last_c"] >= raw["sma200"]:
                 above_200 += 1
 
             clean = sym.replace(".NS", "")
+            sym_by_clean.setdefault(clean, sym)
             if clean in track_a_syms:
                 sig_a += 1
             if clean in track_b_syms:
                 sig_b += 1
 
-            # Build lightweight constituent RRG metrics (compute top 12 by 3M alpha for fast HTML size)
-            s_rets = _compute_period_returns(c)
-            const_rows.append((sym, clean, s_rets, hdf))
-
-        const_rows.sort(key=lambda x: x[2]["m3"], reverse=True)
-        drill_list = []
-        for sym, clean, s_rets, hdf in const_rows[:14]:
-            d_rrg = compute_jdk_rrg_trail(hdf["Close"], bench_close, is_weekly=False, tail_len=16) if not bench_close.empty else None
-            w_rrg = compute_jdk_rrg_trail(hdf["Close"], bench_close, is_weekly=True, tail_len=12) if not bench_close.empty else None
-            tech = _stock_technicals_from_hist(hdf) or {"price": s_rets["last"], "chg": s_rets["d1"], "atr14": 0, "dma20": 0, "dma150": 0, "swingLow": 0}
-            s_ang, s_rad, s_dtail = d_rrg if d_rrg else (45.0, 100.0, [{"x": 0.0, "y": 0.0}])
-            s_wtail = w_rrg[2] if w_rrg else s_dtail
-            m_info = meta_by_sym.get(sym, {})
-            signal_tag = "TRACK A" if clean in track_a_syms else ("TRACK B" if clean in track_b_syms else None)
-            drill_list.append({
-                "ticker": clean,
-                "name": m_info.get("name", clean),
-                "sector": spec["group"],
-                "bucket": m_info.get("bucket", "NSE"),
-                "price": tech["price"],
-                "chg": s_rets["d1"],
-                "w1": s_rets["w1"],
-                "m1": s_rets["m1"],
-                "m3": s_rets["m3"],
-                "y1": s_rets["y1"],
-                "alpha3m": round(s_rets["m3"] - nifty50_rets["m3"], 2),
-                "atr14": tech["atr14"],
-                "dma20": tech["dma20"],
-                "dma150": tech["dma150"],
-                "swingLow": tech["swingLow"],
-                "angle": s_ang,
-                "radius": s_rad,
-                "dailyTail": s_dtail,
-                "weeklyTail": s_wtail,
-                "signalTag": signal_tag,
-            })
-
-        sector_constituents[spec["id"]] = drill_list
+            const_rows.append((sym, clean, raw))
 
         pct50 = round((above_50 / valid_breadth) * 100) if valid_breadth else 0
         pct200 = round((above_200 / valid_breadth) * 100) if valid_breadth else 0
@@ -938,6 +1246,111 @@ def compute_sector_rotation_payload(
             sig_a=sig_a,
             sig_b=sig_b,
         )
+        if node_kind == "sector":
+            sector_context_map[spec["group"]] = {"rets": rets, "tier": pe_tier, "score": pe_score}
+
+        # Score ALL constituent stocks with 3-Phase Smart Money before selecting top drill-down candidates
+        tier_rank_map = {"PHASE_3": 3, "PHASE_2": 2, "PHASE_1": 1, "NEUTRAL": 0, "EXTENDED": -1}
+        scored_const_rows = []
+        for sym, clean, raw in const_rows:
+            d_rrg = get_stock_daily_rrg(sym)
+            s_ang, s_rad, s_dtail = d_rrg if d_rrg else (45.0, 100.0, [{"x": 0.0, "y": 0.0}])
+
+            if node_kind == "cap" and clean in all_stocks_by_ticker:
+                base_c = all_stocks_by_ticker[clean]
+                base_c["capTier"] = spec["id"]
+                stock_obj = dict(base_c)
+                stock_obj["dailyTail"] = s_dtail
+                stock_obj["weeklyTail"] = s_dtail
+            else:
+                s_rets = raw["s_rets"]
+                tech = raw["tech"]
+                m_info = meta_by_sym.get(sym, {})
+                signal_tag = "TRACK A" if clean in track_a_syms else ("TRACK B" if clean in track_b_syms else None)
+
+                if node_kind == "sector":
+                    ctx_rets, ctx_tier = rets, pe_tier
+                    sec_name, sec_tier, sec_score = spec["group"], pe_tier, pe_score
+                else:
+                    raw_sec = m_info.get("sector") or spec["group"]
+                    sec_ctx = sector_context_map.get(raw_sec)
+                    ctx_rets = sec_ctx["rets"] if sec_ctx else rets
+                    ctx_tier = sec_ctx["tier"] if sec_ctx else pe_tier
+                    sec_name = raw_sec
+                    sec_tier = sec_ctx["tier"] if sec_ctx else None
+                    sec_score = sec_ctx["score"] if sec_ctx else 0
+
+                sm_score_s, sm_tier_s, sm_meta = compute_stock_smart_money_phase(
+                    hist_df=None,
+                    daily_tail=s_dtail,
+                    angle=s_ang,
+                    stock_rets=s_rets,
+                    sector_rets=ctx_rets,
+                    sector_tier=ctx_tier,
+                    signal_tag=signal_tag,
+                    precomputed_raw=raw,
+                )
+
+                stock_obj = {
+                    "ticker": clean,
+                    "name": m_info.get("name", clean),
+                    "sector": sec_name,
+                    "sectorTier": sec_tier,
+                    "sectorScore": sec_score,
+                    "capTier": spec["id"] if node_kind == "cap" else None,
+                    "bucket": m_info.get("bucket", "NSE"),
+                    "price": tech["price"],
+                    "chg": s_rets["d1"],
+                    "w1": s_rets["w1"],
+                    "m1": s_rets["m1"],
+                    "m3": s_rets["m3"],
+                    "y1": s_rets["y1"],
+                    "alpha3m": round(s_rets["m3"] - nifty50_rets["m3"], 2),
+                    "atr14": tech["atr14"],
+                    "dma20": tech["dma20"],
+                    "ema20": tech.get("ema20", tech["dma20"]),
+                    "dma150": tech["dma150"],
+                    "swingLow": tech["swingLow"],
+                    "angle": s_ang,
+                    "radius": s_rad,
+                    "dailyTail": s_dtail,
+                    "weeklyTail": s_dtail,
+                    "signalTag": signal_tag,
+                    "preExplodeScore": sm_score_s,
+                    "preExplodeTier": sm_tier_s,
+                    "bbwPct": sm_meta["bbwPct"],
+                    "atrDecay": sm_meta["atrDecay"],
+                    "volDryRatio": sm_meta["volDryRatio"],
+                    "upDownVol": sm_meta["upDownVol"],
+                    "distHighPct": sm_meta["distHighPct"],
+                    "alphaSec1W": sm_meta["alphaSec1W"],
+                    "alphaSec1M": sm_meta["alphaSec1M"],
+                    "stage2Pass": sm_meta["stage2Pass"],
+                    "confluence": sm_meta["confluence"],
+                    "preExplodeReasons": sm_meta["preExplodeReasons"],
+                }
+                if node_kind == "sector" or clean not in all_stocks_by_ticker:
+                    all_stocks_by_ticker[clean] = {k: v for k, v in stock_obj.items() if k not in ("dailyTail", "weeklyTail")}
+
+            scored_const_rows.append(stock_obj)
+
+        scored_const_rows.sort(
+            key=lambda x: (
+                1 if x["signalTag"] else 0,
+                tier_rank_map.get(x["preExplodeTier"], 0),
+                x["preExplodeScore"],
+                x["m3"],
+            ),
+            reverse=True,
+        )
+        top_constituents = scored_const_rows[:16]
+        # Lazy-compute Weekly RRG tails ONLY for the displayed top 16 stocks per node
+        for item in top_constituents:
+            sym_w = sym_by_clean.get(item["ticker"], f"{item['ticker']}.NS")
+            w_rrg = get_stock_weekly_rrg(sym_w)
+            if w_rrg:
+                item["weeklyTail"] = w_rrg[2]
+        sector_constituents[spec["id"]] = top_constituents
 
         desc_str = f"{spec['desc']} ({rets['last']:,.2f})" if rets["last"] > 0 else spec["desc"]
         universe_nodes.append({
@@ -973,22 +1386,45 @@ def compute_sector_rotation_payload(
             "natalNote": spec["natalNote"],
         })
 
-    # 5. Update the 24 Curated Fundamental/Astro-Quant Equities with live prices, technicals & JdK RRG
+    universe_nodes.sort(key=lambda n: spec_order_map.get(n["id"], 999))
+
+    # 5. Update the 24 Curated Fundamental/Astro-Quant Equities with live prices, technicals, JdK RRG & 3-Phase SM
     live_stocks = []
     for base in CURATED_STOCK_BASE:
         st = dict(base)
         yf_sym = f"{st['ticker']}.NS"
-        hdf = get_hist(yf_sym)
-        if hdf is not None and len(hdf) >= 22:
-            tech = _stock_technicals_from_hist(hdf)
-            if tech:
-                st.update(tech)
-            d_rrg = compute_jdk_rrg_trail(hdf["Close"], bench_close, is_weekly=False, tail_len=16) if not bench_close.empty else None
-            w_rrg = compute_jdk_rrg_trail(hdf["Close"], bench_close, is_weekly=True, tail_len=12) if not bench_close.empty else None
+        raw = get_stock_raw(yf_sym)
+        if raw is not None:
+            st.update(raw["tech"])
+            d_rrg = get_stock_daily_rrg(yf_sym)
+            w_rrg = get_stock_weekly_rrg(yf_sym)
             if d_rrg:
                 st["angle"], st["radius"], st["dailyTail"] = d_rrg
             if w_rrg:
                 st["weeklyTail"] = w_rrg[2]
+            s_rets = raw["s_rets"]
+            sec_ctx = sector_context_map.get(st["sector"], {"rets": {"w1": 0.0, "m1": 0.0}, "tier": "NEUTRAL", "score": 0})
+            sm_s, sm_t, sm_meta = compute_stock_smart_money_phase(
+                hist_df=None,
+                daily_tail=st.get("dailyTail") or [{"x": 0.0, "y": 0.0}],
+                angle=st.get("angle", 45.0),
+                stock_rets=s_rets,
+                sector_rets=sec_ctx["rets"],
+                sector_tier=sec_ctx["tier"],
+                signal_tag="TRACK A" if st["ticker"] in track_a_syms else ("TRACK B" if st["ticker"] in track_b_syms else None),
+                precomputed_raw=raw,
+            )
+            st.update({
+                "w1": s_rets["w1"],
+                "m1": s_rets["m1"],
+                "m3": s_rets["m3"],
+                "y1": s_rets["y1"],
+                "sectorTier": sec_ctx["tier"],
+                "sectorScore": sec_ctx["score"],
+                "preExplodeScore": sm_s,
+                "preExplodeTier": sm_t,
+                **sm_meta,
+            })
         if st["ticker"] in track_a_syms:
             st["signalTag"] = "TRACK A"
         elif st["ticker"] in track_b_syms:
@@ -1002,6 +1438,11 @@ def compute_sector_rotation_payload(
         "universe_nodes": universe_nodes,
         "curated_stocks": live_stocks,
         "sector_constituents": sector_constituents,
+        "all_stocks_scored": sorted(
+            list(all_stocks_by_ticker.values()),
+            key=lambda x: (1 if x.get("signalTag") else 0, x.get("preExplodeScore", 0), x.get("m3", 0)),
+            reverse=True,
+        ),
     }
     return payload
 

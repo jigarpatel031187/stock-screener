@@ -7,9 +7,10 @@ cleanly into AntiGravity Dual Track Radar without colliding with Track A/B/Ledge
 import json
 
 
-def render_tab4_fragments(sector_rotation_data):
+def render_tab4_fragments(sector_rotation_data, trade_plan=None):
     """Returns (sr_css, sr_html, sr_js) ready for embedding into generate_dashboard.py."""
     payload_json = json.dumps(sector_rotation_data or {}, ensure_ascii=False).replace("</", "<\\/")
+    trade_plan_json = json.dumps(trade_plan or {}, ensure_ascii=False).replace("</", "<\\/")
 
     sr_css = """
     /* =====================================================================
@@ -661,34 +662,47 @@ def render_tab4_fragments(sector_rotation_data):
           <div class="sr-panel">
             <div class="sr-panel-hdr">
               <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                <span class="sr-panel-title">EXECUTION BUCKET:</span>
-                <button class="sr-btn active" id="sr-bkt-dual" onclick="SR.execEngine.setBucket('dual')">7 Overlapping Dual-Horizon Gems</button>
-                <button class="sr-btn" id="sr-bkt-swing" onclick="SR.execEngine.setBucket('swing')">1-2M Swing Trades (11)</button>
-                <button class="sr-btn" id="sr-bkt-core" onclick="SR.execEngine.setBucket('core')">8-12M Core Investments (15)</button>
-                <button class="sr-btn" id="sr-bkt-all" onclick="SR.execEngine.setBucket('all')">All 24 Stocks</button>
+                <span class="sr-panel-title">EXECUTION AGENT:</span>
+                <button class="sr-btn active" id="sr-bkt-live_swing" onclick="SR.execEngine.setBucket('live_swing')">⚡ Live 1–2M Swing Queue</button>
+                <button class="sr-btn" id="sr-bkt-live_core" onclick="SR.execEngine.setBucket('live_core')">🏛 Live 8–12M Core Queue</button>
+                <button class="sr-btn" id="sr-bkt-open_ledger" onclick="SR.execEngine.setBucket('open_ledger')">🛡️ Open Ledger &amp; Springs</button>
+                <button class="sr-btn" id="sr-bkt-dual" onclick="SR.execEngine.setBucket('dual')">Curated Dual (7)</button>
+                <button class="sr-btn" id="sr-bkt-swing" onclick="SR.execEngine.setBucket('swing')">Curated 1–2M (11)</button>
+                <button class="sr-btn" id="sr-bkt-core" onclick="SR.execEngine.setBucket('core')">Curated 8–12M (15)</button>
+                <button class="sr-btn" id="sr-bkt-all" onclick="SR.execEngine.setBucket('all')">Curated 24</button>
               </div>
-              <span class="sr-mono sr-muted" style="font-size:10.5px;">Click Math → for exact stock-by-stock Buy/SL/Target derivation audit</span>
+              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <input type="text" id="sr-exec-stock-lookup" class="sr-input sr-mono" style="width:170px;" placeholder="Ticker ticket (e.g. DCBBANK)" onkeydown="if(event.key==='Enter') SR.execEngine.lookupTicker()">
+                <button class="sr-btn cyan" onclick="SR.execEngine.lookupTicker()">Analyze Stock →</button>
+              </div>
             </div>
-            <div class="sr-panel-body" style="display:flex; gap:22px; align-items:center; flex-wrap:wrap;">
-              <div>
-                <div class="sr-kpi-lbl">Total Capital (₹)</div>
-                <input type="number" id="sr-exec-cap-input" class="sr-input sr-mono sr-bold" style="width:145px; margin-top:3px;" value="1000000" step="100000" oninput="SR.execEngine.updateCap(this.value)">
-              </div>
-              <div style="min-width:210px;">
-                <div class="sr-kpi-lbl">Phase 2 GTT Cash Reserve: <span id="sr-exec-gtt-lbl" class="sr-info">42%</span></div>
-                <input type="range" id="sr-exec-gtt-slider" min="0" max="70" value="42" style="width:100%; margin-top:6px;" oninput="SR.execEngine.updateGtt(this.value)">
-              </div>
-              <div>
-                <div class="sr-kpi-lbl">Phase 1 Active Capital</div>
-                <div id="sr-exec-p1-val" class="sr-mono sr-pos sr-bold" style="font-size:14px; margin-top:3px;">₹5,80,000</div>
-              </div>
-              <div>
-                <div class="sr-kpi-lbl">Phase 2 GTT Reserve</div>
-                <div id="sr-exec-p2-val" class="sr-mono sr-info sr-bold" style="font-size:14px; margin-top:3px;">₹4,20,000</div>
-              </div>
-              <div>
-                <div class="sr-kpi-lbl">Bucket Weight Sum</div>
-                <div id="sr-exec-sum-val" class="sr-mono sr-bold" style="font-size:14px; margin-top:3px;">100%</div>
+            <div class="sr-panel-body" style="display:flex; flex-direction:column; gap:10px;">
+              <div id="sr-exec-regime-strip" class="sr-kpi-strip" style="margin-bottom:0;"></div>
+              <div style="display:flex; gap:18px; align-items:center; flex-wrap:wrap; padding-top:6px; border-top:1px solid #182130;">
+                <div>
+                  <div class="sr-kpi-lbl">Total Capital (₹)</div>
+                  <input type="number" id="sr-exec-cap-input" class="sr-input sr-mono sr-bold" style="width:140px; margin-top:3px;" value="1000000" step="100000" oninput="SR.execEngine.updateCap(this.value)">
+                </div>
+                <div>
+                  <div class="sr-kpi-lbl">1R Swing Risk (%)</div>
+                  <input type="number" id="sr-exec-risk-input" class="sr-input sr-mono sr-bold" style="width:92px; margin-top:3px;" value="0.75" step="0.25" min="0.25" max="2.5" oninput="SR.execEngine.updateRisk(this.value)">
+                </div>
+                <div style="min-width:195px;">
+                  <div class="sr-kpi-lbl">Phase 2 GTT Cash Reserve: <span id="sr-exec-gtt-lbl" class="sr-info">25%</span></div>
+                  <input type="range" id="sr-exec-gtt-slider" min="0" max="70" value="25" style="width:100%; margin-top:6px;" oninput="SR.execEngine.updateGtt(this.value)">
+                </div>
+                <div>
+                  <div class="sr-kpi-lbl">Active Deployment</div>
+                  <div id="sr-exec-p1-val" class="sr-mono sr-pos sr-bold" style="font-size:14px; margin-top:3px;">₹7,50,000</div>
+                </div>
+                <div>
+                  <div class="sr-kpi-lbl">GTT Reserve Cash</div>
+                  <div id="sr-exec-p2-val" class="sr-mono sr-info sr-bold" style="font-size:14px; margin-top:3px;">₹2,50,000</div>
+                </div>
+                <div>
+                  <div class="sr-kpi-lbl">1R Max Loss / Ticket</div>
+                  <div id="sr-exec-sum-val" class="sr-mono sr-bold sr-warn" style="font-size:14px; margin-top:3px;">₹7,500</div>
+                </div>
               </div>
             </div>
           </div>
@@ -888,11 +902,13 @@ def render_tab4_fragments(sector_rotation_data):
 
     sr_js = """
     const SR_LIVE_DATA = __SECTOR_ROTATION_JSON__;
+    const TRADE_PLAN_DB = __TRADE_PLAN_JSON__;
 
     window.SR = (function () {
       const UNIVERSE_DB = (SR_LIVE_DATA.universe_nodes || []).map(n => ({ ...n }));
       const STOCK_DB = (SR_LIVE_DATA.curated_stocks || []).map(s => ({ ...s }));
       const SECTOR_CONSTITUENTS = SR_LIVE_DATA.sector_constituents || {};
+      const UNIVERSE_LOOKUP = TRADE_PLAN_DB.stock_lookup || {};
       const LIVE_TAPE = SR_LIVE_DATA.tape || {};
       const BENCH_NAME = SR_LIVE_DATA.benchmark_name || 'NIFTY 500';
 
@@ -1147,6 +1163,8 @@ def render_tab4_fragments(sector_rotation_data):
             const hit = (SECTOR_CONSTITUENTS[secId] || []).find(s => s.ticker === term || s.ticker.includes(term));
             if (hit) { inspectorModal.open(hit.ticker, secId); return; }
           }
+          const tpHit = UNIVERSE_LOOKUP[term] || Object.values(UNIVERSE_LOOKUP).find(s => s.ticker.includes(term));
+          if (tpHit) { inspectorModal.open(tpHit.ticker); return; }
           const node = rrgEngine.macroNodes.find(n => n.group.toUpperCase().includes(term) || n.short.includes(term));
           if (node) { app.drillSectorFromAnywhere(node.id); return; }
           ui.toast(`No match for "${q}"`);
@@ -1415,6 +1433,13 @@ def render_tab4_fragments(sector_rotation_data):
           rrgEngine.drawCanvasOnly();
         },
 
+        stockPhaseFilter: 'all',
+
+        setStockPhaseFilter: (ph) => {
+          rrgEngine.stockPhaseFilter = ph;
+          rrgEngine.renderRightDock();
+        },
+
         setUniverse: (u) => {
           rrgEngine.universe = u;
           rrgEngine.resetZoom();
@@ -1631,9 +1656,9 @@ def render_tab4_fragments(sector_rotation_data):
 
             const isFocus = node.id === focusId;
             const peTier = node.preExplodeTier || 'NEUTRAL';
-            const isP3 = (rrgEngine.mode === 'macro' && peTier === 'PHASE_3');
-            const isP2 = (rrgEngine.mode === 'macro' && peTier === 'PHASE_2');
-            const isP1 = (rrgEngine.mode === 'macro' && peTier === 'PHASE_1');
+            const isP3 = (peTier === 'PHASE_3');
+            const isP2 = (peTier === 'PHASE_2');
+            const isP1 = (peTier === 'PHASE_1');
             const isSM = (isP3 || isP2 || isP1);
             const alpha = focusId && !isFocus ? 0.13 : 1.0;
 
@@ -1849,6 +1874,12 @@ def render_tab4_fragments(sector_rotation_data):
               <div style="margin-top:5px; color:#00d4ff; font-size:10px;">▶ Click node to drill into Constituent Stock RRG</div>
             `;
           } else {
+            const stTier = node.preExplodeTier || 'NEUTRAL';
+            const stCol = stTier === 'PHASE_3' ? '#e879f9' : (stTier === 'PHASE_2' ? '#a855f7' : (stTier === 'PHASE_1' ? '#38bdf8' : (stTier === 'EXTENDED' ? '#ffb300' : '#8c99ad')));
+            const stBadge = stTier === 'PHASE_3' ? `★ P3: Markup Ready (${node.preExplodeScore})`
+              : (stTier === 'PHASE_2' ? `◈ P2: Absorption (${node.preExplodeScore})`
+              : (stTier === 'PHASE_1' ? `◎ P1: Early Base (${node.preExplodeScore})`
+              : (stTier === 'EXTENDED' ? `EXTENDED (${node.preExplodeScore || 0})` : `Neutral (${node.preExplodeScore || 0})`)));
             const fvLine = node.fairValue
               ? `<div style="display:flex; justify-content:space-between;"><span class="sr-muted">CMP → FAIR VALUE:</span><span>₹${node.price.toFixed(1)} → <strong class="sr-pos">₹${node.fairValue}</strong></span></div>`
               : `<div style="display:flex; justify-content:space-between;"><span class="sr-muted">1M / 3M RETURN:</span><span class="${(node.m3 || 0) >= 0 ? 'sr-pos' : 'sr-neg'}">${(node.m1 || 0) > 0 ? '+' : ''}${(node.m1 || 0).toFixed(1)}% / ${(node.m3 || 0) > 0 ? '+' : ''}${(node.m3 || 0).toFixed(1)}%</span></div>`;
@@ -1858,9 +1889,11 @@ def render_tab4_fragments(sector_rotation_data):
               </div>
               <div style="display:flex; justify-content:space-between;"><span class="sr-muted">JdK RS-RATIO / MOM:</span><span>${(100 + rawHead.x).toFixed(2)} / ${(100 + rawHead.y).toFixed(2)}</span></div>
               <div style="display:flex; justify-content:space-between;"><span class="sr-muted">RRG QUADRANT:</span><span style="color:${quadColor(node.quadrant)}; font-weight:700;">${node.quadrant} (${node.heading})</span></div>
+              <div style="display:flex; justify-content:space-between; gap:8px;"><span class="sr-muted">STOCK SM PHASE:</span><span style="color:${stCol}; font-weight:700;">${stBadge}</span></div>
+              ${node.volDryRatio !== undefined ? `<div class="sr-muted" style="font-size:9.5px; margin-top:2px;">BBW ${node.bbwPct ?? '--'}% • VolDry ${node.volDryRatio}x • Accum ${node.upDownVol ?? '--'}x • αSec1W ${(node.alphaSec1W || 0) > 0 ? '+' : ''}${node.alphaSec1W || 0}%</div>` : ''}
               ${fvLine}
               <div style="display:flex; justify-content:space-between;"><span class="sr-muted">20-DMA / ATR(14):</span><span>₹${node.dma20 || '--'} / ₹${node.atr14 || '--'}</span></div>
-              <div style="margin-top:5px; color:#00d4ff; font-size:10px;">▶ Click stock for Swing/Core Audit &amp; TradingView Link</div>
+              <div style="margin-top:5px; color:#00d4ff; font-size:10px;">▶ Click stock for Swing/Core Audit &amp; Trade Plan</div>
             `;
           }
         },
@@ -1904,39 +1937,63 @@ def render_tab4_fragments(sector_rotation_data):
             listEl.innerHTML = html;
           } else {
             const p = rrgEngine.drilledParent;
-            title.textContent = `CONSTITUENTS & ROTATION — ${p.short}`;
-            sub.textContent = 'Sorted by 3M Strength / Smart Money';
+            const fltStock = rrgEngine.stockPhaseFilter || 'all';
+            title.textContent = `CONSTITUENTS & 3-PHASE SMART MONEY — ${p.short}`;
+            sub.textContent = 'Filter or click stock for Trade Plan & Audit';
             ctxBar.style.display = 'block';
             ctxBar.innerHTML = `
               <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-                <span>Source: <strong class="sr-info">${p.source || 'NSE'}</strong> | &gt;50DMA: <strong>${p.pctAbove50 ?? '--'}%</strong> | Track A: <strong class="sr-pos">${p.trackACount || 0}</strong> | Track B: <strong class="sr-vio">${p.trackBCount || 0}</strong></span>
-                <span class="sr-pill pill-violet">Ruler: ${p.ruler}</span>
+                <span>&gt;50D: <strong>${p.pctAbove50 ?? '--'}%</strong> | A:<strong class="sr-pos">${p.trackACount || 0}</strong> B:<strong class="sr-vio">${p.trackBCount || 0}</strong></span>
+                <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                  <button class="sr-btn ${fltStock === 'all' ? 'active' : ''}" style="padding:2px 6px; font-size:9.5px;" onclick="SR.rrgEngine.setStockPhaseFilter('all')">All (${rrgEngine.stockNodes.length})</button>
+                  <button class="sr-btn ${fltStock === 'PHASE_3' ? 'active' : ''}" style="padding:2px 6px; font-size:9.5px; color:#f5d0fe;" onclick="SR.rrgEngine.setStockPhaseFilter('PHASE_3')">★ P3</button>
+                  <button class="sr-btn ${fltStock === 'PHASE_2' ? 'active' : ''}" style="padding:2px 6px; font-size:9.5px; color:#e9d5ff;" onclick="SR.rrgEngine.setStockPhaseFilter('PHASE_2')">◈ P2</button>
+                  <button class="sr-btn ${fltStock === 'PHASE_1' ? 'active' : ''}" style="padding:2px 6px; font-size:9.5px; color:#bae6fd;" onclick="SR.rrgEngine.setStockPhaseFilter('PHASE_1')">◎ P1</button>
+                </div>
               </div>
             `;
 
-            const sorted = [...rrgEngine.stockNodes].sort((a, b) => ((b.smScore || 0) - (a.smScore || 0)) || ((b.m3 || 0) - (a.m3 || 0)));
+            const filtered = fltStock === 'all'
+              ? rrgEngine.stockNodes
+              : rrgEngine.stockNodes.filter(s => (s.preExplodeTier || 'NEUTRAL') === fltStock);
+            const tierOrder = { PHASE_3: 3, PHASE_2: 2, PHASE_1: 1, NEUTRAL: 0, EXTENDED: -1 };
+            const sorted = [...filtered].sort((a, b) =>
+              ((tierOrder[b.preExplodeTier] || 0) - (tierOrder[a.preExplodeTier] || 0)) ||
+              ((b.preExplodeScore || 0) - (a.preExplodeScore || 0)) ||
+              ((b.m3 || 0) - (a.m3 || 0))
+            );
             const maxMetric = Math.max(...sorted.map(s => Math.abs(s.m3 || s.chg || 1)), 1);
 
-            listEl.innerHTML = sorted.map(s => {
+            listEl.innerHTML = sorted.length ? sorted.map(s => {
               const m3 = s.m3 ?? 0;
               const barW = Math.min(100, Math.round((Math.abs(m3) / maxMetric) * 100));
               const safeTk = ui.escAttr(s.ticker);
-              const sigBadge = s.signalTag ? `<span class="sr-pill ${s.signalTag === 'TRACK A' ? 'pill-emerald' : 'pill-violet'}" style="font-size:9px;">${s.signalTag}</span>` : '';
+              const peTier = s.preExplodeTier || 'NEUTRAL';
+              const dockCls = peTier === 'PHASE_3' ? 'sr-dock-p3' : (peTier === 'PHASE_2' ? 'sr-dock-p2' : (peTier === 'PHASE_1' ? 'sr-dock-p1' : ''));
+              const pePill = peTier === 'PHASE_3'
+                ? `<span class="sr-pill pill-p3" style="font-size:8.5px;">★ P3 · ${s.preExplodeScore}</span>`
+                : (peTier === 'PHASE_2' ? `<span class="sr-pill pill-p2" style="font-size:8.5px;">◈ P2 · ${s.preExplodeScore}</span>`
+                : (peTier === 'PHASE_1' ? `<span class="sr-pill pill-p1" style="font-size:8.5px;">◎ P1 · ${s.preExplodeScore}</span>`
+                : (peTier === 'EXTENDED' ? `<span class="sr-pill pill-amber" style="font-size:8.5px;">EXT</span>` : '')));
+              const confBadge = s.confluence === 'DUAL_CONFLUENCE'
+                ? `<span class="sr-pill pill-emerald" style="font-size:8.5px;">🔥 CONFLUENCE</span>`
+                : '';
+              const sigBadge = s.signalTag ? `<span class="sr-pill ${s.signalTag === 'TRACK A' ? 'pill-emerald' : 'pill-violet'}" style="font-size:8.5px;">${s.signalTag}</span>` : '';
               const extraLine = s.fairValue
-                ? `<span>FV: <strong class="sr-pos">₹${s.fairValue}</strong> | Net Inst: <strong class="${(s.netInstCr || 0) >= 0 ? 'sr-pos' : 'sr-neg'}">${ui.fmtCr(s.netInstCr)}</strong></span>`
-                : `<span>20DMA: ₹${s.dma20 || '--'} | ATR: ₹${s.atr14 || '--'}</span>`;
+                ? `<span>FV: <strong class="sr-pos">₹${s.fairValue}</strong> | VolDry ${s.volDryRatio ?? '--'}x | αSec <strong class="${(s.alphaSec1M || 0) >= 0 ? 'sr-pos' : 'sr-neg'}">${(s.alphaSec1M || 0) > 0 ? '+' : ''}${s.alphaSec1M || 0}%</strong></span>`
+                : `<span>BBW ${s.bbwPct ?? '--'}% | VolDry ${s.volDryRatio ?? '--'}x | Accum ${s.upDownVol ?? '--'}x</span>`;
               return `
-                <div class="sr-dock-card" data-id="${safeTk}"
+                <div class="sr-dock-card ${dockCls}" data-id="${safeTk}"
                      onmouseenter="SR.rrgEngine.highlightFromDock('${safeTk}')"
                      onmouseleave="SR.rrgEngine.highlightFromDock(null)"
                      onclick="SR.inspectorModal.open('${safeTk}', '${ui.escAttr(p.id)}')">
-                  <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-                    <div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; gap:4px; flex-wrap:wrap;">
+                    <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
                       <span class="sr-mono sr-bold sr-info" style="font-size:12px;">${s.ticker}</span>
-                      <span class="sr-muted" style="font-size:10.5px;"> • ₹${Number(s.price || 0).toFixed(1)}</span>
-                      ${sigBadge}
+                      <span class="sr-muted" style="font-size:10.5px;">₹${Number(s.price || 0).toFixed(1)}</span>
+                      ${pePill} ${confBadge} ${sigBadge}
                     </div>
-                    <span class="sr-pill ${quadPill(s.quadrant)}">${s.quadrant} (${s.heading})</span>
+                    <span class="sr-pill ${quadPill(s.quadrant)}" style="font-size:9.5px;">${s.quadrant} (${s.heading})</span>
                   </div>
                   <div class="sr-flow-track">
                     <div class="${m3 >= 0 ? 'sr-flow-pos' : 'sr-flow-neg'}" style="width:${barW}%"></div>
@@ -1946,11 +2003,11 @@ def render_tab4_fragments(sector_rotation_data):
                   </div>
                   <div class="sr-mono" style="display:flex; justify-content:space-between; font-size:10px; margin-top:4px; padding-top:4px; border-top:1px solid #182130;">
                     ${extraLine}
-                    <span class="sr-info">Audit →</span>
+                    <span class="sr-info">Plan →</span>
                   </div>
                 </div>
               `;
-            }).join('');
+            }).join('') : '<div class="sr-muted sr-mono" style="padding:14px; font-size:11px;">No constituent stocks match this phase filter inside this sector.</div>';
           }
         },
 
@@ -2159,10 +2216,12 @@ def render_tab4_fragments(sector_rotation_data):
       };
 
       const execEngine = {
-        bucket: 'dual',
-        capital: 1000000,
-        gttPct: 0.42,
+        bucket: 'live_swing',
+        capital: TRADE_PLAN_DB.capital || 1000000,
+        riskPct: TRADE_PLAN_DB.risk_pct || 0.75,
+        gttPct: (TRADE_PLAN_DB.regime && TRADE_PLAN_DB.regime.gtt_cash_reserve_pct ? TRADE_PLAN_DB.regime.gtt_cash_reserve_pct : 25) / 100,
         showFormulas: true,
+        customTicker: null,
 
         toggleFormulaDrawer: () => {
           execEngine.showFormulas = !execEngine.showFormulas;
@@ -2172,12 +2231,21 @@ def render_tab4_fragments(sector_rotation_data):
 
         setBucket: (b) => {
           execEngine.bucket = b;
-          ['dual', 'swing', 'core', 'all'].forEach(k => document.getElementById(`sr-bkt-${k}`).classList.toggle('active', k === b));
+          execEngine.customTicker = null;
+          ['live_swing', 'live_core', 'open_ledger', 'dual', 'swing', 'core', 'all'].forEach(k => {
+            const btn = document.getElementById(`sr-bkt-${k}`);
+            if (btn) btn.classList.toggle('active', k === b);
+          });
           execEngine.render();
         },
 
         updateCap: (v) => {
           execEngine.capital = Math.max(50000, parseFloat(v) || 1000000);
+          execEngine.render();
+        },
+
+        updateRisk: (v) => {
+          execEngine.riskPct = Math.max(0.25, Math.min(2.5, parseFloat(v) || 0.75));
           execEngine.render();
         },
 
@@ -2187,7 +2255,107 @@ def render_tab4_fragments(sector_rotation_data):
           execEngine.updateSummary(execEngine.getStocks());
         },
 
+        lookupTicker: () => {
+          const inp = document.getElementById('sr-exec-stock-lookup');
+          const raw = (inp ? inp.value : '').trim().toUpperCase().replace('.NS', '');
+          if (!raw) return;
+          const tkt = UNIVERSE_LOOKUP[raw] || Object.values(UNIVERSE_LOOKUP).find(x => x.ticker.includes(raw));
+          if (tkt) {
+            execEngine.customTicker = tkt.ticker;
+            inspectorModal.open(tkt.ticker);
+            return;
+          }
+          app.quickJump(raw);
+        },
+
+        phaseBadgeHtml: (tier, sc) => {
+          if (tier === 'PHASE_3') return `<span class="sr-pill pill-p3">★ P3 (${sc || 0})</span>`;
+          if (tier === 'PHASE_2') return `<span class="sr-pill pill-p2">◈ P2 (${sc || 0})</span>`;
+          if (tier === 'PHASE_1') return `<span class="sr-pill pill-p1">◎ P1 (${sc || 0})</span>`;
+          if (tier === 'EXTENDED') return `<span class="sr-pill pill-amber">EXTENDED</span>`;
+          return `<span class="sr-pill pill-neutral">${sc || 0}</span>`;
+        },
+
+        sizeLiveSwing: (t) => {
+          const sw = t.swing || {};
+          const reg = TRADE_PLAN_DB.regime || {};
+          const swingCap = execEngine.capital * ((reg.swing_budget_pct || 45) / 100);
+          const slotCap = Math.max(50000, swingCap / 6);
+          const mult = t.sizeMult || 1.0;
+          const riskBudget = execEngine.capital * (execEngine.riskPct / 100) * mult;
+          const rShare = Math.max(1, sw.riskPerShare || 1);
+          const ePx = Math.max(1, sw.entryRef || t.price || 1);
+          const sh = Math.max(0, Math.min(Math.floor(riskBudget / rShare), Math.floor((slotCap * mult) / ePx)));
+          const t1 = Math.floor(sh / 2);
+          return {
+            shares: sh,
+            t1Sh: t1,
+            t2Sh: sh - t1,
+            allocInr: Math.round(sh * ePx),
+            maxRiskInr: Math.round(sh * rShare)
+          };
+        },
+
+        sizeLiveCore: (t) => {
+          const reg = TRADE_PLAN_DB.regime || {};
+          const coreCap = execEngine.capital * ((reg.core_budget_pct || 55) / 100);
+          const slotCap = Math.max(50000, coreCap / 8);
+          const px = Math.max(1, t.price || 1);
+          const sh = Math.max(0, Math.floor(slotCap / px));
+          const sh1 = Math.round(sh * 0.40);
+          const sh2 = Math.round(sh * 0.35);
+          return {
+            shares: sh,
+            sh1, sh2, sh3: Math.max(0, sh - sh1 - sh2),
+            allocInr: Math.round(sh * px)
+          };
+        },
+
+        renderRegimeStrip: () => {
+          const strip = document.getElementById('sr-exec-regime-strip');
+          if (!strip) return;
+          if (!execEngine._gttSynced) {
+            execEngine._gttSynced = true;
+            const gVal = Math.round(execEngine.gttPct * 100);
+            const sl = document.getElementById('sr-exec-gtt-slider');
+            const lbl = document.getElementById('sr-exec-gtt-lbl');
+            if (sl) sl.value = gVal;
+            if (lbl) lbl.textContent = `${gVal}%`;
+          }
+          const reg = TRADE_PLAN_DB.regime || {};
+          const aud = TRADE_PLAN_DB.portfolio_audit || {};
+          const heat = aud.open_heat_pct ?? 0;
+          const maxH = reg.max_heat_pct ?? 4.5;
+          const swingCount = (TRADE_PLAN_DB.swing_queue || []).length;
+          const coreCount = (TRADE_PLAN_DB.core_queue || []).length;
+          strip.innerHTML = `
+            <div class="sr-kpi-card">
+              <span class="sr-kpi-lbl">Market Regime</span>
+              <span class="sr-kpi-val ${reg.regime === 'RISK_ON_EXPANSION' ? 'sr-pos' : (reg.regime === 'DEFENSIVE_PRESERVATION' ? 'sr-neg' : 'sr-warn')}">${reg.label || 'SELECTIVE ROTATION'}</span>
+              <span class="sr-kpi-sub">${reg.breadth_pct ?? '--'}% Adv • VIX ${reg.vix ?? '--'}</span>
+            </div>
+            <div class="sr-kpi-card">
+              <span class="sr-kpi-lbl">Recommended Horizon Split</span>
+              <span class="sr-kpi-val sr-info">${reg.swing_budget_pct ?? 30}% Swing / ${reg.core_budget_pct ?? 70}% Core</span>
+              <span class="sr-kpi-sub">Queue: ${swingCount} Swing • ${coreCount} Core</span>
+            </div>
+            <div class="sr-kpi-card">
+              <span class="sr-kpi-lbl">Portfolio Risk Heat (${Object.keys(aud.sector_counts || {}).length} Sectors)</span>
+              <span class="sr-kpi-val ${heat >= maxH ? 'sr-neg' : 'sr-pos'}">${heat}% / ${maxH}% Cap</span>
+              <span class="sr-kpi-sub">${(aud.open_actions || []).length} Open / Spring Watches</span>
+            </div>
+            <div class="sr-kpi-card">
+              <span class="sr-kpi-lbl">Anti-Stop-Hunt Architecture</span>
+              <span class="sr-kpi-val" style="color:#f5d0fe;">Two-Tier SL</span>
+              <span class="sr-kpi-sub">1.0×ATR Wide GTT + 3:15 PM Close SL</span>
+            </div>
+          `;
+        },
+
         getStocks: () => {
+          if (execEngine.bucket === 'live_swing') return TRADE_PLAN_DB.swing_queue || [];
+          if (execEngine.bucket === 'live_core') return TRADE_PLAN_DB.core_queue || [];
+          if (execEngine.bucket === 'open_ledger') return (TRADE_PLAN_DB.portfolio_audit || {}).open_actions || [];
           if (execEngine.bucket === 'dual') return STOCK_DB.filter(s => s.isCore && s.isSwing);
           if (execEngine.bucket === 'swing') return STOCK_DB.filter(s => s.isSwing);
           if (execEngine.bucket === 'core') return STOCK_DB.filter(s => s.isCore);
@@ -2220,9 +2388,98 @@ def render_tab4_fragments(sector_rotation_data):
         },
 
         render: () => {
-          const list = execEngine.getStocks().sort((a, b) => a.ticker.localeCompare(b.ticker));
+          execEngine.renderRegimeStrip();
+          const bkt = execEngine.bucket;
           const thead = document.getElementById('sr-exec-thead');
           const tbody = document.getElementById('sr-exec-tbody');
+
+          if (bkt === 'live_swing') {
+            const list = execEngine.getStocks();
+            thead.innerHTML = `<tr>
+              <th>Ticker / Sector</th><th class="sr-num">CMP (₹)</th><th>Sector → Stock SM</th><th>Ticket Verdict</th>
+              <th>2-Tranche Entry</th><th class="sr-num">Hard GTT SL</th><th class="sr-num">EOD Close SL</th>
+              <th class="sr-num">T1 (2R) / T2 (3.5R)</th><th class="sr-num">Size (50% + 50%)</th><th class="sr-num">Alloc ₹ (1R Risk)</th><th>Plan</th>
+            </tr>`;
+            tbody.innerHTML = list.length ? list.map(t => {
+              const sw = t.swing || {};
+              const sz = execEngine.sizeLiveSwing(t);
+              const safeTk = ui.escAttr(t.ticker);
+              const guardPill = t.guard && (t.guard.startsWith('EXECUTE') || t.guard.startsWith('READY') || t.guard.startsWith('PILOT'))
+                ? `<span class="sr-pill pill-emerald">${t.guard}</span>`
+                : `<span class="sr-pill pill-amber">${t.guard || 'WATCH'}</span>`;
+              const confTag = t.signalTag ? `<span class="sr-pill pill-violet" style="font-size:9px;">${t.signalTag}</span>` : (t.confluence === 'DUAL_CONFLUENCE' ? `<span class="sr-pill pill-p3" style="font-size:9px;">🔥 DUAL CONF</span>` : '');
+              return `<tr class="sr-row-click" onclick="SR.inspectorModal.open('${safeTk}')">
+                <td><span class="sr-ticker-btn">${t.ticker}</span> ${confTag}<div class="sr-muted" style="font-size:10px;">${t.sector} • ${t.account}</div></td>
+                <td class="sr-num sr-bold">₹${Number(t.price || 0).toFixed(2)}</td>
+                <td>${execEngine.phaseBadgeHtml(t.sectorTier, t.sectorScore)} → ${execEngine.phaseBadgeHtml(t.stockTier, t.stockScore)}</td>
+                <td>${guardPill}</td>
+                <td class="sr-mono sr-vio">₹${sw.entryRef || t.price}<div class="sr-muted" style="font-size:9.5px;">Band: ${sw.entryBand || '--'}</div></td>
+                <td class="sr-num sr-neg sr-bold">₹${sw.hardGttSl}<div class="sr-muted" style="font-size:9.5px;">-${sw.riskPct}% wide</div></td>
+                <td class="sr-num sr-warn">₹${sw.softEodSl}<div class="sr-muted" style="font-size:9.5px;">BE trail ₹${sw.beTrailSl}</div></td>
+                <td class="sr-num sr-pos">₹${sw.t1_2r} / ₹${sw.t2_35r}</td>
+                <td class="sr-num sr-bold sr-info">${sz.shares} sh<div class="sr-muted" style="font-size:9.5px;">${sz.t1Sh} + ${sz.t2Sh}</div></td>
+                <td class="sr-num">${ui.fmtInr(sz.allocInr)}<div class="sr-muted" style="font-size:9.5px;">1R: ${ui.fmtInr(sz.maxRiskInr)}</div></td>
+                <td><button class="sr-btn" style="padding:2px 7px; font-size:10px;" onclick="event.stopPropagation(); SR.inspectorModal.open('${safeTk}')">Ticket →</button></td>
+              </tr>`;
+            }).join('') : '<tr><td colspan="11" class="sr-muted">No active Phase 3 Swing candidates in current cache.</td></tr>';
+            execEngine.updateSummary(list);
+            return;
+          }
+
+          if (bkt === 'live_core') {
+            const list = execEngine.getStocks();
+            thead.innerHTML = `<tr>
+              <th>Ticker / Sector</th><th class="sr-num">CMP (₹)</th><th>Sector → Stock SM</th><th>Scaling Action</th>
+              <th>Accumulation Band</th><th class="sr-num">150-DMA SL</th><th class="sr-num">12M Base / Bull</th>
+              <th>3-Tranche Shares (40/35/25%)</th><th class="sr-num">Core Alloc ₹</th><th>Plan</th>
+            </tr>`;
+            tbody.innerHTML = list.length ? list.map(t => {
+              const cr = t.core || {};
+              const sz = execEngine.sizeLiveCore(t);
+              const safeTk = ui.escAttr(t.ticker);
+              return `<tr class="sr-row-click" onclick="SR.inspectorModal.open('${safeTk}')">
+                <td><span class="sr-ticker-btn">${t.ticker}</span> ${t.isCurated ? '<span class="sr-pill pill-cyan" style="font-size:9px;">CURATED FV</span>' : ''}<div class="sr-muted" style="font-size:10px;">${t.sector} • ${t.account}</div></td>
+                <td class="sr-num sr-bold">₹${Number(t.price || 0).toFixed(2)}</td>
+                <td>${execEngine.phaseBadgeHtml(t.sectorTier, t.sectorScore)} → ${execEngine.phaseBadgeHtml(t.stockTier, t.stockScore)}</td>
+                <td><span class="sr-pill pill-blue">${t.coreAction || 'PILOT_ACCUM'}</span></td>
+                <td class="sr-mono sr-vio">₹${cr.accumBand || '--'}</td>
+                <td class="sr-num sr-neg">₹${cr.structSl || '--'}</td>
+                <td class="sr-num sr-pos sr-bold">₹${Math.round(cr.baseTarget || 0)} (+${cr.upsidePct || 0}%)<div class="sr-muted" style="font-size:9.5px;">Bull ₹${Math.round(cr.bullTarget || 0)}</div></td>
+                <td class="sr-mono sr-info">${sz.shares} sh (${sz.sh1} / ${sz.sh2} / ${sz.sh3})</td>
+                <td class="sr-num">${ui.fmtInr(sz.allocInr)}</td>
+                <td><button class="sr-btn" style="padding:2px 7px; font-size:10px;" onclick="event.stopPropagation(); SR.inspectorModal.open('${safeTk}')">Ticket →</button></td>
+              </tr>`;
+            }).join('') : '<tr><td colspan="10" class="sr-muted">No Core accumulation candidates right now.</td></tr>';
+            execEngine.updateSummary(list);
+            return;
+          }
+
+          if (bkt === 'open_ledger') {
+            const list = execEngine.getStocks();
+            thead.innerHTML = `<tr>
+              <th>Symbol / Track</th><th class="sr-num">CMP (₹)</th><th>Status</th><th>Daily Instruction</th>
+              <th>Sector → Stock SM</th><th class="sr-num">Entry</th><th class="sr-num">Current SL</th><th class="sr-num">T1 / T2</th><th class="sr-num">PnL (R / %)</th>
+            </tr>`;
+            tbody.innerHTML = list.length ? list.map(a => {
+              const safeTk = ui.escAttr(a.symbol);
+              const actCls = a.action === 'REENTRY_WATCH' ? 'pill-p3' : (a.status === 'T1_HIT' ? 'pill-emerald' : 'pill-cyan');
+              return `<tr class="sr-row-click" onclick="SR.inspectorModal.open('${safeTk}')">
+                <td><span class="sr-ticker-btn">${a.symbol}</span><div class="sr-muted" style="font-size:10px;">${a.track} • ${a.sector}</div></td>
+                <td class="sr-num sr-bold">₹${Number(a.cmp || 0).toFixed(2)}</td>
+                <td><span class="sr-pill ${a.status === 'SPRING_RECLAIM' ? 'pill-p3' : 'pill-neutral'}">${a.status}</span></td>
+                <td><span class="sr-pill ${actCls}">${a.action}</span><div class="sr-muted" style="font-size:10px; margin-top:2px;">${a.note}</div></td>
+                <td>${execEngine.phaseBadgeHtml(a.sectorTier, '')} → ${execEngine.phaseBadgeHtml(a.stockTier, '')}</td>
+                <td class="sr-num">₹${a.entry}</td>
+                <td class="sr-num sr-neg sr-bold">₹${a.sl}</td>
+                <td class="sr-num sr-pos">₹${a.t1} / ₹${a.t2}</td>
+                <td class="sr-num ${a.pnlR >= 0 ? 'sr-pos' : 'sr-neg'} sr-bold">${a.pnlR > 0 ? '+' : ''}${a.pnlR}R (${a.pnlPct > 0 ? '+' : ''}${a.pnlPct}%)</td>
+              </tr>`;
+            }).join('') : '<tr><td colspan="9" class="sr-muted">No open/pending positions or Spring re-entry alerts in ledger.</td></tr>';
+            execEngine.updateSummary(list);
+            return;
+          }
+
+          const list = execEngine.getStocks().sort((a, b) => a.ticker.localeCompare(b.ticker));
 
           if (execEngine.bucket === 'dual' || execEngine.bucket === 'all') {
             thead.innerHTML = `<tr>
@@ -2316,12 +2573,17 @@ def render_tab4_fragments(sector_rotation_data):
         },
 
         updateSummary: (list) => {
-          const sumPct = list.reduce((a, s) => a + (s.cap ?? 8), 0);
           const gttAmt = execEngine.capital * execEngine.gttPct;
           const p1Amt = execEngine.capital - gttAmt;
           document.getElementById('sr-exec-p1-val').textContent = ui.fmtInr(p1Amt);
           document.getElementById('sr-exec-p2-val').textContent = ui.fmtInr(gttAmt);
-          document.getElementById('sr-exec-sum-val').textContent = `${sumPct}%`;
+          if (['live_swing', 'live_core', 'open_ledger'].includes(execEngine.bucket)) {
+            const riskInr = execEngine.capital * (execEngine.riskPct / 100);
+            document.getElementById('sr-exec-sum-val').textContent = `${ui.fmtInr(riskInr)} (${execEngine.riskPct}%)`;
+          } else {
+            const sumPct = list.reduce((a, s) => a + (s.cap ?? 8), 0);
+            document.getElementById('sr-exec-sum-val').textContent = `${sumPct}%`;
+          }
         }
       };
 
@@ -2395,13 +2657,27 @@ def render_tab4_fragments(sector_rotation_data):
               txt += `\\`${s.ticker}\\` (${s.valMethod})\\nCMP: ₹${s.price} → Intrinsic FV: ₹${s.fairValue} (${up > 0 ? '+' : ''}${up}% Upside) | Net Inst: ${ui.fmtCr(s.netInstCr)}\\n\\n`;
             });
           } else {
-            const gems = STOCK_DB.filter(s => s.isCore && s.isSwing);
-            txt = `📋 *7 DUAL-HORIZON GEMS TRADE PLAN | ${dt}*\\n\\n`;
-            gems.forEach(s => {
-              const seg = evaluateSeg3(s);
-              const acctTag = pub ? ' [Seg-3 Verified]' : ` [${seg.person}]`;
-              txt += `\\`${s.ticker}\\`${acctTag} | CMP: ₹${s.price} | Entry: ${s.entry} | SL: ${s.sl} | 1-2M T1: ${s.t1} | 12M FV: ₹${s.base}\\n`;
-            });
+            const reg = TRADE_PLAN_DB.regime || {};
+            const swQ = TRADE_PLAN_DB.swing_queue || [];
+            const crQ = TRADE_PLAN_DB.core_queue || [];
+            if (swQ.length || crQ.length) {
+              txt = `📋 *DAILY TRADE PLAN BRIEF | ${dt}*\\nRegime: ${reg.label || 'SELECTIVE'} (${reg.swing_budget_pct || 30}% Swing / ${reg.core_budget_pct || 70}% Core)\\n\\n*1-2M Swing Top Picks:*\\n`;
+              swQ.slice(0, 4).forEach(t => {
+                txt += `• \\`${t.ticker}\\` [${t.stockTier} ${t.stockScore}] Buy ₹${t.swing.entryRef} (${t.swing.shares}sh) | Hard SL ₹${t.swing.hardGttSl} | EOD SL ₹${t.swing.softEodSl} | T1 ₹${t.swing.t1_2r}\\n`;
+              });
+              txt += `\\n*8-12M Core Picks:*\\n`;
+              crQ.slice(0, 4).forEach(t => {
+                txt += `• \\`${t.ticker}\\` (${t.coreAction}) Band ₹${t.core.accumBand} | 150D SL ₹${t.core.structSl} | Base ₹${Math.round(t.core.baseTarget)}\\n`;
+              });
+            } else {
+              const gems = STOCK_DB.filter(s => s.isCore && s.isSwing);
+              txt = `📋 *7 DUAL-HORIZON GEMS TRADE PLAN | ${dt}*\\n\\n`;
+              gems.forEach(s => {
+                const seg = evaluateSeg3(s);
+                const acctTag = pub ? ' [Seg-3 Verified]' : ` [${seg.person}]`;
+                txt += `\\`${s.ticker}\\`${acctTag} | CMP: ₹${s.price} | Entry: ${s.entry} | SL: ${s.sl} | 1-2M T1: ${s.t1} | 12M FV: ₹${s.base}\\n`;
+              });
+            }
           }
 
           if (pub) {
@@ -2510,39 +2786,69 @@ def render_tab4_fragments(sector_rotation_data):
               if (found) { c = found; break; }
             }
           }
-          if (!c) return;
+          const tkt = UNIVERSE_LOOKUP[ticker];
+          if (!c && !tkt) return;
+          if (!c && tkt) {
+            c = {
+              ticker: tkt.ticker, name: tkt.name, sector: tkt.sector, price: tkt.price,
+              chg: tkt.chg, w1: tkt.w1, m1: tkt.m1, m3: tkt.m3, y1: tkt.y1, alpha3m: 0,
+              atr14: tkt.atr14, dma20: tkt.dma20, dma150: tkt.dma150, swingLow: tkt.swingLow,
+              angle: 45, radius: 100, signalTag: tkt.signalTag,
+              preExplodeTier: tkt.stockTier, preExplodeScore: tkt.stockScore,
+              sectorTier: tkt.sectorTier, sectorScore: tkt.sectorScore,
+              bbwPct: tkt.bbwPct, atrDecay: tkt.atrDecay, volDryRatio: tkt.volDryRatio,
+              upDownVol: tkt.upDownVol, alphaSec1W: tkt.alphaSec1W, alphaSec1M: tkt.alphaSec1M,
+              confluence: tkt.confluence, preExplodeReasons: tkt.reasons, stage2Pass: tkt.stage2Pass
+            };
+          }
 
           const atr = c.atr14 || +(c.price * 0.025).toFixed(1);
           const dma20 = c.dma20 || c.price;
           const swLow = c.swingLow || +(c.price * 0.94).toFixed(1);
-          const sl = Math.max(1, Math.round(swLow - 1.5 * atr));
+          const rawSl = Math.min(swLow - 1.0 * atr, c.price - 1.5 * atr);
+          const sl = Math.max(Math.round(c.price * 0.92), Math.min(Math.round(c.price * 0.96), Math.round(rawSl)));
+          const softCloseSl = Math.round(Math.max(swLow * 0.996, dma20 - 0.35 * atr));
           const entryLow = Math.round(dma20);
           const entryHigh = Math.round(c.price + 0.5 * atr);
-          const entryMid = (entryLow + entryHigh) / 2;
-          const risk = Math.max(1, entryMid - sl);
-          const t1 = Math.round(entryMid + 2.0 * risk);
-          const t2 = Math.round(entryMid + 3.5 * risk);
+          const risk = Math.max(1, c.price - sl);
+          const t1 = Math.round(c.price + 2.0 * risk);
+          const t2 = Math.round(c.price + 3.5 * risk);
           const gann = gannSq9Ref(c.price);
           const quad = deriveQuadrant(c.angle || 45);
+          const sz = tkt ? execEngine.sizeLiveSwing(tkt) : { shares: Math.floor((execEngine.capital * (execEngine.riskPct / 100)) / risk), t1Sh: 0, t2Sh: 0, allocInr: 0 };
+          if (!tkt) { sz.t1Sh = Math.floor(sz.shares / 2); sz.t2Sh = sz.shares - sz.t1Sh; sz.allocInr = Math.round(sz.shares * c.price); }
+          const acct = (tkt && tkt.account) || 'Kritika / Vina';
+          const peTier = c.preExplodeTier || 'NEUTRAL';
+          const peCol = peTier === 'PHASE_3' ? '#e879f9' : (peTier === 'PHASE_2' ? '#a855f7' : (peTier === 'PHASE_1' ? '#38bdf8' : (peTier === 'EXTENDED' ? '#ffb300' : '#8c99ad')));
 
-          document.getElementById('sr-insp-hdr-title').textContent = `${c.ticker} — ${c.name} (${c.sector}) | LIVE UNIVERSE TECHNICAL & RRG AUDIT`;
+          document.getElementById('sr-insp-hdr-title').textContent = `${c.ticker} — ${c.name} (${c.sector}) | 3-CARD TRADE PLAN & AUDIT`;
           document.getElementById('sr-insp-modal-body').innerHTML = `
             <div class="sr-meth-grid">
               <div class="sr-meth-card">
-                <h4>⚡ Dynamic 1–2M ATR Swing Levels</h4>
+                <h4>⚡ Anti-Stop-Hunt 1–2M Swing Plan (${sz.shares} sh)</h4>
                 <div class="sr-formula-box">Live CMP: ₹${c.price.toFixed(2)} | 20-DMA: ₹${dma20} | 150-DMA: ₹${c.dma150 || '--'} | ATR(14): ₹${atr}</div>
-                <div><strong>Swing Entry Band:</strong> <span class="sr-vio sr-bold">₹${entryLow} – ₹${entryHigh}</span> <span class="sr-muted">(20-DMA to CMP+0.5×ATR)</span></div>
-                <div><strong>Hard Stop-Loss:</strong> <span class="sr-neg sr-bold">₹${sl}</span> <span class="sr-muted">(20D Swing Low ₹${swLow} − 1.5×ATR)</span></div>
+                <div><strong>2-Tranche Entry (${sz.t1Sh}+${sz.t2Sh} sh):</strong> <span class="sr-vio sr-bold">₹${entryLow} – ₹${entryHigh}</span> <span class="sr-muted">(Alloc ${ui.fmtInr(sz.allocInr)})</span></div>
+                <div><strong>Hard Wide GTT SL:</strong> <span class="sr-neg sr-bold">₹${sl}</span> <span class="sr-muted">(min[SwLow−1ATR, CMP−1.5ATR])</span></div>
+                <div><strong>Soft EOD Close SL:</strong> <span class="sr-warn sr-bold">₹${softCloseSl}</span> <span class="sr-muted">(Obey at 3:15 PM close)</span></div>
                 <div><strong>Target 1 (2R):</strong> <span class="sr-pos sr-bold">₹${t1}</span> | <strong>Target 2 (3.5R):</strong> <span class="sr-pos sr-bold">₹${t2}</span></div>
               </div>
+              <div class="sr-meth-card" style="border-color:${peCol}66;">
+                <h4 style="color:${peCol};">🏦 3-Phase Smart Money &amp; Footprint</h4>
+                <div class="sr-formula-box">Phase: ${peTier} (${c.preExplodeScore ?? 0}/100) | ${c.confluence || 'STANDARD'}</div>
+                <div><strong>Volatility Coil:</strong> BBW <strong>${c.bbwPct ?? '--'}%</strong> rank | ATR Decay <strong>${c.atrDecay ?? '--'}x</strong></div>
+                <div><strong>Institutional Volume:</strong> Up/Dn Vol <strong>${c.upDownVol ?? '--'}x</strong> | 5D Dry-Up <strong>${c.volDryRatio ?? '--'}x</strong></div>
+                <div><strong>α vs Sector (1W / 1M):</strong> <span class="${(c.alphaSec1W || 0) >= 0 ? 'sr-pos' : 'sr-neg'}">${(c.alphaSec1W || 0) > 0 ? '+' : ''}${c.alphaSec1W ?? 0}%</span> / <span class="${(c.alphaSec1M || 0) >= 0 ? 'sr-pos' : 'sr-neg'}">${(c.alphaSec1M || 0) > 0 ? '+' : ''}${c.alphaSec1M ?? 0}%</span></div>
+                <div class="sr-muted" style="font-size:10px; margin-top:4px;">${(c.preExplodeReasons || []).join(' • ') || 'Stage-2 & Base structure metrics'}</div>
+              </div>
               <div class="sr-meth-card">
-                <h4>◎ Relative Strength &amp; Scanner Status</h4>
-                <div class="sr-formula-box">RRG Quadrant: ${quad} (Angle ${c.angle}°, Radius ${c.radius})</div>
+                <h4>◎ RRG Position &amp; Core Anchor</h4>
+                <div class="sr-formula-box">RRG: ${quad} (Angle ${c.angle}°, Radius ${c.radius}) | Route: ${acct}</div>
                 <div><strong>1D / 1W / 1M:</strong> <span class="${c.chg >= 0 ? 'sr-pos' : 'sr-neg'}">${c.chg}%</span> / ${c.w1}% / ${c.m1}%</div>
-                <div><strong>3M / 1Y / α vs Nifty 50:</strong> ${c.m3}% / ${c.y1}% / <span class="${(c.alpha3m || 0) >= 0 ? 'sr-pos' : 'sr-neg'}">${(c.alpha3m || 0) > 0 ? '+' : ''}${c.alpha3m}%</span></div>
+                <div><strong>3M / 1Y / Stage-2:</strong> ${c.m3}% / ${c.y1}% / <strong class="${c.stage2Pass ? 'sr-pos' : 'sr-warn'}">${c.stage2Pass ? 'PASS' : 'WATCH'}</strong></div>
+                <div><strong>8–12M Core 150-DMA SL:</strong> <span class="sr-neg">₹${Math.round((c.dma150 || c.price * 0.9) - atr)}</span></div>
                 <div style="margin-top:6px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-                  ${c.signalTag ? `<span class="sr-pill ${c.signalTag === 'TRACK A' ? 'pill-emerald' : 'pill-violet'}">${c.signalTag} SIGNAL ACTIVE</span>` : '<span class="sr-pill pill-neutral">UNIVERSE CONSTITUENT</span>'}
-                  <span class="sr-gann-pill">Gann Sq9 (Ref Only): 90° ₹${Math.round(gann.r90)} | 180° ₹${Math.round(gann.r180)}</span>
+                  ${c.signalTag ? `<span class="sr-pill ${c.signalTag === 'TRACK A' ? 'pill-emerald' : 'pill-violet'}">${c.signalTag} ACTIVE</span>` : '<span class="sr-pill pill-neutral">750 UNIVERSE</span>'}
+                  <span class="sr-gann-pill">Gann 90° ₹${Math.round(gann.r90)} | 180° ₹${Math.round(gann.r180)}</span>
                   <a href="https://in.tradingview.com/chart/?symbol=NSE:${encodeURIComponent(c.ticker)}" target="_blank" class="sr-btn cyan" style="text-decoration:none; padding:2px 8px; font-size:10px;">TradingView ↗</a>
                 </div>
               </div>
@@ -2615,5 +2921,5 @@ def render_tab4_fragments(sector_rotation_data):
     })();
     """
 
-    sr_js = sr_js.replace("__SECTOR_ROTATION_JSON__", payload_json)
+    sr_js = sr_js.replace("__SECTOR_ROTATION_JSON__", payload_json).replace("__TRADE_PLAN_JSON__", trade_plan_json)
     return sr_css, sr_html, sr_js

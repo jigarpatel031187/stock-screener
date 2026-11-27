@@ -9,7 +9,7 @@ import os
 import json
 import datetime
 
-def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=None, total_scanned=750, trades=None, strategy_metrics=None, sector_rotation=None):
+def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=None, total_scanned=750, trades=None, strategy_metrics=None, sector_rotation=None, trade_plan=None):
     """
     Renders a futuristic dark-mode HTML dashboard with embedded JSON data,
     TradingView mini widgets, search/filter controls, and statistics.
@@ -79,8 +79,17 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
         except Exception:
             sector_rotation = {"universe_nodes": [], "curated_stocks": [], "sector_constituents": {}, "tape": {}}
 
+    if trade_plan is None:
+        try:
+            from trade_plan_agent import load_trade_plan_cache, build_trade_plan_payload
+            trade_plan = build_trade_plan_payload(
+                sector_rotation, trades=trades, active_breakouts=active_breakouts, pre_breakout_squeezes=pre_breakout_squeezes
+            ) if sector_rotation else load_trade_plan_cache()
+        except Exception:
+            trade_plan = {}
+
     from tab4_sector_rotation import render_tab4_fragments
-    sr_css, sr_html, sr_js = render_tab4_fragments(sector_rotation)
+    sr_css, sr_html, sr_js = render_tab4_fragments(sector_rotation, trade_plan=trade_plan)
     sector_nodes_count = len((sector_rotation or {}).get("universe_nodes", []))
 
     html_content = f"""<!DOCTYPE html>
@@ -1453,7 +1462,7 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
 </html>"""
     return html_content
 
-def save_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=None, output_dir=None, total_scanned=750, trades=None, strategy_metrics=None, sector_rotation=None):
+def save_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=None, output_dir=None, total_scanned=750, trades=None, strategy_metrics=None, sector_rotation=None, trade_plan=None):
     """Saves generated dashboard to docs/index.html and root dashboard.html."""
     if output_dir is None:
         output_dir = os.path.dirname(os.path.abspath(__file__))
@@ -1461,7 +1470,7 @@ def save_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_indices=No
     html = generate_html_dashboard(
         active_breakouts, pre_breakout_squeezes, benchmark_indices,
         total_scanned=total_scanned, trades=trades, strategy_metrics=strategy_metrics,
-        sector_rotation=sector_rotation
+        sector_rotation=sector_rotation, trade_plan=trade_plan
     )
     
     # 1. Save to docs/index.html for GitHub Pages (atomic replace avoids OneDrive ReparsePoint Errno 22)

@@ -75,6 +75,7 @@ def record_new_signals(trades, active_breakouts, pre_breakout_squeezes, scan_dat
             "entry_price": entry,
             "initial_sl": sl,
             "current_sl": sl,
+            "catastrophe_sl": float(stock.get("catastrophe_sl", round(sl * 0.97, 1))),
             "target_1_2r": float(stock.get("t1_2r", entry + (2 * unit_risk))),
             "target_2_3r": float(stock.get("t2_3r", entry + (3 * unit_risk))),
             "risk_per_share": unit_risk,
@@ -126,6 +127,7 @@ def record_new_signals(trades, active_breakouts, pre_breakout_squeezes, scan_dat
             "entry_trigger": trigger,
             "initial_sl": sl,
             "current_sl": sl,
+            "catastrophe_sl": float(stock.get("catastrophe_sl", round(sl * 0.97, 1))),
             "target_1_2r": float(stock.get("target_1_2r", trigger + (2 * risk))),
             "target_2_3r": float(stock.get("target_2_3r", trigger + (3 * risk))),
             "risk_per_share": risk,
@@ -241,24 +243,35 @@ def update_existing_trades(trades, all_hist=None):
             for idx, bar in bars_since.iterrows():
                 bar_h = float(bar["High"])
                 bar_l = float(bar["Low"])
+                bar_c = float(bar["Close"])
                 bar_date = idx.strftime("%Y-%m-%d")
+                curr_sl = float(trade["current_sl"])
+                cat_sl = float(trade.get("catastrophe_sl") or round(curr_sl * 0.97, 2))
 
-                # Stop-Loss Check
-                if bar_l <= trade["current_sl"]:
+                # Track intraday sweep-and-recover wicks without falsely triggering closing stops
+                if bar_l <= curr_sl < bar_c and bar_l > cat_sl:
+                    trade["wick_swept"] = True
+
+                # Two-Tier Anti-Stop-Hunt Exit:
+                # 1) Emergency Intraday Catastrophe Guard (bar_l <= cat_sl)
+                # 2) Standard Closing-Basis Thesis Stop (bar_c <= curr_sl at EOD)
+                cat_hit = (bar_l <= cat_sl)
+                eod_hit = (bar_c <= curr_sl)
+                if cat_hit or eod_hit:
+                    exit_px = cat_sl if (cat_hit and not eod_hit) else round(bar_c, 2)
                     if trade["status"] == "T1_HIT":
-                        # Stopped out at BE after hitting T1
                         trade["status"] = "STOPPED_OUT_BE"
-                        trade["exit_price"] = trade["current_sl"]
+                        trade["exit_price"] = exit_px
                         trade["exit_date"] = bar_date
-                        trade["pnl_r"] = 0.80
-                        trade["pnl_pct"] = round(((trade["exit_price"] - entry_p) / entry_p) * 100, 2)
+                        rem_r = ((exit_px - entry_p) / risk_1r) * 0.60 if risk_1r > 0 else 0.0
+                        trade["pnl_r"] = round(0.80 + rem_r, 2)
+                        trade["pnl_pct"] = round(((exit_px - entry_p) / entry_p) * 100, 2)
                     else:
-                        # Initial SL Hit (-1R)
                         trade["status"] = "STOPPED_OUT"
-                        trade["exit_price"] = trade["current_sl"]
+                        trade["exit_price"] = exit_px
                         trade["exit_date"] = bar_date
-                        trade["pnl_r"] = -1.0
-                        trade["pnl_pct"] = round(((trade["exit_price"] - entry_p) / entry_p) * 100, 2)
+                        trade["pnl_r"] = round((exit_px - entry_p) / risk_1r, 2) if risk_1r > 0 else -1.0
+                        trade["pnl_pct"] = round(((exit_px - entry_p) / entry_p) * 100, 2)
                     updated_count += 1
                     break
 
@@ -272,10 +285,12 @@ def update_existing_trades(trades, all_hist=None):
                     updated_count += 1
                     break
 
-                # Target 1 Hit (+2R)
+                # Target 1 Hit (+2R) -> upgrade to sweep-safe retest/EMA trailing SL
                 if bar_h >= t1 and trade["status"] == "ACTIVE":
                     trade["status"] = "T1_HIT"
-                    trade["current_sl"] = trade["be_retest_anchor"]
+                    new_sl = float(trade["be_retest_anchor"])
+                    trade["current_sl"] = new_sl
+                    trade["catastrophe_sl"] = round(new_sl * 0.97, 2)
                     updated_count += 1
 
             # Floating unrealized PnL
