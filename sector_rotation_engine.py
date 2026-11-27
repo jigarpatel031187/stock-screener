@@ -570,6 +570,7 @@ def _stock_technicals_from_hist(hist_df):
     dma20 = float(close.rolling(20, min_periods=10).mean().iloc[-1])
     dma150 = float(close.rolling(min(150, len(close)), min_periods=20).mean().iloc[-1])
     swing_low = float(low.iloc[-21:-1].min()) if len(low) >= 21 else float(low.min())
+    shelf_low_5d = float(low.iloc[-6:-1].min()) if len(low) >= 6 else float(low.min())
     ema20 = float(close.ewm(span=20, adjust=False).mean().iloc[-1])
     return {
         "price": round(last, 2),
@@ -579,6 +580,7 @@ def _stock_technicals_from_hist(hist_df):
         "ema20": round(ema20, 1),
         "dma150": round(dma150, 1),
         "swingLow": round(swing_low, 1),
+        "shelfLow5d": round(shelf_low_5d, 1),
     }
 
 
@@ -665,6 +667,7 @@ def _extract_stock_raw_features(hist_df: pd.DataFrame):
     sma200 = float(close.rolling(min(200, len(close))).mean().iloc[-1])
     dma150 = float(close.rolling(min(150, len(close)), min_periods=20).mean().iloc[-1])
     swing_low = float(low.iloc[-21:-1].min()) if len(low) >= 21 else float(low.min())
+    shelf_low_5d = float(low.iloc[-6:-1].min()) if len(low) >= 6 else float(low.min())
 
     tech = {
         "price": round(last_c, 2),
@@ -674,6 +677,7 @@ def _extract_stock_raw_features(hist_df: pd.DataFrame):
         "ema20": round(ema20, 1),
         "dma150": round(dma150, 1),
         "swingLow": round(swing_low, 1),
+        "shelfLow5d": round(shelf_low_5d, 1),
     }
     s_rets = _compute_period_returns(close, pre_normalized=True)
 
@@ -1311,6 +1315,7 @@ def compute_sector_rotation_payload(
                     "ema20": tech.get("ema20", tech["dma20"]),
                     "dma150": tech["dma150"],
                     "swingLow": tech["swingLow"],
+                    "shelfLow5d": tech.get("shelfLow5d", tech["swingLow"]),
                     "angle": s_ang,
                     "radius": s_rad,
                     "dailyTail": s_dtail,

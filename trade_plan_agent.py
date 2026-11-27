@@ -19,6 +19,7 @@ import argparse
 import datetime
 import json
 import logging
+import math
 import os
 import re
 from typing import Any, Dict, List, Optional, Tuple
@@ -284,11 +285,13 @@ def compute_sweep_proof_stops(
     dma150: float,
     atr14: float,
     entry_ref: Optional[float] = None,
+    shelf_low_5d: Optional[float] = None,
 ) -> dict:
     """
-    Two-Tier Anti-Stop-Hunt Risk Geometry:
-      - softEodSl: Closing-basis decision stop at 3:15 PM IST
-      - hardGttSl: Wide disaster GTT SL anchored min(SwingLow - 1.0*ATR, Entry - 1.5*ATR) (4.0% - 8.0%)
+    Two-Tier Anti-Stop-Hunt Risk Geometry (Unified with Track A/B Bot):
+      - softEodSl: Closing-basis 1R anchor from min(5D Shelf Low - 0.75*ATR, Entry - 1.5*ATR),
+                   nudged off round clusters BEFORE clamping strictly within 4.0% - 8.0%
+      - hardGttSl: Wide disaster GTT circuit breaker 0.5*ATR deeper than softEodSl
       - beTrailSl: Post-T1 Free-Roll trailing SL guaranteed >= entry_ref
       - coreStructSl: 150-DMA - 1.0*ATR for 8-12M Core compounding
     """
@@ -299,31 +302,42 @@ def compute_sweep_proof_stops(
     e20 = float(ema20) if (ema20 and ema20 > 0) else d20
     d150 = float(dma150) if (dma150 and dma150 > 0) else cmp_val * 0.88
     sw_low = float(swing_low) if (swing_low and swing_low > 0) else cmp_val * 0.93
+    shelf5d = float(shelf_low_5d) if (shelf_low_5d and shelf_low_5d > 0) else max(sw_low, d20 - 0.5 * atr)
 
-    raw_wide = min(sw_low - (1.0 * atr), ref - (1.5 * atr))
-    clamped_sl = max(ref * 0.92, min(ref * 0.96, raw_wide))
-    hard_gtt_sl = _round_cluster_guard(clamped_sl)
-    if hard_gtt_sl >= ref:
-        hard_gtt_sl = round(ref * 0.955, 1)
+    # Precision-safe rounding (2 decimals below Rs.100 so penny/low-price stocks keep exact 4%-8% band)
+    nd = 2 if ref < 100.0 else 1
+    scale = 10 ** nd
+    min_sl_strict = math.ceil((ref * 0.92) * scale) / scale
+    max_sl_strict = math.floor((ref * 0.96) * scale) / scale
+    if max_sl_strict <= min_sl_strict:
+        max_sl_strict = min_sl_strict
 
-    wide_risk = max(1.0, round(ref - hard_gtt_sl, 2))
-    risk_pct = round((wide_risk / ref) * 100.0, 2) if ref > 0 else 5.0
+    # Apply round-cluster guard BEFORE 4%-8% clamp so Risk% NEVER overflows 8.0%
+    raw_struct = min(shelf5d - (0.75 * atr), ref - (1.5 * atr))
+    guarded_eod = _round_cluster_guard(raw_struct)
+    soft_eod_sl = round(max(min_sl_strict, min(max_sl_strict, guarded_eod)), nd)
+    if soft_eod_sl >= ref:
+        soft_eod_sl = round(ref * 0.955, nd)
 
-    soft_raw = max(sw_low * 0.996, d20 - (0.35 * atr))
-    soft_eod_sl = round(min(ref * 0.975, max(hard_gtt_sl * 1.008, soft_raw)), 1)
+    unit_risk = max(0.05 if ref < 50.0 else 0.1, round(ref - soft_eod_sl, nd))
+    risk_pct = round((unit_risk / ref) * 100.0, 2) if ref > 0 else 5.0
 
-    t1_2r = round(ref + (2.0 * wide_risk), 1)
-    t2_35r = round(ref + (3.5 * wide_risk), 1)
-    be_trail_sl = round(max(ref * 1.002, _round_cluster_guard(max(e20 - (0.4 * atr), ref + 0.1 * atr))), 1)
+    # Disaster Intraday GTT Floor sits ~0.5*ATR deeper than Soft EOD Stop (capped at max 10%)
+    hard_gtt_raw = _round_cluster_guard(soft_eod_sl - (0.5 * atr))
+    hard_gtt_sl = round(max(ref * 0.90, min(soft_eod_sl * 0.992, hard_gtt_raw)), nd)
 
-    core_struct_sl = _round_cluster_guard(min(ref * 0.90, d150 - (1.0 * atr)))
+    t1_2r = round(ref + (2.0 * unit_risk), nd)
+    t2_35r = round(ref + (3.5 * unit_risk), nd)
+    be_trail_sl = round(max(ref * 1.002, _round_cluster_guard(max(e20 - (0.4 * atr), ref + 0.1 * atr))), nd)
+
+    core_struct_sl = round(_round_cluster_guard(min(ref * 0.90, d150 - (1.0 * atr))), nd)
     return {
         "entryRef": round(ref, 2),
-        "entryBand": f"{round(min(ref, d20), 0):.0f}-{round(ref + 0.5 * atr, 0):.0f}",
+        "entryBand": f"{round(min(ref, d20), nd if ref < 100 else 0):.{nd if ref < 100 else 0}f}-{round(ref + 0.5 * atr, nd if ref < 100 else 0):.{nd if ref < 100 else 0}f}",
         "hardGttSl": hard_gtt_sl,
         "softEodSl": soft_eod_sl,
         "beTrailSl": be_trail_sl,
-        "riskPerShare": round(wide_risk, 1),
+        "riskPerShare": unit_risk,
         "riskPct": risk_pct,
         "t1_2r": t1_2r,
         "t2_35r": t2_35r,
@@ -513,6 +527,7 @@ def _enrich_candidate_ticket(
         dma150=st.get("dma150") or (curated or {}).get("dma150") or price * 0.88,
         atr14=st.get("atr14") or (curated or {}).get("atr14") or price * 0.025,
         entry_ref=entry_ref,
+        shelf_low_5d=st.get("shelfLow5d"),
     )
 
     max_risk_inr = capital * (risk_pct / 100.0)
@@ -856,6 +871,7 @@ def build_trade_plan_payload(
         t for t in tickets
         if t["sectorTier"] != "EXTENDED"
         and t["stockTier"] != "EXTENDED"
+        and (t.get("roePct") is None or float(t["roePct"]) >= MIN_CORE_ROE)
         and (
             (t["isCurated"] and t["isCore"])
             or (

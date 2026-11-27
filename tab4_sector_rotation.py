@@ -47,7 +47,12 @@ def render_tab4_fragments(sector_rotation_data, trade_plan=None):
       gap: 12px;
       overflow-x: auto;
       white-space: nowrap;
+      scrollbar-width: thin;
+      scrollbar-color: #243044 #05070a;
     }
+    #view-sector .sr-tape::-webkit-scrollbar { height: 4px; }
+    #view-sector .sr-tape::-webkit-scrollbar-track { background: #05070a; }
+    #view-sector .sr-tape::-webkit-scrollbar-thumb { background: #243044; border-radius: 3px; }
     #view-sector .sr-tape-group { display: flex; align-items: center; gap: 11px; }
     #view-sector .sr-tape-item { display: inline-flex; align-items: baseline; gap: 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
     #view-sector .sr-tape-lbl { color: #8c99ad; font-size: 10px; font-weight: 600; }
@@ -640,7 +645,7 @@ def render_tab4_fragments(sector_rotation_data, trade_plan=None):
                   <div class="sr-formula-box">Gate: Stock P3 + Sector P2/P3 (&le;2/Sec, Max 10 Swings) · Track A/B in P1 = 0.5R Watch</div>
                   <div class="sr-formula-box">Size &amp; Pyramid: 1.25R Common+Dual+Track | 40% Pivot / 45% +1R EMA / 15% Sec RS&gt;100</div>
                   <div class="sr-formula-box">Exit &amp; Runner: 40% T1 (+2R &rarr; 0% Heat) | 35% T2 (+3.5R) | 25% Uncapped 20-EMA Runner | 18D Time-Stop</div>
-                  <div class="sr-muted" style="font-size:10.5px;">Never chases &gt;2.5&times;ATR above 20-DMA. Hard GTT SL sits 4%–8% wide; closing SL checked at 3:15 PM IST.</div>
+                  <div class="sr-muted" style="font-size:10.5px;">Never chases &gt;2.5&times;ATR above 20-DMA. EOD 1R SL (3:15 PM) sits 4%–8% below entry; Hard GTT breaker sits 0.5&times;ATR deeper.</div>
                 </div>
                 <div class="sr-meth-card">
                   <h4>🏛 Confirm 8–12M Logic (Live Yahoo Q-Check + 150-DMA)</h4>
@@ -2281,7 +2286,7 @@ def render_tab4_fragments(sector_rotation_data, trade_plan=None):
           const slotCap = Math.max(50000, swingCap / 6);
           const mult = t.sizeMult || 1.0;
           const riskBudget = execEngine.capital * (execEngine.riskPct / 100) * mult;
-          const rShare = Math.max(1, sw.riskPerShare || 1);
+          const rShare = Math.max(0.05, sw.riskPerShare || 1);
           const ePx = Math.max(1, sw.entryRef || t.price || 1);
           const sh = Math.max(0, Math.min(Math.floor(riskBudget / rShare), Math.floor((slotCap * mult) / ePx)));
           // 40% Pilot / 45% +1R EMA-Retest / 15% Sector RS > 100
@@ -2391,7 +2396,7 @@ def render_tab4_fragments(sector_rotation_data, trade_plan=None):
             const list = execEngine.getStocks();
             thead.innerHTML = `<tr>
               <th>Ticker / Sector</th><th class="sr-num">CMP (₹)</th><th>Sector &rarr; Stock SM</th><th>Verdict &amp; Remark</th>
-              <th>Entry Zone</th><th class="sr-num">Hard GTT SL</th><th class="sr-num">EOD Close SL</th>
+              <th>Entry Zone</th><th class="sr-num">EOD 1R SL (3:15 PM)</th><th class="sr-num">Hard GTT Breaker</th>
               <th class="sr-num">T1 (40%) / T2 (35%) / 25% Run</th><th class="sr-num">Pyramid (40/45/15)</th><th class="sr-num">Alloc ₹ (Risk)</th><th>Plan</th>
             </tr>`;
             tbody.innerHTML = list.length ? list.map(t => {
@@ -2412,8 +2417,8 @@ def render_tab4_fragments(sector_rotation_data, trade_plan=None):
                 <td>${execEngine.phaseBadgeHtml(t.sectorTier, t.sectorScore)} &rarr; ${execEngine.phaseBadgeHtml(t.stockTier, t.stockScore)}</td>
                 <td>${multBadge}${remarkHtml}</td>
                 <td class="sr-mono sr-vio">₹${sw.entryRef || t.price}<div class="sr-muted" style="font-size:9.5px;">Band: ${sw.entryBand || '--'}</div></td>
-                <td class="sr-num sr-neg sr-bold">₹${sw.hardGttSl}<div class="sr-muted" style="font-size:9.5px;">-${sw.riskPct}% wide</div></td>
-                <td class="sr-num sr-warn">₹${sw.softEodSl}<div class="sr-muted" style="font-size:9.5px;">FreeRoll ≥₹${sw.beTrailSl}</div></td>
+                <td class="sr-num sr-warn sr-bold">₹${sw.softEodSl}<div class="sr-muted" style="font-size:9.5px;">-${sw.riskPct}% 1R · FR ≥₹${sw.beTrailSl}</div></td>
+                <td class="sr-num sr-neg">₹${sw.hardGttSl}<div class="sr-muted" style="font-size:9.5px;">−0.5×ATR GTT guard</div></td>
                 <td class="sr-num sr-pos">₹${sw.t1_2r} / ₹${sw.t2_35r}<div class="sr-muted" style="font-size:9px;">+25% 20-EMA Runner</div></td>
                 <td class="sr-num sr-bold sr-info">${sz.shares} sh<div class="sr-muted" style="font-size:9.5px;">${sz.t1Sh} / ${sz.t2Sh} / ${sz.t3Sh}</div></td>
                 <td class="sr-num">${ui.fmtInr(sz.allocInr)}<div class="sr-muted" style="font-size:9.5px;">Risk: ${ui.fmtInr(sz.maxRiskInr)}</div></td>
@@ -2785,14 +2790,15 @@ def render_tab4_fragments(sector_rotation_data, trade_plan=None):
           const atr = c.atr14 || +(c.price * 0.025).toFixed(1);
           const dma20 = c.dma20 || c.price;
           const swLow = c.swingLow || +(c.price * 0.94).toFixed(1);
+          const shelf5d = c.shelfLow5d || Math.max(swLow, dma20 - 0.5 * atr);
           const swLive = tkt && tkt.swing;
           const crLive = tkt && tkt.core;
-          const rawSl = Math.min(swLow - 1.0 * atr, c.price - 1.5 * atr);
-          const sl = swLive ? swLive.hardGttSl : Math.max(Math.round(c.price * 0.92), Math.min(Math.round(c.price * 0.96), Math.round(rawSl)));
-          const softCloseSl = swLive ? swLive.softEodSl : Math.round(Math.max(swLow * 0.996, dma20 - 0.35 * atr));
+          const rawStruct = Math.min(shelf5d - 0.75 * atr, c.price - 1.5 * atr);
+          const softCloseSl = swLive ? swLive.softEodSl : Math.round(Math.max(c.price * 0.92, Math.min(c.price * 0.96, rawStruct)) * 10) / 10;
+          const sl = swLive ? swLive.hardGttSl : Math.round(Math.max(c.price * 0.90, softCloseSl - 0.5 * atr) * 10) / 10;
           const entryLow = Math.round(dma20);
           const entryHigh = Math.round(c.price + 0.5 * atr);
-          const risk = Math.max(1, swLive ? swLive.riskPerShare : (c.price - sl));
+          const risk = Math.max(0.05, swLive ? swLive.riskPerShare : (c.price - softCloseSl));
           const t1 = swLive ? swLive.t1_2r : Math.round(c.price + 2.0 * risk);
           const t2 = swLive ? swLive.t2_35r : Math.round(c.price + 3.5 * risk);
           const gann = gannSq9Ref(c.price);

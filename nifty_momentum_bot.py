@@ -774,6 +774,11 @@ def calculate_active_breakout_score(hist, nifty500_hist=None, delivery_pct=None)
     anchor_low = retest_low if retest_holding else shelf_low_5d
     atr_sl_floor = today_close - (1.5 * curr_atr)
     raw_sl = min(anchor_low - (0.75 * curr_atr), atr_sl_floor)
+    # Round-cluster guard BEFORE 4%-8% clamp so final risk never exceeds 8.0%
+    step = 100.0 if raw_sl >= 1500 else (50.0 if raw_sl >= 400 else 10.0)
+    nearest = round(raw_sl / step) * step
+    if abs(raw_sl - nearest) <= max(1.0, raw_sl * 0.0025):
+        raw_sl = nearest - max(1.5, round(raw_sl * 0.0035, 1))
 
     raw_risk = today_close - raw_sl
     max_risk = today_close * 0.080  # 8.0% max risk cap for Sweep-Proof SL
@@ -785,10 +790,10 @@ def calculate_active_breakout_score(hist, nifty500_hist=None, delivery_pct=None)
     risk_pct = round((unit_risk / today_close) * 100, 2)
     t1_2r = round(today_close + (2.0 * unit_risk), 1)
 
-    # Dynamic Fibonacci 1.618 Base Extension Target (Adaptive to Base Depth)
+    # Dynamic Fibonacci 1.618 Base Extension / 3.5R Target
     base_depth = max(pivot - anchor_low, 2.0 * curr_atr)
-    fib_t2 = round(pivot + (1.618 * base_depth), 1) if base_depth > 0 else round(today_close + (3.0 * unit_risk), 1)
-    t2_3r = round(max(today_close + (3.0 * unit_risk), fib_t2), 1)
+    fib_t2 = round(pivot + (1.618 * base_depth), 1) if base_depth > 0 else round(today_close + (3.5 * unit_risk), 1)
+    t2_3r = round(max(today_close + (3.5 * unit_risk), fib_t2), 1)
 
     state_label = "CONFIRMED_RETEST" if retest_holding else "ACTIVE_BREAKOUT"
 
@@ -1035,6 +1040,10 @@ def run_nse_market_lens_screen():
                 base_low_5d = float(hist["Low"].iloc[-6:-1].min())  # Matches TradingView ta.lowest(low[1], 5)
                 sl_atr = entry_trigger - (1.5 * atr_val)
                 raw_sl = min(base_low_5d - (0.75 * atr_val), sl_atr)
+                step_b = 100.0 if raw_sl >= 1500 else (50.0 if raw_sl >= 400 else 10.0)
+                nearest_b = round(raw_sl / step_b) * step_b
+                if abs(raw_sl - nearest_b) <= max(1.0, raw_sl * 0.0025):
+                    raw_sl = nearest_b - max(1.5, round(raw_sl * 0.0035, 1))
                 raw_risk = entry_trigger - raw_sl
                 max_risk = entry_trigger * 0.080
                 min_risk = entry_trigger * 0.040
@@ -1045,10 +1054,10 @@ def run_nse_market_lens_screen():
 
                 target_1_2r = round(entry_trigger + (2.0 * risk_1r), 1)
                 
-                # Base Depth & Fibonacci 1.618 Extension Target
+                # Base Depth & Fibonacci 1.618 Extension / 3.5R Target
                 base_depth = max(pivot - base_low_5d, 2.0 * atr_val)
-                fib_ext_target = round(pivot + (1.618 * base_depth), 1) if base_depth > 0 else round(entry_trigger + (3.0 * risk_1r), 1)
-                target_2_3r = round(max(entry_trigger + (3.0 * risk_1r), fib_ext_target), 1)
+                fib_ext_target = round(pivot + (1.618 * base_depth), 1) if base_depth > 0 else round(entry_trigger + (3.5 * risk_1r), 1)
+                target_2_3r = round(max(entry_trigger + (3.5 * risk_1r), fib_ext_target), 1)
                 be_retest_anchor = round(max(pivot - (0.5 * atr_val), initial_sl + (0.5 * risk_1r)), 1)
 
                 dry_desc = "extreme dry-up" if halo_metrics['vol_dryup_ratio'] <= 0.60 else "supply drying"

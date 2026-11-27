@@ -828,7 +828,7 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
       <div class="header-content">
         <div>
           <h1 class="brand-title">
-            <span>🌌</span> AntiGravity Smart Money Dual Track Radar
+            <span style="-webkit-text-fill-color: initial; background: none;">🌌</span> AntiGravity Smart Money Dual Track Radar
           </h1>
           <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
             Institutional Quality Compounders (₹2,000 Cr – ₹50,000 Cr | ROE > 12% | ROCE > 12% | P/E < 91 | 0.5 < OCF/PAT < 3.0 | Sector D/E)
@@ -886,7 +886,7 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
 
     <!-- Search Input -->
     <div class="search-bar" id="main-search-bar">
-      <input type="text" class="search-input" id="search-input" placeholder="Search by Symbol, Company Name, or Sector..." onkeyup="filterCards()">
+      <input type="text" class="search-input" id="search-input" placeholder="Search by Symbol, Company Name, or Sector..." oninput="filterCards()" onkeyup="filterCards()">
     </div>
 
     <!-- TAB 1: Track B Grid -->
@@ -939,23 +939,23 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
         </div>
       </div>
 
-      <!-- Institutional 40/30/30 Profit Lock Architecture -->
+      <!-- Institutional 40/35/25 Uncapped Runner Profit Architecture -->
       <div class="lifecycle-box">
         <div class="lifecycle-title">
-          <span>🛡️</span> Mathematical Edge: AntiGravity 40 / 30 / 30 Capital Protection Engine
+          <span>🛡️</span> Mathematical Edge: AntiGravity 40 / 35 / 25 Uncapped Runner Engine
         </div>
         <div class="lifecycle-rules">
           <div class="rule-item">
-            <strong>Target 1 (+2R):</strong> Book 40% position profit; trailing SL instantly jumps to Breakeven Retest Anchor. The trade is guaranteed profitable at <strong>+0.8R net</strong> even if later stopped out!
+            <strong>Target 1 (+2R):</strong> Book 40% position profit; trailing SL moves &ge; Entry (Free-Roll = 0% Portfolio Heat &amp; slot freed immediately).
           </div>
           <div class="rule-item">
-            <strong>Target 2 (+3R):</strong> Book 30% position profit. Total booked profit locks in at <strong>+1.7R to +2.5R</strong>.
+            <strong>Target 2 (+3.5R):</strong> Book 35% position profit. Cumulative locked gain locks core swing profits before outlier extension.
           </div>
           <div class="rule-item">
-            <strong>Runner (30%):</strong> Trailed with 20-Day EMA to ride multi-month institutional momentum compounders without premature profit capping.
+            <strong>Runner (25%):</strong> Uncapped Trend Runner held until Daily/Weekly Close &lt; 20-EMA or 50-DMA (rides multi-month leaders without premature capping).
           </div>
           <div class="rule-item">
-            <strong>Capital Defense:</strong> If stopped at initial structural stop-loss, loss is strictly defined and capped at exactly <strong>-1.0R</strong>.
+            <strong>Two-Tier Defense:</strong> Honoured on 3:15 PM closing basis (`Soft EOD SL`) with Hard GTT catastrophe floor (`-0.5&times;ATR` deeper) + `18D` stale rotation rule.
           </div>
         </div>
       </div>
@@ -1091,12 +1091,12 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
               <span class="plan-val t1">₹${{stock.target_1_2r}} (Book 40% & Trail SL to ₹${{stock.be_retest_anchor}})</span>
             </div>
             <div class="plan-line">
-              <span class="plan-tag">🚀 TARGET 2 (3R)</span>
-              <span class="plan-val t2">₹${{stock.target_2_3r}} (Book 30%)</span>
+              <span class="plan-tag">🎯 TARGET 2 (3.5R)</span>
+              <span class="plan-val t2">₹${{stock.target_2_3r}} (Book 35%)</span>
             </div>
             <div class="plan-line">
-              <span class="plan-tag">💎 RUNNER (30%)</span>
-              <span class="plan-val runner">Trail with 20-Day EMA (Ride Multibagger)</span>
+              <span class="plan-tag">💎 RUNNER (25%)</span>
+              <span class="plan-val runner">Uncapped Trail on Daily/Weekly Close &lt; 20-EMA / 50-DMA</span>
             </div>
           </div>
 
