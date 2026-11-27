@@ -713,5 +713,49 @@
     "qualifiesCore": false,
     "fundReason": "D/E 0.7 > 0.6 (Consumer)",
     "fetched_at": "2026-11-27"
+  },
+  "WAKEFIT": {
+    "ticker": "WAKEFIT",
+    "roePct": 16.4,
+    "deRatio": 0.28,
+    "peRatio": 35.09,
+    "pbRatio": 3.93,
+    "mcapCr": 4616.5,
+    "qualifiesCore": true,
+    "fundReason": "ROE 16.4% | D/E 0.28 | P/E 35.09",
+    "fetched_at": "2026-11-27"
+  },
+  "JUSTDIAL": {
+    "ticker": "JUSTDIAL",
+    "roePct": 9.6,
+    "deRatio": 0.01,
+    "peRatio": 9.93,
+    "pbRatio": 1.08,
+    "mcapCr": 5830.5,
+    "qualifiesCore": false,
+    "fundReason": "ROE 9.6% < 12.0%",
+    "fetched_at": "2026-11-27"
+  },
+  "KFINTECH": {
+    "ticker": "KFINTECH",
+    "roePct": 22.6,
+    "deRatio": 0.05,
+    "peRatio": 35.33,
+    "pbRatio": 10.51,
+    "mcapCr": 17054.0,
+    "qualifiesCore": true,
+    "fundReason": "ROE 22.6% | D/E 0.05 | P/E 35.33",
+    "fetched_at": "2026-11-27"
+  },
+  "STYLAMIND": {
+    "ticker": "STYLAMIND",
+    "roePct": 21.6,
+    "deRatio": 0.05,
+    "peRatio": 24.55,
+    "pbRatio": 6.17,
+    "mcapCr": 5525.2,
+    "qualifiesCore": true,
+    "fundReason": "ROE 21.6% | D/E 0.05 | P/E 24.55",
+    "fetched_at": "2026-11-27"
   }
 }
