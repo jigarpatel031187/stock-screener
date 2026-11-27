@@ -4,3 +4,6 @@ __pycache__/
 venv/
 .venv/
 logs/
+sector_rotation_card.py
+data/sector_rotation_card.png
+nse_rrg_astro_terminal.html

@@ -358,7 +358,7 @@ def compute_strategy_metrics(trades):
     - Win rate, total R-return, profit factor, average win/loss, best trade, etc.
     """
     total_signals = len(trades)
-    closed_trades = [t for t in trades if t["status"] in ["T2_HIT", "RUNNER_EXITED", "T1_HIT", "RUNNER_ACTIVE", "STOPPED_OUT", "STOPPED_OUT_BE"]]
+    closed_trades = [t for t in trades if t["status"] in ["T2_HIT", "RUNNER_EXITED", "T1_HIT", "RUNNER_ACTIVE", "STOPPED_OUT", "STOPPED_OUT_BE", "TIME_STOP_EXITED"]]
     active_trades = [t for t in trades if t["status"] in ["ACTIVE", "T1_HIT", "RUNNER_ACTIVE"]]
     pending_trades = [t for t in trades if t["status"] == "PENDING_TRIGGER"]
 

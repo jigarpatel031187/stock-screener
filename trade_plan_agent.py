@@ -394,7 +394,8 @@ def evaluate_open_trades(
 
             if not is_free_roll:
                 sector_counts[sec_key] = sector_counts.get(sec_key, 0) + 1
-                active_non_freeroll_count += 1
+                if status != "PENDING_TRIGGER":
+                    active_non_freeroll_count += 1
 
             if status == "RUNNER_ACTIVE":
                 ema20_val = float(tr.get("latest_ema20") or st_live.get("ema20") or cmp_val)

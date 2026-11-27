@@ -202,15 +202,15 @@
     "risk_per_share": 193.7,
     "risk_pct": 24.4,
     "be_retest_anchor": 796.7,
-    "status": "ACTIVE",
-    "exit_date": null,
-    "exit_price": null,
-    "current_price": 774.2,
-    "pnl_pct": -2.48,
+    "status": "TIME_STOP_EXITED",
+    "exit_date": "2026-11-27",
+    "exit_price": 773.7,
+    "current_price": 773.7,
+    "pnl_pct": -2.54,
     "pnl_r": -0.1,
     "max_price_seen": 834.5,
     "days_held": 20,
-    "notes": "Cleared 20D pivot \u20b9778.18 with 1.97x volume and strong institutional volume. Strong close in top 8% of day range; outperforming Nifty 500 by +18.6% over 3M."
+    "notes": "Cleared 20D pivot \u20b9778.18 with 1.97x volume and strong institutional volume. Strong close in top 8% of day range; outperforming Nifty 500 by +18.6% over 3M. [18D Time-Stop: Exited at market after 20d < +0.5R while Media moved higher]"
   },
   {
     "id": "ACUTAAS_20261029_A",
@@ -232,15 +232,15 @@
     "risk_per_share": 992.9,
     "risk_pct": 24.97,
     "be_retest_anchor": 3990.6,
-    "status": "ACTIVE",
-    "exit_date": null,
-    "exit_price": null,
-    "current_price": 4025.4,
-    "pnl_pct": 1.22,
+    "status": "TIME_STOP_EXITED",
+    "exit_date": "2026-11-27",
+    "exit_price": 4075.0,
+    "current_price": 4075.0,
+    "pnl_pct": 2.47,
     "pnl_r": 0.05,
     "max_price_seen": 4134.0,
     "days_held": 20,
-    "notes": "Cleared 20D pivot \u20b93975.0 with 4.06x volume and strong institutional volume. Strong close in top 15% of day range; outperforming Nifty 500 by +25.8% over 3M."
+    "notes": "Cleared 20D pivot \u20b93975.0 with 4.06x volume and strong institutional volume. Strong close in top 15% of day range; outperforming Nifty 500 by +25.8% over 3M. [18D Time-Stop: Exited older pre-upgrade trade after 20d < +0.5R to free slot]"
   },
   {
     "id": "SUPRIYA_20261105_B",

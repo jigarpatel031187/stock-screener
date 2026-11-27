@@ -1223,9 +1223,9 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
         // Status filter
         if (ledgerStatusFilter === 'ACTIVE' && !['ACTIVE', 'T1_HIT', 'RUNNER_ACTIVE'].includes(trade.status)) return false;
         if (ledgerStatusFilter === 'PENDING_TRIGGER' && trade.status !== 'PENDING_TRIGGER') return false;
-        if (ledgerStatusFilter === 'WINS' && !['T1_HIT', 'T2_HIT', 'RUNNER_ACTIVE', 'RUNNER_EXITED', 'STOPPED_OUT_BE'].includes(trade.status)) return false;
+        if (ledgerStatusFilter === 'WINS' && (!['T1_HIT', 'T2_HIT', 'RUNNER_ACTIVE', 'RUNNER_EXITED', 'STOPPED_OUT_BE', 'TIME_STOP_EXITED'].includes(trade.status) || (trade.status === 'TIME_STOP_EXITED' && (trade.pnl_r || 0) <= 0))) return false;
         if (ledgerStatusFilter === 'STOPPED_OUT_BE' && trade.status !== 'STOPPED_OUT_BE') return false;
-        if (ledgerStatusFilter === 'LOSSES' && trade.status !== 'STOPPED_OUT') return false;
+        if (ledgerStatusFilter === 'LOSSES' && (trade.status !== 'STOPPED_OUT' && !(trade.status === 'TIME_STOP_EXITED' && (trade.pnl_r || 0) < 0))) return false;
 
         // Track filter
         if (ledgerTrackFilter !== 'ALL' && trade.track !== ledgerTrackFilter) return false;
@@ -1274,6 +1274,8 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
           statusBadge = '<span class="status-badge status-be">🛡️ STOPPED BE (+0.8R)</span>';
         }} else if (trade.status === 'STOPPED_OUT') {{
           statusBadge = '<span class="status-badge status-sl">🔴 STOPPED OUT (-1R)</span>';
+        }} else if (trade.status === 'TIME_STOP_EXITED') {{
+          statusBadge = '<span class="status-badge status-pending">⏱️ 18D TIME-STOP EXIT</span>';
         }} else {{
           statusBadge = `<span class="status-badge status-expired">⚪ ${{trade.status}}</span>`;
         }}
