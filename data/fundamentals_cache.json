@@ -757,5 +757,148 @@
     "qualifiesCore": true,
     "fundReason": "ROE 21.6% | D/E 0.05 | P/E 24.55",
     "fetched_at": "2026-11-27"
+  },
+  "BEML": {
+    "ticker": "BEML",
+    "roePct": 5.8,
+    "deRatio": 0.22,
+    "peRatio": 32.01,
+    "pbRatio": 6.8,
+    "mcapCr": 19540.4,
+    "qualifiesCore": false,
+    "fundReason": "ROE 5.8% < 12.0%",
+    "fetched_at": "2026-11-28"
+  },
+  "ANTHEM": {
+    "ticker": "ANTHEM",
+    "roePct": 20.4,
+    "deRatio": 0.01,
+    "peRatio": 61.55,
+    "pbRatio": 16.91,
+    "mcapCr": 55459.6,
+    "qualifiesCore": true,
+    "fundReason": "ROE 20.4% | D/E 0.01 | P/E 61.55",
+    "fetched_at": "2026-11-28"
+  },
+  "CUPID": {
+    "ticker": "CUPID",
+    "roePct": 35.9,
+    "deRatio": 0.2,
+    "peRatio": 311.6,
+    "pbRatio": 93.05,
+    "mcapCr": 52374.5,
+    "qualifiesCore": false,
+    "fundReason": "Val P/E 311.6 P/B 93.05 out of bounds",
+    "fetched_at": "2026-11-28"
+  },
+  "NUVAMA": {
+    "ticker": "NUVAMA",
+    "roePct": 27.1,
+    "deRatio": 2.92,
+    "peRatio": 21.85,
+    "pbRatio": 7.4,
+    "mcapCr": 33866.5,
+    "qualifiesCore": true,
+    "fundReason": "ROE 27.1% | D/E 2.92 | P/E 21.85",
+    "fetched_at": "2026-11-28"
+  },
+  "DRREDDY": {
+    "ticker": "DRREDDY",
+    "roePct": 7.3,
+    "deRatio": 0.19,
+    "peRatio": 23.36,
+    "pbRatio": 2.98,
+    "mcapCr": 115188.3,
+    "qualifiesCore": false,
+    "fundReason": "ROE 7.3% < 12.0%",
+    "fetched_at": "2026-11-28"
+  },
+  "TEXRAIL": {
+    "ticker": "TEXRAIL",
+    "roePct": 9.6,
+    "deRatio": 0.37,
+    "peRatio": 18.63,
+    "pbRatio": 2.02,
+    "mcapCr": 5079.7,
+    "qualifiesCore": false,
+    "fundReason": "ROE 9.6% < 12.0%",
+    "fetched_at": "2026-11-28"
+  },
+  "GRANULES": {
+    "ticker": "GRANULES",
+    "roePct": 13.5,
+    "deRatio": 0.17,
+    "peRatio": 21.52,
+    "pbRatio": 3.17,
+    "mcapCr": 22519.3,
+    "qualifiesCore": true,
+    "fundReason": "ROE 13.5% | D/E 0.17 | P/E 21.52",
+    "fetched_at": "2026-11-28"
+  },
+  "COHANCE": {
+    "ticker": "COHANCE",
+    "roePct": -0.1,
+    "deRatio": 0.11,
+    "peRatio": 56.08,
+    "pbRatio": 4.84,
+    "mcapCr": 19037.4,
+    "qualifiesCore": false,
+    "fundReason": "ROE -0.1% < 12.0%",
+    "fetched_at": "2026-11-28"
+  },
+  "LENSKART": {
+    "ticker": "LENSKART",
+    "roePct": 10.0,
+    "deRatio": 0.37,
+    "peRatio": 95.4,
+    "pbRatio": 13.36,
+    "mcapCr": 124453.2,
+    "qualifiesCore": false,
+    "fundReason": "ROE 10.0% < 12.0%; Val P/E 95.4 P/B 13.36 out of bounds",
+    "fetched_at": "2026-11-28"
+  },
+  "LALPATHLAB": {
+    "ticker": "LALPATHLAB",
+    "roePct": 22.6,
+    "deRatio": 0.08,
+    "peRatio": 43.44,
+    "pbRatio": 12.07,
+    "mcapCr": 33162.9,
+    "qualifiesCore": true,
+    "fundReason": "ROE 22.6% | D/E 0.08 | P/E 43.44",
+    "fetched_at": "2026-11-28"
+  },
+  "SHAILY": {
+    "ticker": "SHAILY",
+    "roePct": 25.4,
+    "deRatio": 0.22,
+    "peRatio": 42.14,
+    "pbRatio": 18.46,
+    "mcapCr": 15411.1,
+    "qualifiesCore": true,
+    "fundReason": "ROE 25.4% | D/E 0.22 | P/E 42.14",
+    "fetched_at": "2026-11-28"
+  },
+  "ABBOTINDIA": {
+    "ticker": "ABBOTINDIA",
+    "roePct": 39.9,
+    "deRatio": 0.04,
+    "peRatio": 29.81,
+    "pbRatio": 13.51,
+    "mcapCr": 57681.2,
+    "qualifiesCore": true,
+    "fundReason": "ROE 39.9% | D/E 0.04 | P/E 29.81",
+    "fetched_at": "2026-11-28"
+  },
+  "MEESHO": {
+    "ticker": "MEESHO",
+    "roePct": -36.5,
+    "deRatio": 0.01,
+    "peRatio": 192.27,
+    "pbRatio": 29.06,
+    "mcapCr": 119702.4,
+    "qualifiesCore": false,
+    "fundReason": "ROE -36.5% < 12.0%; Val P/E 192.27 P/B 29.06 out of bounds",
+    "fetched_at": "2026-11-28"
   }
 }
