@@ -579,20 +579,22 @@ def compute_sector_pre_explosion(
     sig_b: int,
 ):
     """
-    Computes a 0-100 Pre-Explosion Probability Score for a sector or market-cap index node by combining:
+    Computes a 0-100 Smart Money Rotation Probability Score for a sector or market-cap index node by combining:
     1. RRG rotation inflection (0-30 pts)
     2. Index volatility compression - BBW 120D rank & ATR(14) decay (0-20 pts)
     3. 1D/1W relative alpha acceleration vs Nifty 50 / Nifty 500 (0-20 pts)
     4. Constituent breadth building above 50/200-DMA (0-15 pts)
     5. Constituent Track B HALO squeeze / Track A breakout confluence (0-15 pts)
-    Returns (score, tier, bbw_pct, atr_decay, reasons).
+    Returns (score, tier, bbw_pct, atr_decay, reasons), where tier is one of:
+      PHASE_3 (Markup Ready >=65), PHASE_2 (Supply Absorption 50-64), PHASE_1 (Early Base 35-49),
+      EXTENDED (Late Markup >16% 1M in Leading/Weakening), NEUTRAL (<35).
     """
     # 1. Sector Volatility Compression (BBW 120D percentile + ATR14 20-day decay)
     bbw_pct = 50.0
     atr_decay = 1.0
     s = _normalize_series_index(price_series) if price_series is not None else pd.Series(dtype=float)
     if len(s) < 60:
-        return 0, "STANDARD", bbw_pct, atr_decay, []
+        return 0, "NEUTRAL", bbw_pct, atr_decay, []
 
     bb_mid = s.rolling(20).mean()
     bb_std = s.rolling(20).std()
@@ -643,7 +645,7 @@ def compute_sector_pre_explosion(
     # Factor B: Sector Compression (max 20)
     if bbw_pct <= 25.0:
         score += 12
-        reasons.append(f"BBW {bbw_pct:.0f}% Coil")
+        reasons.append(f"BBW {bbw_pct:.0f}% Squeeze")
     elif bbw_pct <= 40.0:
         score += 7
     if atr_decay <= 0.85:
@@ -676,16 +678,18 @@ def compute_sector_pre_explosion(
         if sig_a:
             reasons.append(f"{sig_a} Breakout")
 
-    # Early-stage guard: avoid flagging sectors already >16% over 1M in Leading/Weakening
+    # Early-stage guard: avoid flagging late-stage rallies (>16% 1M in Leading/Weakening)
     is_extended = (m1_ret > 16.0 and quad in ("Leading", "Weakening"))
     if is_extended:
         tier = "EXTENDED"
-    elif score >= 60:
-        tier = "IGNITION"
-    elif score >= 45:
-        tier = "COILING"
+    elif score >= 65:
+        tier = "PHASE_3"
+    elif score >= 50:
+        tier = "PHASE_2"
+    elif score >= 35:
+        tier = "PHASE_1"
     else:
-        tier = "STANDARD"
+        tier = "NEUTRAL"
 
     return score, tier, bbw_pct, atr_decay, reasons
 
@@ -940,7 +944,7 @@ def compute_sector_rotation_payload(
             "id": spec["id"],
             "kind": node_kind,
             "curated": spec["curated"],
-            "topMover": spec["topMover"] or abs(alpha_1d) >= 1.0 or pe_tier in ("IGNITION", "COILING"),
+            "topMover": spec["topMover"] or abs(alpha_1d) >= 1.0 or pe_tier in ("PHASE_3", "PHASE_2"),
             "group": spec["group"],
             "short": spec["short"],
             "desc": desc_str,

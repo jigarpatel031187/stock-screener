@@ -144,20 +144,23 @@ def render_tab4_fragments(sector_rotation_data):
     #view-sector .pill-amber { background: rgba(255, 179, 0, 0.12); color: #ffb300; border-color: rgba(255, 179, 0, 0.35); }
     #view-sector .pill-crimson { background: rgba(255, 59, 92, 0.12); color: #ff3b5c; border-color: rgba(255, 59, 92, 0.35); }
     #view-sector .pill-violet { background: rgba(168, 85, 247, 0.15); color: #d8b4fe; border-color: rgba(168, 85, 247, 0.38); }
-    #view-sector .pill-ignite {
+    #view-sector .pill-p3 {
       background: rgba(232, 121, 249, 0.16); color: #f5d0fe; border-color: rgba(232, 121, 249, 0.78);
       box-shadow: 0 0 8px rgba(232, 121, 249, 0.28);
     }
-    #view-sector .pill-coil {
+    #view-sector .pill-p2 {
       background: rgba(168, 85, 247, 0.16); color: #e9d5ff; border-color: rgba(168, 85, 247, 0.62);
+    }
+    #view-sector .pill-p1 {
+      background: rgba(56, 189, 248, 0.12); color: #bae6fd; border-color: rgba(56, 189, 248, 0.52);
     }
     #view-sector .pill-neutral { background: #121822; color: #8c99ad; border-color: #1d2738; }
 
-    #view-sector .sr-ignite-bar {
-      background: linear-gradient(90deg, rgba(232, 121, 249, 0.12), rgba(168, 85, 247, 0.08), rgba(13, 18, 26, 0.96));
-      border: 1px solid rgba(232, 121, 249, 0.55); border-radius: 6px;
-      padding: 8px 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;
-      box-shadow: 0 0 14px rgba(232, 121, 249, 0.12);
+    #view-sector .sr-sm-radar-bar {
+      background: linear-gradient(90deg, rgba(232, 121, 249, 0.11), rgba(168, 85, 247, 0.08), rgba(56, 189, 248, 0.06), rgba(13, 18, 26, 0.96));
+      border: 1px solid rgba(232, 121, 249, 0.52); border-radius: 6px;
+      padding: 9px 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 7px;
+      box-shadow: 0 0 14px rgba(232, 121, 249, 0.10);
     }
 
     #view-sector .sr-gann-pill {
@@ -190,13 +193,17 @@ def render_tab4_fragments(sector_rotation_data):
       padding: 8px 10px; cursor: pointer; transition: border-color 0.15s, transform 0.12s;
     }
     #view-sector .sr-cap-card:hover { border-color: #00d4ff; transform: translateY(-1px); }
-    #view-sector .sr-cap-card.sr-cap-ignite {
+    #view-sector .sr-cap-card.sr-cap-p3 {
       border-color: rgba(232, 121, 249, 0.78); background: rgba(232, 121, 249, 0.08);
       box-shadow: 0 0 12px rgba(232, 121, 249, 0.18), inset 3px 0 0 #e879f9;
     }
-    #view-sector .sr-cap-card.sr-cap-coil {
+    #view-sector .sr-cap-card.sr-cap-p2 {
       border-color: rgba(168, 85, 247, 0.62); background: rgba(168, 85, 247, 0.07);
       box-shadow: inset 3px 0 0 #a855f7;
+    }
+    #view-sector .sr-cap-card.sr-cap-p1 {
+      border-color: rgba(56, 189, 248, 0.50); background: rgba(56, 189, 248, 0.05);
+      box-shadow: inset 3px 0 0 #38bdf8;
     }
 
     #view-sector .sr-breadcrumb {
@@ -232,8 +239,9 @@ def render_tab4_fragments(sector_rotation_data):
     }
     #view-sector .sr-dock-card:hover { border-color: #00d4ff; background: #131a26; }
     #view-sector .sr-dock-card.highlighted { border-color: #00d4ff; background: rgba(0, 212, 255, 0.1); box-shadow: inset 3px 0 0 #00d4ff; }
-    #view-sector .sr-dock-card.sr-dock-ignite { border-color: rgba(232, 121, 249, 0.72); background: rgba(232, 121, 249, 0.07); box-shadow: inset 3px 0 0 #e879f9; }
-    #view-sector .sr-dock-card.sr-dock-coil { border-color: rgba(168, 85, 247, 0.58); background: rgba(168, 85, 247, 0.06); box-shadow: inset 3px 0 0 #a855f7; }
+    #view-sector .sr-dock-card.sr-dock-p3 { border-color: rgba(232, 121, 249, 0.72); background: rgba(232, 121, 249, 0.07); box-shadow: inset 3px 0 0 #e879f9; }
+    #view-sector .sr-dock-card.sr-dock-p2 { border-color: rgba(168, 85, 247, 0.58); background: rgba(168, 85, 247, 0.06); box-shadow: inset 3px 0 0 #a855f7; }
+    #view-sector .sr-dock-card.sr-dock-p1 { border-color: rgba(56, 189, 248, 0.48); background: rgba(56, 189, 248, 0.045); box-shadow: inset 3px 0 0 #38bdf8; }
 
     #view-sector .sr-flow-track { height: 5px; background: #162030; border-radius: 3px; overflow: hidden; margin-top: 4px; }
     #view-sector .sr-flow-pos { height: 100%; background: #00e676; }
@@ -252,10 +260,12 @@ def render_tab4_fragments(sector_rotation_data):
       padding: 7px 9px; border-bottom: 1px solid #141c28; white-space: nowrap; vertical-align: middle;
     }
     #view-sector table.sr-table tr:hover td { background: rgba(0, 212, 255, 0.045); }
-    #view-sector table.sr-table tr.sr-row-ignite td { background: rgba(232, 121, 249, 0.075); }
-    #view-sector table.sr-table tr.sr-row-ignite td:first-child { border-left: 3px solid #e879f9; }
-    #view-sector table.sr-table tr.sr-row-coil td { background: rgba(168, 85, 247, 0.055); }
-    #view-sector table.sr-table tr.sr-row-coil td:first-child { border-left: 3px solid #a855f7; }
+    #view-sector table.sr-table tr.sr-row-p3 td { background: rgba(232, 121, 249, 0.075); }
+    #view-sector table.sr-table tr.sr-row-p3 td:first-child { border-left: 3px solid #e879f9; }
+    #view-sector table.sr-table tr.sr-row-p2 td { background: rgba(168, 85, 247, 0.055); }
+    #view-sector table.sr-table tr.sr-row-p2 td:first-child { border-left: 3px solid #a855f7; }
+    #view-sector table.sr-table tr.sr-row-p1 td { background: rgba(56, 189, 248, 0.04); }
+    #view-sector table.sr-table tr.sr-row-p1 td:first-child { border-left: 3px solid #38bdf8; }
     #view-sector .sr-row-click { cursor: pointer; }
     #view-sector .sr-ticker-btn { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #e8eef5; cursor: pointer; }
     #view-sector .sr-ticker-btn:hover { color: #00d4ff; text-decoration: underline; }
@@ -408,7 +418,7 @@ def render_tab4_fragments(sector_rotation_data):
             </div>
           </div>
 
-          <div id="sr-f1-ignite-bar" class="sr-ignite-bar" style="display:none;"></div>
+          <div id="sr-f1-sm-bar" class="sr-sm-radar-bar" style="display:none;"></div>
 
           <div class="sr-panel">
             <div class="sr-panel-hdr">
@@ -475,7 +485,10 @@ def render_tab4_fragments(sector_rotation_data):
                 <select id="sr-rrg-universe-select" class="sr-select" onchange="SR.rrgEngine.setUniverse(this.value)">
                   <option value="curated_10">Curated Leaders &amp; Market Cap Indices</option>
                   <option value="all_23" selected>All NSE Sectors + Market Cap Indices</option>
-                  <option value="pre_explode">⚡ Pre-Explosion Watchlist (Ignition / Coiling)</option>
+                  <option value="sm_active">🏦 Smart Money Active (All 3 Phases)</option>
+                  <option value="sm_p3">★ Phase 3: Markup Ready Only</option>
+                  <option value="sm_p2">◈ Phase 2: Supply Absorption Only</option>
+                  <option value="sm_p1">◎ Phase 1: Early Base Only</option>
                   <option value="cap_5">Market Cap Indices Only (5 Nodes)</option>
                   <option value="sectors_18">All NSE Sectors Only</option>
                   <option value="leading_only">Leading Quadrant Only</option>
@@ -509,7 +522,7 @@ def render_tab4_fragments(sector_rotation_data):
             <div class="sr-panel">
               <div class="sr-panel-hdr">
                 <span class="sr-panel-title" id="sr-rrg-canvas-title">JdK RELATIVE ROTATION GRAPH — SCROLL TO ZOOM • DRAG TO PAN • CLICK NODE FOR STOCK RRG</span>
-                <span class="sr-mono sr-muted" style="font-size:10px;">◆ Cap | ● Sector | <span style="color:#e879f9;">⚡ Ring = Pre-Explode</span></span>
+                <span class="sr-mono sr-muted" style="font-size:10px;">◆ Cap | ● Sector | <span style="color:#e879f9;">★ P3 Markup</span> · <span style="color:#c084fc;">◈ P2 Absorp</span> · <span style="color:#38bdf8;">◎ P1 Base</span></span>
               </div>
               <div class="sr-canvas-wrap">
                 <canvas id="sr-main-rrg-canvas" width="840" height="550"></canvas>
@@ -544,7 +557,8 @@ def render_tab4_fragments(sector_rotation_data):
                 <button class="sr-btn" id="sr-hm-btn-alpha" onclick="SR.heatmapEngine.setMetric('alpha')">Alpha vs NIFTY 50</button>
                 <select id="sr-hm-filter-type" class="sr-select" onchange="SR.heatmapEngine.render()">
                   <option value="all">All Sectors &amp; Cap Indices</option>
-                  <option value="pre_explode">⚡ Pre-Explosion Only (Ignition / Coiling)</option>
+                  <option value="sm_active">🏦 Smart Money Active (Phase 1–3)</option>
+                  <option value="sm_p3">★ Phase 3: Markup Ready Only</option>
                   <option value="cap">Market Cap &amp; Benchmark Indices</option>
                   <option value="sector">NSE Sectors Only</option>
                 </select>
@@ -1109,7 +1123,7 @@ def render_tab4_fragments(sector_rotation_data):
           const uSel = document.getElementById('sr-rrg-universe-select');
           if (uSel) uSel.value = 'all_23';
           rrgEngine.renderAll();
-          ui.toast('Highlighted ⚡ Pre-Explosion (Ignition / Coiling) sectors on RRG');
+          ui.toast('Highlighted ★ P3 Markup, ◈ P2 Absorption & ◎ P1 Early Base on RRG');
         },
 
         openCapInRRG: () => {
@@ -1161,42 +1175,50 @@ def render_tab4_fragments(sector_rotation_data):
           const sectors = rrgEngine.macroNodes.filter(n => n.kind === 'sector');
           const leadCount = sectors.filter(n => n.quadrant === 'Leading').length;
           const impCount = sectors.filter(n => n.quadrant === 'Improving').length;
-          const igniteNodes = rrgEngine.macroNodes
-            .filter(n => n.preExplodeTier === 'IGNITION' || n.preExplodeTier === 'COILING')
-            .sort((a, b) => (b.preExplodeScore || 0) - (a.preExplodeScore || 0));
-          const ignCount = igniteNodes.filter(n => n.preExplodeTier === 'IGNITION').length;
-          const coilCount = igniteNodes.length - ignCount;
-          document.getElementById('sr-f1-quad-count').textContent = `${leadCount} Lead • ${impCount} Imp • ⚡${ignCount} Ign/${coilCount} Coil`;
+          const sortScore = (a, b) => (b.preExplodeScore || 0) - (a.preExplodeScore || 0);
+          const p3Nodes = rrgEngine.macroNodes.filter(n => n.preExplodeTier === 'PHASE_3').sort(sortScore);
+          const p2Nodes = rrgEngine.macroNodes.filter(n => n.preExplodeTier === 'PHASE_2').sort(sortScore);
+          const p1Nodes = rrgEngine.macroNodes.filter(n => n.preExplodeTier === 'PHASE_1').sort(sortScore);
+          document.getElementById('sr-f1-quad-count').textContent = `${leadCount} Lead • ${impCount} Imp • P3:${p3Nodes.length} / P2:${p2Nodes.length}`;
           document.getElementById('sr-f1-quad-sub').textContent = `Out of ${sectors.length} NSE Sectors (JdK vs ${BENCH_NAME})`;
 
-          const ignBar = document.getElementById('sr-f1-ignite-bar');
-          if (ignBar) {
-            if (!igniteNodes.length) {
-              ignBar.style.display = 'none';
+          const smBar = document.getElementById('sr-f1-sm-bar');
+          if (smBar) {
+            const totalActive = p3Nodes.length + p2Nodes.length + p1Nodes.length;
+            if (!totalActive) {
+              smBar.style.display = 'none';
             } else {
-              ignBar.style.display = 'flex';
-              const chips = igniteNodes.map(n => {
-                const isIgn = n.preExplodeTier === 'IGNITION';
+              smBar.style.display = 'flex';
+              const makeChip = (n, cls, icon, tag) => {
                 const safeId = ui.escAttr(n.id);
                 const reasons = (n.preExplodeReasons || []).join(' • ');
-                const kindPrefix = n.kind === 'cap' ? '◆ ' : '';
-                return `<button class="sr-pill ${isIgn ? 'pill-ignite' : 'pill-coil'}" style="cursor:pointer;" onclick="SR.app.drillSectorFromAnywhere('${safeId}')" title="${ui.escAttr(reasons)}">${isIgn ? '⚡' : '◈'} ${kindPrefix}${n.short} ${n.preExplodeScore}/100 (${n.preExplodeTier})</button>`;
-              }).join('');
-              ignBar.innerHTML = `
+                const kp = n.kind === 'cap' ? '◆ ' : '';
+                return `<button class="sr-pill ${cls}" style="cursor:pointer;" onclick="SR.app.drillSectorFromAnywhere('${safeId}')" title="${ui.escAttr(reasons)}">${icon} ${kp}${n.short} ${n.preExplodeScore} (${tag})</button>`;
+              };
+              const primaryChips = [
+                ...p3Nodes.map(n => makeChip(n, 'pill-p3', '★', 'P3 MARKUP')),
+                ...p2Nodes.map(n => makeChip(n, 'pill-p2', '◈', 'P2 ABSORP'))
+              ].join('');
+              const p1Chips = p1Nodes.map(n => makeChip(n, 'pill-p1', '◎', 'P1 BASE')).join('');
+              smBar.innerHTML = `
                 <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; width:100%; justify-content:space-between;">
-                  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                    <span class="sr-mono" style="color:#f5d0fe; font-weight:800; font-size:11px; letter-spacing:0.4px;">⚡ PRE-EXPLOSION RADAR (${igniteNodes.length}):</span>
-                    ${chips}
-                    <span class="sr-muted sr-mono" style="font-size:10px;">(Sectors &amp; Indices • Hover pill for factors • Click for stocks)</span>
+                  <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap;">
+                    <span class="sr-mono" style="color:#f5d0fe; font-weight:800; font-size:11px; letter-spacing:0.4px;">🏦 SMART MONEY ROTATION RADAR:</span>
+                    ${primaryChips || '<span class="sr-muted sr-mono" style="font-size:10.5px;">No Phase 2/3 triggers yet</span>'}
                   </div>
                   <button class="sr-btn" style="border-color:#e879f9; color:#f5d0fe; padding:3px 9px; font-size:10.5px;" onclick="SR.app.openPreExplodeInRRG()">Highlight on RRG [F2] →</button>
                 </div>
+                ${p1Nodes.length ? `
+                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding-top:5px; border-top:1px solid rgba(56, 189, 248, 0.16);">
+                  <span class="sr-mono" style="color:#bae6fd; font-weight:700; font-size:10px;">P1 · EARLY BASE (${p1Nodes.length}):</span>
+                  ${p1Chips}
+                </div>` : ''}
               `;
             }
           }
 
           const badgeEl = document.getElementById('badge-sector');
-          if (badgeEl) badgeEl.textContent = ignCount > 0 ? `${leadCount} Lead • ⚡${ignCount}` : `${leadCount} Lead`;
+          if (badgeEl) badgeEl.textContent = p3Nodes.length > 0 ? `${leadCount} Lead • P3:${p3Nodes.length}` : `${leadCount} Lead`;
 
           const avgUp = STOCK_DB.length
             ? STOCK_DB.reduce((a, s) => a + ((s.fairValue - s.price) / s.price) * 100, 0) / STOCK_DB.length
@@ -1204,17 +1226,19 @@ def render_tab4_fragments(sector_rotation_data):
           document.getElementById('sr-f1-fv-kpi').textContent = `${avgUp >= 0 ? '+' : ''}${avgUp.toFixed(1)}% Avg Upside`;
 
           document.getElementById('sr-f1-cap-grid').innerHTML = caps.map(c => {
-            const peTier = c.preExplodeTier || 'STANDARD';
-            const isIgn = peTier === 'IGNITION';
-            const isCoil = peTier === 'COILING';
-            const cardCls = isIgn ? 'sr-cap-ignite' : (isCoil ? 'sr-cap-coil' : '');
-            const peBadge = isIgn
-              ? `<span class="sr-pill pill-ignite" style="font-size:8.5px; padding:1px 4px;">⚡ ${c.preExplodeScore}</span>`
-              : (isCoil ? `<span class="sr-pill pill-coil" style="font-size:8.5px; padding:1px 4px;">◈ ${c.preExplodeScore}</span>` : '');
+            const peTier = c.preExplodeTier || 'NEUTRAL';
+            const isP3 = peTier === 'PHASE_3';
+            const isP2 = peTier === 'PHASE_2';
+            const isP1 = peTier === 'PHASE_1';
+            const cardCls = isP3 ? 'sr-cap-p3' : (isP2 ? 'sr-cap-p2' : (isP1 ? 'sr-cap-p1' : ''));
+            const peBadge = isP3
+              ? `<span class="sr-pill pill-p3" style="font-size:8.5px; padding:1px 4px;">★ P3 ${c.preExplodeScore}</span>`
+              : (isP2 ? `<span class="sr-pill pill-p2" style="font-size:8.5px; padding:1px 4px;">◈ P2 ${c.preExplodeScore}</span>`
+              : (isP1 ? `<span class="sr-pill pill-p1" style="font-size:8.5px; padding:1px 4px;">◎ P1 ${c.preExplodeScore}</span>` : ''));
             return `
             <div class="sr-cap-card ${cardCls}" onclick="SR.app.drillSectorFromAnywhere('${ui.escAttr(c.id)}')" title="${ui.escAttr((c.preExplodeReasons || []).join(' • '))}">
               <div style="display:flex; justify-content:space-between; align-items:center; gap:4px; margin-bottom:4px;">
-                <span class="sr-mono sr-bold ${isIgn ? '' : 'sr-info'}" style="font-size:10.5px; ${isIgn ? 'color:#f5d0fe;' : ''}">◆ ${c.short} ${peBadge}</span>
+                <span class="sr-mono sr-bold ${isP3 ? '' : 'sr-info'}" style="font-size:10.5px; ${isP3 ? 'color:#f5d0fe;' : ''}">◆ ${c.short} ${peBadge}</span>
                 <span class="sr-pill ${quadPill(c.quadrant)}" style="font-size:9px; padding:1px 5px;">${c.quadrant}</span>
               </div>
               <div class="sr-mono sr-bold ${c.chg >= 0 ? 'sr-pos' : 'sr-neg'}" style="font-size:13.5px;">
@@ -1477,7 +1501,10 @@ def render_tab4_fragments(sector_rotation_data):
           if (rrgEngine.mode === 'stock') return rrgEngine.stockNodes;
           const u = rrgEngine.universe;
           if (u === 'curated_10') return rrgEngine.macroNodes.filter(n => n.curated);
-          if (u === 'pre_explode') return rrgEngine.macroNodes.filter(n => n.preExplodeTier === 'IGNITION' || n.preExplodeTier === 'COILING');
+          if (u === 'sm_active') return rrgEngine.macroNodes.filter(n => n.preExplodeTier === 'PHASE_3' || n.preExplodeTier === 'PHASE_2' || n.preExplodeTier === 'PHASE_1');
+          if (u === 'sm_p3') return rrgEngine.macroNodes.filter(n => n.preExplodeTier === 'PHASE_3');
+          if (u === 'sm_p2') return rrgEngine.macroNodes.filter(n => n.preExplodeTier === 'PHASE_2');
+          if (u === 'sm_p1') return rrgEngine.macroNodes.filter(n => n.preExplodeTier === 'PHASE_1');
           if (u === 'cap_5') return rrgEngine.macroNodes.filter(n => n.kind === 'cap');
           if (u === 'sectors_18') return rrgEngine.macroNodes.filter(n => n.kind === 'sector');
           if (u === 'leading_only') return rrgEngine.macroNodes.filter(n => n.quadrant === 'Leading');
@@ -1603,18 +1630,19 @@ def render_tab4_fragments(sector_rotation_data):
             if (!sub.length) return;
 
             const isFocus = node.id === focusId;
-            const peTier = node.preExplodeTier || 'STANDARD';
-            const isIgn = (rrgEngine.mode === 'macro' && peTier === 'IGNITION');
-            const isCoil = (rrgEngine.mode === 'macro' && peTier === 'COILING');
-            const isPE = (isIgn || isCoil);
+            const peTier = node.preExplodeTier || 'NEUTRAL';
+            const isP3 = (rrgEngine.mode === 'macro' && peTier === 'PHASE_3');
+            const isP2 = (rrgEngine.mode === 'macro' && peTier === 'PHASE_2');
+            const isP1 = (rrgEngine.mode === 'macro' && peTier === 'PHASE_1');
+            const isSM = (isP3 || isP2 || isP1);
             const alpha = focusId && !isFocus ? 0.13 : 1.0;
 
             ctx.save();
             ctx.globalAlpha = alpha;
 
             const pts = sub.map(p => ({ x: cx + p.x * scale, y: cy - p.y * scale }));
-            ctx.strokeStyle = isFocus ? '#00d4ff' : (isIgn ? '#e879f9' : color);
-            ctx.lineWidth = isFocus ? 2.8 : (isIgn ? 2.4 : (node.kind === 'cap' ? 2.1 : 1.6));
+            ctx.strokeStyle = isFocus ? '#00d4ff' : (isP3 ? '#e879f9' : color);
+            ctx.lineWidth = isFocus ? 2.8 : (isP3 ? 2.4 : (node.kind === 'cap' ? 2.1 : 1.6));
             if (node.kind === 'cap') ctx.setLineDash([4, 2]);
             else ctx.setLineDash([]);
 
@@ -1654,13 +1682,15 @@ def render_tab4_fragments(sector_rotation_data):
               ctx.fill();
             }
 
-            if (isPE && !isFocus) {
+            if (isSM && !isFocus) {
               ctx.save();
-              ctx.strokeStyle = isIgn ? '#e879f9' : '#a855f7';
-              ctx.lineWidth = isIgn ? (opts.isMini ? 1.8 : 2.5) : (opts.isMini ? 1.3 : 1.8);
-              if (!isIgn) ctx.setLineDash([3, 2]);
+              ctx.strokeStyle = isP3 ? '#e879f9' : (isP2 ? '#a855f7' : '#38bdf8');
+              ctx.lineWidth = isP3 ? (opts.isMini ? 1.8 : 2.5) : (isP2 ? (opts.isMini ? 1.3 : 1.8) : (opts.isMini ? 1.0 : 1.3));
+              if (isP2) ctx.setLineDash([3, 2]);
+              else if (isP1) ctx.setLineDash([2, 2]);
               ctx.beginPath();
-              ctx.arc(head.x, head.y, opts.isMini ? (isIgn ? 9.2 : 8.0) : (isIgn ? 13.0 : 10.6), 0, Math.PI * 2);
+              const haloR = isP3 ? (opts.isMini ? 9.2 : 13.0) : (isP2 ? (opts.isMini ? 8.0 : 10.8) : (opts.isMini ? 7.0 : 9.4));
+              ctx.arc(head.x, head.y, haloR, 0, Math.PI * 2);
               ctx.stroke();
               ctx.restore();
             }
@@ -1676,7 +1706,7 @@ def render_tab4_fragments(sector_rotation_data):
             if (node.kind === 'cap') {
               const d = opts.isMini ? 6 : 8;
               ctx.fillStyle = color;
-              ctx.strokeStyle = isFocus ? '#00d4ff' : (isIgn ? '#e879f9' : (isCoil ? '#a855f7' : '#ffb300'));
+              ctx.strokeStyle = isFocus ? '#00d4ff' : (isP3 ? '#e879f9' : (isP2 ? '#a855f7' : (isP1 ? '#38bdf8' : '#ffb300')));
               ctx.lineWidth = 2;
               ctx.beginPath();
               ctx.moveTo(head.x, head.y - d);
@@ -1688,17 +1718,19 @@ def render_tab4_fragments(sector_rotation_data):
               ctx.stroke();
             } else {
               ctx.fillStyle = color;
-              ctx.strokeStyle = isFocus ? '#00d4ff' : (isIgn ? '#e879f9' : (isCoil ? '#a855f7' : '#070a0f'));
-              ctx.lineWidth = isPE ? 2.0 : 1.6;
+              ctx.strokeStyle = isFocus ? '#00d4ff' : (isP3 ? '#e879f9' : (isP2 ? '#a855f7' : (isP1 ? '#38bdf8' : '#070a0f')));
+              ctx.lineWidth = isSM ? 2.0 : 1.6;
               ctx.beginPath();
-              ctx.arc(head.x, head.y, opts.isMini ? (isIgn ? 4.8 : 4.3) : (isIgn ? 6.5 : 5.8), 0, Math.PI * 2);
+              ctx.arc(head.x, head.y, opts.isMini ? (isP3 ? 4.8 : 4.3) : (isP3 ? 6.5 : 5.8), 0, Math.PI * 2);
               ctx.fill();
               ctx.stroke();
             }
 
             const showLabel =
               isFocus ||
-              isPE ||
+              isP3 ||
+              isP2 ||
+              (isP1 && (rrgEngine.universe === 'sm_active' || rrgEngine.universe === 'sm_p1')) ||
               opts.labelMode === 'all' ||
               (opts.labelMode === 'top' && (node.topMover || node.kind === 'cap'));
 
@@ -1706,7 +1738,7 @@ def render_tab4_fragments(sector_rotation_data):
               ctx.font = node.kind === 'cap'
                 ? (opts.isMini ? '700 8.5px JetBrains Mono, monospace' : '700 10px JetBrains Mono, monospace')
                 : (opts.isMini ? '600 8.5px Plus Jakarta Sans, sans-serif' : '600 10px JetBrains Mono, monospace');
-              const text = (isIgn ? '⚡ ' : (isCoil ? '◈ ' : '')) + node.short;
+              const text = (isP3 ? '★ ' : (isP2 ? '◈ ' : (isP1 ? '◎ ' : ''))) + node.short;
               const tw = ctx.measureText(text).width + 8;
               const th = 15;
 
@@ -1751,18 +1783,18 @@ def render_tab4_fragments(sector_rotation_data):
 
               ctx.fillStyle = isFocus
                 ? 'rgba(0, 212, 255, 0.22)'
-                : (isIgn ? 'rgba(232, 121, 249, 0.22)' : (isCoil ? 'rgba(168, 85, 247, 0.18)' : 'rgba(9, 13, 20, 0.86)'));
+                : (isP3 ? 'rgba(232, 121, 249, 0.22)' : (isP2 ? 'rgba(168, 85, 247, 0.18)' : (isP1 ? 'rgba(56, 189, 248, 0.14)' : 'rgba(9, 13, 20, 0.86)')));
               ctx.strokeStyle = isFocus
                 ? '#00d4ff'
-                : (isIgn ? '#e879f9' : (isCoil ? '#a855f7' : 'rgba(30, 41, 59, 0.95)'));
-              ctx.lineWidth = isIgn ? 1.6 : (isCoil ? 1.3 : 1);
+                : (isP3 ? '#e879f9' : (isP2 ? '#a855f7' : (isP1 ? '#38bdf8' : 'rgba(30, 41, 59, 0.95)')));
+              ctx.lineWidth = isP3 ? 1.6 : (isP2 ? 1.3 : (isP1 ? 1.15 : 1));
               ctx.beginPath();
               if (typeof ctx.roundRect === 'function') ctx.roundRect(bestBox.x, bestBox.y, bestBox.w, bestBox.h, 3);
               else ctx.rect(bestBox.x, bestBox.y, bestBox.w, bestBox.h);
               ctx.fill();
               ctx.stroke();
 
-              ctx.fillStyle = node.kind === 'cap' ? '#00d4ff' : (isIgn ? '#fdf4ff' : (isCoil ? '#f3e8ff' : '#f1f5f9'));
+              ctx.fillStyle = node.kind === 'cap' ? '#00d4ff' : (isP3 ? '#fdf4ff' : (isP2 ? '#f3e8ff' : (isP1 ? '#bae6fd' : '#f1f5f9')));
               ctx.textAlign = 'left';
               ctx.fillText(text, bestBox.x + 4, bestBox.y + 11);
             }
@@ -1795,11 +1827,13 @@ def render_tab4_fragments(sector_rotation_data):
           tip.style.top = Math.min(window.innerHeight - 210, e.clientY + 14) + 'px';
 
           if (rrgEngine.mode === 'macro') {
-            const peTier = node.preExplodeTier || 'STANDARD';
-            const peCol = peTier === 'IGNITION' ? '#e879f9' : (peTier === 'COILING' ? '#a855f7' : (peTier === 'EXTENDED' ? '#ffb300' : '#8c99ad'));
-            const peBadge = (peTier === 'IGNITION' || peTier === 'COILING')
-              ? `${peTier === 'IGNITION' ? '⚡ ' : '◈ '}${peTier} (${node.preExplodeScore}/100)`
-              : `${peTier} (${node.preExplodeScore || 0}/100)`;
+            const peTier = node.preExplodeTier || 'NEUTRAL';
+            const peCol = peTier === 'PHASE_3' ? '#e879f9' : (peTier === 'PHASE_2' ? '#a855f7' : (peTier === 'PHASE_1' ? '#38bdf8' : (peTier === 'EXTENDED' ? '#ffb300' : '#8c99ad')));
+            const peBadge = peTier === 'PHASE_3'
+              ? `★ P3: Markup Ready (${node.preExplodeScore}/100)`
+              : (peTier === 'PHASE_2' ? `◈ P2: Supply Absorption (${node.preExplodeScore}/100)`
+              : (peTier === 'PHASE_1' ? `◎ P1: Early Base (${node.preExplodeScore}/100)`
+              : (peTier === 'EXTENDED' ? `Late Markup / Extended (${node.preExplodeScore || 0}/100)` : `Low Sponsorship (${node.preExplodeScore || 0}/100)`)));
             const reasonsStr = (node.preExplodeReasons || []).join(' • ');
             tip.innerHTML = `
               <div style="color:${node.kind === 'cap' ? '#ffb300' : '#00d4ff'}; font-weight:700; border-bottom:1px solid #1d2738; padding-bottom:4px; margin-bottom:5px;">
@@ -1807,7 +1841,7 @@ def render_tab4_fragments(sector_rotation_data):
               </div>
               <div style="display:flex; justify-content:space-between;"><span class="sr-muted">JdK RS-RATIO / MOM:</span><span>${(100 + rawHead.x).toFixed(2)} / ${(100 + rawHead.y).toFixed(2)}</span></div>
               <div style="display:flex; justify-content:space-between;"><span class="sr-muted">QUADRANT / HEADING:</span><span style="color:${quadColor(node.quadrant)}; font-weight:700;">${node.quadrant} (${node.heading})</span></div>
-              <div style="display:flex; justify-content:space-between;"><span class="sr-muted">PRE-EXPLOSION:</span><span style="color:${peCol}; font-weight:700;">${peBadge}</span></div>
+              <div style="display:flex; justify-content:space-between; gap:8px;"><span class="sr-muted">SMART MONEY PHASE:</span><span style="color:${peCol}; font-weight:700;">${peBadge}</span></div>
               ${reasonsStr ? `<div class="sr-muted" style="font-size:9.5px; margin-top:2px;">BBW ${node.bbwPct ?? '--'}% • ATR ${node.atrDecay ?? '--'}x • ${reasonsStr}</div>` : ''}
               <div style="display:flex; justify-content:space-between;"><span class="sr-muted">1D / 1M RETURN:</span><span class="${node.chg >= 0 ? 'sr-pos' : 'sr-neg'}">${node.chg > 0 ? '+' : ''}${node.chg.toFixed(2)}% / ${node.m1 > 0 ? '+' : ''}${node.m1.toFixed(1)}%</span></div>
               <div style="display:flex; justify-content:space-between; margin-top:4px; padding-top:4px; border-top:1px solid #1d2738;"><span class="sr-muted">&gt;50DMA / &gt;200DMA:</span><span>${node.pctAbove50 ?? '--'}% / ${node.pctAbove200 ?? '--'}%</span></div>
@@ -1922,13 +1956,15 @@ def render_tab4_fragments(sector_rotation_data):
 
         macroDockCard: (n) => {
           const safeId = ui.escAttr(n.id);
-          const peTier = n.preExplodeTier || 'STANDARD';
-          const isIgn = peTier === 'IGNITION';
-          const isCoil = peTier === 'COILING';
-          const dockCls = isIgn ? 'sr-dock-ignite' : (isCoil ? 'sr-dock-coil' : '');
-          const pePill = isIgn
-            ? `<span class="sr-pill pill-ignite" style="font-size:9px;">⚡ ${n.preExplodeScore} IGN</span>`
-            : (isCoil ? `<span class="sr-pill pill-coil" style="font-size:9px;">◈ ${n.preExplodeScore} COIL</span>` : '');
+          const peTier = n.preExplodeTier || 'NEUTRAL';
+          const isP3 = peTier === 'PHASE_3';
+          const isP2 = peTier === 'PHASE_2';
+          const isP1 = peTier === 'PHASE_1';
+          const dockCls = isP3 ? 'sr-dock-p3' : (isP2 ? 'sr-dock-p2' : (isP1 ? 'sr-dock-p1' : ''));
+          const pePill = isP3
+            ? `<span class="sr-pill pill-p3" style="font-size:9px;">★ P3 · ${n.preExplodeScore}</span>`
+            : (isP2 ? `<span class="sr-pill pill-p2" style="font-size:9px;">◈ P2 · ${n.preExplodeScore}</span>`
+            : (isP1 ? `<span class="sr-pill pill-p1" style="font-size:9px;">◎ P1 · ${n.preExplodeScore}</span>` : ''));
           const sigTxt = (n.trackACount || n.trackBCount)
             ? ` • <span class="sr-pos">A:${n.trackACount || 0}</span>/<span class="sr-vio">B:${n.trackBCount || 0}</span>`
             : '';
@@ -1939,7 +1975,7 @@ def render_tab4_fragments(sector_rotation_data):
                  onmouseleave="SR.rrgEngine.highlightFromDock(null)"
                  onclick="SR.rrgEngine.drillIntoNode('${safeId}')">
               <div style="display:flex; justify-content:space-between; align-items:center; gap:5px;">
-                <span class="sr-bold" style="font-size:11.5px; color:${n.kind === 'cap' ? '#00d4ff' : (isIgn ? '#f5d0fe' : '#e8eef5')};">
+                <span class="sr-bold" style="font-size:11.5px; color:${n.kind === 'cap' ? '#00d4ff' : (isP3 ? '#f5d0fe' : '#e8eef5')};">
                   ${n.kind === 'cap' ? '◆' : '●'} ${n.group} ${pePill}
                 </span>
                 <span class="sr-pill ${quadPill(n.quadrant)}" style="font-size:9.5px;">${n.quadrant} (${n.heading})</span>
@@ -1990,7 +2026,8 @@ def render_tab4_fragments(sector_rotation_data):
 
           let rows = rrgEngine.macroNodes.filter(n => {
             if (flt === 'all') return true;
-            if (flt === 'pre_explode') return n.preExplodeTier === 'IGNITION' || n.preExplodeTier === 'COILING';
+            if (flt === 'sm_active') return n.preExplodeTier === 'PHASE_3' || n.preExplodeTier === 'PHASE_2' || n.preExplodeTier === 'PHASE_1';
+            if (flt === 'sm_p3') return n.preExplodeTier === 'PHASE_3';
             return n.kind === flt;
           }).map(n => ({
             ...n,
@@ -2007,13 +2044,14 @@ def render_tab4_fragments(sector_rotation_data):
             return ((a[c] || 0) - (b2[c] || 0)) * heatmapEngine.sortDir;
           });
 
-          const renderPreExplodeCell = (r) => {
-            const tier = r.preExplodeTier || 'STANDARD';
+          const renderSMPhaseCell = (r) => {
+            const tier = r.preExplodeTier || 'NEUTRAL';
             const sc = r.preExplodeScore || 0;
             const reasons = ui.escAttr((r.preExplodeReasons || []).join(' • ') || `BBW ${r.bbwPct ?? '--'}%`);
-            if (tier === 'IGNITION') return `<span class="sr-pill pill-ignite" title="${reasons}">⚡ ${sc} IGNITE</span>`;
-            if (tier === 'COILING') return `<span class="sr-pill pill-coil" title="${reasons}">◈ ${sc} COIL</span>`;
-            if (tier === 'EXTENDED') return `<span class="sr-pill pill-amber" title="${reasons}">${sc} EXTENDED</span>`;
+            if (tier === 'PHASE_3') return `<span class="sr-pill pill-p3" title="${reasons}">★ P3 · MARKUP (${sc})</span>`;
+            if (tier === 'PHASE_2') return `<span class="sr-pill pill-p2" title="${reasons}">◈ P2 · ABSORP (${sc})</span>`;
+            if (tier === 'PHASE_1') return `<span class="sr-pill pill-p1" title="${reasons}">◎ P1 · EARLY BASE (${sc})</span>`;
+            if (tier === 'EXTENDED') return `<span class="sr-pill pill-amber" title="${reasons}">EXTENDED (${sc})</span>`;
             return `<span class="sr-muted sr-mono" style="font-size:10px;" title="${reasons}">${sc}</span>`;
           };
 
@@ -2024,7 +2062,7 @@ def render_tab4_fragments(sector_rotation_data):
                   <th onclick="SR.heatmapEngine.sortBy('group')">Sector / Market Cap Index ⇅</th>
                   <th>Category</th>
                   <th>RRG Quadrant</th>
-                  <th class="sr-num" onclick="SR.heatmapEngine.sortBy('preExplodeScore')">Pre-Explode ⇅</th>
+                  <th class="sr-num" onclick="SR.heatmapEngine.sortBy('preExplodeScore')">SM Phase ⇅</th>
                   <th>Astro Ruler</th>
                   <th class="sr-num" onclick="SR.heatmapEngine.sortBy('v1d')">1D ⇅</th>
                   <th class="sr-num" onclick="SR.heatmapEngine.sortBy('v1w')">1W ⇅</th>
@@ -2038,16 +2076,16 @@ def render_tab4_fragments(sector_rotation_data):
               </thead>
               <tbody>
                 ${rows.map(r => {
-                  const rowCls = r.preExplodeTier === 'IGNITION' ? 'sr-row-ignite' : (r.preExplodeTier === 'COILING' ? 'sr-row-coil' : '');
+                  const rowCls = r.preExplodeTier === 'PHASE_3' ? 'sr-row-p3' : (r.preExplodeTier === 'PHASE_2' ? 'sr-row-p2' : (r.preExplodeTier === 'PHASE_1' ? 'sr-row-p1' : ''));
                   return `
                   <tr class="sr-row-click ${rowCls}" onclick="SR.app.drillSectorFromAnywhere('${ui.escAttr(r.id)}')">
                     <td>
-                      <span class="sr-bold" style="color:${r.kind === 'cap' ? '#00d4ff' : (r.preExplodeTier === 'IGNITION' ? '#f5d0fe' : '#e8eef5')};">${r.kind === 'cap' ? '◆ ' : '● '}${r.group}</span>
+                      <span class="sr-bold" style="color:${r.kind === 'cap' ? '#00d4ff' : (r.preExplodeTier === 'PHASE_3' ? '#f5d0fe' : '#e8eef5')};">${r.kind === 'cap' ? '◆ ' : '● '}${r.group}</span>
                       <div class="sr-muted" style="font-size:10px;">${r.desc} • ${r.source || ''}</div>
                     </td>
                     <td><span class="sr-pill ${r.kind === 'cap' ? 'pill-amber' : 'pill-neutral'}">${r.kind === 'cap' ? 'CAP INDEX' : 'SECTOR'}</span></td>
                     <td><span class="sr-pill ${quadPill(r.quadrant)}">${r.quadrant} (${r.heading})</span></td>
-                    <td class="sr-num">${renderPreExplodeCell(r)}</td>
+                    <td class="sr-num">${renderSMPhaseCell(r)}</td>
                     <td class="sr-mono sr-vio" style="font-size:10.5px;">${r.ruler}</td>
                     ${[r.v1d, r.v1w, r.v1m, r.v3m, r.v1y].map(v =>
                       `<td class="sr-num ${v >= 0 ? 'sr-pos' : 'sr-neg'}" style="${heatmapEngine.tint(v)}">${v > 0 ? '+' : ''}${v.toFixed(2)}%</td>`
