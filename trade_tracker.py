@@ -159,7 +159,7 @@ def update_existing_trades(trades, all_hist=None):
     now_ist = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
     today_str = now_ist.strftime("%Y-%m-%d")
 
-    open_statuses = {"PENDING_TRIGGER", "ACTIVE", "T1_HIT"}
+    open_statuses = {"PENDING_TRIGGER", "ACTIVE", "T1_HIT", "RUNNER_ACTIVE"}
     open_trades = [t for t in trades if t["status"] in open_statuses]
 
     if not open_trades:
@@ -168,7 +168,7 @@ def update_existing_trades(trades, all_hist=None):
     hist_map = dict(all_hist or {})
     needed_symbols = list({t["symbol"] for t in open_trades})
 
-    # Download any tickers not already present in hist_map
+    # Download any tickers not already present in hist_map (need >= 60 bars for 20-EMA / 50-DMA runner trailing)
     missing = []
     for s in needed_symbols:
         clean = s.replace(".NS", "")
@@ -177,7 +177,7 @@ def update_existing_trades(trades, all_hist=None):
 
     if missing:
         try:
-            d = yf.download(missing, period="1mo", group_by="ticker", threads=True, progress=False)
+            d = yf.download(missing, period="6mo", group_by="ticker", threads=True, progress=False)
             for s in missing:
                 if isinstance(d.columns, pd.MultiIndex):
                     if s in d.columns.levels[0]:
@@ -198,9 +198,15 @@ def update_existing_trades(trades, all_hist=None):
         if hist is None or hist.empty:
             continue
 
+        close_full = hist["Close"].dropna()
+        ema20_full = close_full.ewm(span=20, adjust=False).mean()
+        dma50_full = close_full.rolling(50, min_periods=20).mean()
+
+        start_ref = trade.get("entry_date") or trade["detected_date"]
         det_date = trade["detected_date"]
         try:
-            bars_since = hist[hist.index.strftime("%Y-%m-%d") >= det_date]
+            idx_dates = hist.index.strftime("%Y-%m-%d")
+            bars_since = hist[idx_dates >= (det_date if trade["status"] == "PENDING_TRIGGER" else start_ref)]
         except Exception:
             bars_since = hist.iloc[-10:]
 
@@ -210,6 +216,8 @@ def update_existing_trades(trades, all_hist=None):
         latest_close = float(bars_since["Close"].iloc[-1])
         trade["current_price"] = round(latest_close, 2)
         trade["days_held"] = len(bars_since)
+        trade["latest_ema20"] = round(float(ema20_full.iloc[-1]), 2) if not ema20_full.empty else trade["current_price"]
+        trade["latest_dma50"] = round(float(dma50_full.iloc[-1]), 2) if (not dma50_full.empty and pd.notna(dma50_full.iloc[-1])) else 0.0
 
         # 1. State: PENDING_TRIGGER
         if trade["status"] == "PENDING_TRIGGER":
@@ -221,6 +229,7 @@ def update_existing_trades(trades, all_hist=None):
                 trade["entry_date"] = first_trig.strftime("%Y-%m-%d")
                 trade["entry_price"] = trigger_level
                 bars_since = bars_since[bars_since.index >= first_trig]
+                trade["days_held"] = len(bars_since)
                 updated_count += 1
             else:
                 if len(bars_since) >= 10:
@@ -230,12 +239,12 @@ def update_existing_trades(trades, all_hist=None):
                     updated_count += 1
                 continue
 
-        # 2. State: ACTIVE or T1_HIT
-        if trade["status"] in ["ACTIVE", "T1_HIT"]:
-            entry_p = trade["entry_price"]
-            risk_1r = trade["risk_per_share"]
-            t1 = trade["target_1_2r"]
-            t2 = trade["target_2_3r"]
+        # 2. State: ACTIVE, T1_HIT, or RUNNER_ACTIVE (40% T1 / 35% T2 / 25% Uncapped 20-EMA/50-DMA Runner)
+        if trade["status"] in ["ACTIVE", "T1_HIT", "RUNNER_ACTIVE"]:
+            entry_p = float(trade["entry_price"])
+            risk_1r = float(trade["risk_per_share"] or 1.0)
+            t1 = float(trade["target_1_2r"])
+            t2 = float(trade["target_2_3r"])
 
             highest_high = float(bars_since["High"].max())
             trade["max_price_seen"] = round(max(trade.get("max_price_seen", entry_p), highest_high), 2)
@@ -247,56 +256,99 @@ def update_existing_trades(trades, all_hist=None):
                 bar_date = idx.strftime("%Y-%m-%d")
                 curr_sl = float(trade["current_sl"])
                 cat_sl = float(trade.get("catastrophe_sl") or round(curr_sl * 0.97, 2))
+                bar_ema20 = float(ema20_full.loc[idx]) if idx in ema20_full.index else bar_c
+                bar_dma50 = float(dma50_full.loc[idx]) if (idx in dma50_full.index and pd.notna(dma50_full.loc[idx])) else 0.0
 
                 # Track intraday sweep-and-recover wicks without falsely triggering closing stops
                 if bar_l <= curr_sl < bar_c and bar_l > cat_sl:
                     trade["wick_swept"] = True
 
+                # Skip re-evaluating earlier dates once T2 already fired on a prior date
+                t2_dt = trade.get("t2_hit_date") or ""
+                if trade["status"] == "RUNNER_ACTIVE" and t2_dt and bar_date <= t2_dt:
+                    continue
+
                 # Two-Tier Anti-Stop-Hunt Exit:
                 # 1) Emergency Intraday Catastrophe Guard (bar_l <= cat_sl)
                 # 2) Standard Closing-Basis Thesis Stop (bar_c <= curr_sl at EOD)
+                # 3) Runner Trend Exit (Daily Close < 20-EMA or 50-DMA on remaining 25%)
                 cat_hit = (bar_l <= cat_sl)
                 eod_hit = (bar_c <= curr_sl)
-                if cat_hit or eod_hit:
-                    exit_px = cat_sl if (cat_hit and not eod_hit) else round(bar_c, 2)
-                    if trade["status"] == "T1_HIT":
+                runner_break = (
+                    trade["status"] == "RUNNER_ACTIVE"
+                    and ((bar_ema20 > 0 and bar_c < bar_ema20) or (bar_dma50 > 0 and bar_c < bar_dma50))
+                )
+                if cat_hit or eod_hit or runner_break:
+                    exit_px = cat_sl if (cat_hit and not (eod_hit or runner_break)) else round(bar_c, 2)
+                    r_t1 = ((t1 - entry_p) / risk_1r) if risk_1r > 0 else 2.0
+                    r_t2 = ((t2 - entry_p) / risk_1r) if risk_1r > 0 else 3.5
+                    r_rem = ((exit_px - entry_p) / risk_1r) if risk_1r > 0 else 0.0
+                    if trade["status"] == "RUNNER_ACTIVE":
+                        trade["status"] = "RUNNER_EXITED"
+                        trade["exit_price"] = exit_px
+                        trade["exit_date"] = bar_date
+                        trade["pnl_r"] = round((0.40 * r_t1) + (0.35 * r_t2) + (0.25 * r_rem), 2)
+                        blended_px = (0.40 * t1) + (0.35 * t2) + (0.25 * exit_px)
+                        trade["pnl_pct"] = round(((blended_px - entry_p) / entry_p) * 100, 2)
+                    elif trade["status"] == "T1_HIT":
                         trade["status"] = "STOPPED_OUT_BE"
                         trade["exit_price"] = exit_px
                         trade["exit_date"] = bar_date
-                        rem_r = ((exit_px - entry_p) / risk_1r) * 0.60 if risk_1r > 0 else 0.0
-                        trade["pnl_r"] = round(0.80 + rem_r, 2)
-                        trade["pnl_pct"] = round(((exit_px - entry_p) / entry_p) * 100, 2)
+                        trade["pnl_r"] = round((0.40 * r_t1) + (0.60 * r_rem), 2)
+                        blended_px = (0.40 * t1) + (0.60 * exit_px)
+                        trade["pnl_pct"] = round(((blended_px - entry_p) / entry_p) * 100, 2)
                     else:
                         trade["status"] = "STOPPED_OUT"
                         trade["exit_price"] = exit_px
                         trade["exit_date"] = bar_date
-                        trade["pnl_r"] = round((exit_px - entry_p) / risk_1r, 2) if risk_1r > 0 else -1.0
+                        trade["pnl_r"] = round(r_rem, 2) if risk_1r > 0 else -1.0
                         trade["pnl_pct"] = round(((exit_px - entry_p) / entry_p) * 100, 2)
                     updated_count += 1
                     break
 
-                # Target 2 Hit (+3R)
-                if bar_h >= t2:
-                    trade["status"] = "T2_HIT"
-                    trade["exit_price"] = t2
-                    trade["exit_date"] = bar_date
-                    trade["pnl_r"] = 2.50
-                    trade["pnl_pct"] = round(((t2 - entry_p) / entry_p) * 100, 2)
-                    updated_count += 1
-                    break
-
-                # Target 1 Hit (+2R) -> upgrade to sweep-safe retest/EMA trailing SL
+                # Target 1 Hit (+2R) -> book 40% & guarantee SL >= cost (Free-Roll 0% heat!)
                 if bar_h >= t1 and trade["status"] == "ACTIVE":
                     trade["status"] = "T1_HIT"
-                    new_sl = float(trade["be_retest_anchor"])
-                    trade["current_sl"] = new_sl
-                    trade["catastrophe_sl"] = round(new_sl * 0.97, 2)
+                    trade["t1_hit_date"] = bar_date
+                    new_sl = max(entry_p, float(trade.get("be_retest_anchor") or entry_p))
+                    trade["current_sl"] = round(new_sl, 2)
+                    trade["catastrophe_sl"] = round(max(entry_p * 0.99, new_sl * 0.97), 2)
+                    trade["free_roll"] = True
                     updated_count += 1
 
-            # Floating unrealized PnL
-            if trade["status"] in ["ACTIVE", "T1_HIT"]:
+                # Target 2 Hit (+3.5R) -> book 35% & convert remaining 25% to Uncapped 20-EMA Runner
+                if bar_h >= t2 and trade["status"] == "T1_HIT":
+                    trade["status"] = "RUNNER_ACTIVE"
+                    trade["t2_hit_date"] = bar_date
+                    trade["free_roll"] = True
+                    trail_floor = max(float(trade["current_sl"]), round(entry_p * 1.02, 2), round(bar_ema20 * 0.992, 2))
+                    trade["current_sl"] = trail_floor
+                    trade["catastrophe_sl"] = round(trail_floor * 0.97, 2)
+                    updated_count += 1
+                    continue
+
+                # Daily ratchet of Runner trailing floor above 20-EMA while staying risk-free
+                if trade["status"] == "RUNNER_ACTIVE" and bar_ema20 > entry_p:
+                    ratchet = round(max(curr_sl, bar_ema20 * 0.992), 2)
+                    if ratchet > curr_sl:
+                        trade["current_sl"] = ratchet
+                        trade["catastrophe_sl"] = round(ratchet * 0.97, 2)
+
+            # Floating unrealized blended PnL
+            r_t1 = ((t1 - entry_p) / risk_1r) if risk_1r > 0 else 2.0
+            r_t2 = ((t2 - entry_p) / risk_1r) if risk_1r > 0 else 3.5
+            r_now = ((latest_close - entry_p) / risk_1r) if risk_1r > 0 else 0.0
+            if trade["status"] == "ACTIVE":
                 trade["pnl_pct"] = round(((latest_close - entry_p) / entry_p) * 100, 2)
-                trade["pnl_r"] = round((latest_close - entry_p) / risk_1r, 2) if risk_1r > 0 else 0.0
+                trade["pnl_r"] = round(r_now, 2)
+            elif trade["status"] == "T1_HIT":
+                blended_px = (0.40 * t1) + (0.60 * latest_close)
+                trade["pnl_pct"] = round(((blended_px - entry_p) / entry_p) * 100, 2)
+                trade["pnl_r"] = round((0.40 * r_t1) + (0.60 * r_now), 2)
+            elif trade["status"] == "RUNNER_ACTIVE":
+                blended_px = (0.40 * t1) + (0.35 * t2) + (0.25 * latest_close)
+                trade["pnl_pct"] = round(((blended_px - entry_p) / entry_p) * 100, 2)
+                trade["pnl_r"] = round((0.40 * r_t1) + (0.35 * r_t2) + (0.25 * r_now), 2)
 
     return updated_count
 
@@ -306,8 +358,8 @@ def compute_strategy_metrics(trades):
     - Win rate, total R-return, profit factor, average win/loss, best trade, etc.
     """
     total_signals = len(trades)
-    closed_trades = [t for t in trades if t["status"] in ["T2_HIT", "T1_HIT", "STOPPED_OUT", "STOPPED_OUT_BE"]]
-    active_trades = [t for t in trades if t["status"] in ["ACTIVE", "T1_HIT"]]
+    closed_trades = [t for t in trades if t["status"] in ["T2_HIT", "RUNNER_EXITED", "T1_HIT", "RUNNER_ACTIVE", "STOPPED_OUT", "STOPPED_OUT_BE"]]
+    active_trades = [t for t in trades if t["status"] in ["ACTIVE", "T1_HIT", "RUNNER_ACTIVE"]]
     pending_trades = [t for t in trades if t["status"] == "PENDING_TRIGGER"]
 
     wins = [t for t in closed_trades if t["pnl_r"] > 0]

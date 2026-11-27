@@ -1186,12 +1186,12 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
               <span class="plan-val t1">₹${{stock.t1_2r || (stock.price * 1.08).toFixed(1)}} (Book 40% & Move SL to Cost)</span>
             </div>
             <div class="plan-line">
-              <span class="plan-tag">🚀 TARGET 2 (Dynamic/3R)</span>
-              <span class="plan-val t2">₹${{stock.t2_3r || (stock.price * 1.14).toFixed(1)}} (Book 30%)</span>
+              <span class="plan-tag">🎯 TARGET 2 (3.5R)</span>
+              <span class="plan-val t2">₹${{stock.t2_3r || (stock.price * 1.14).toFixed(1)}} (Book 35%)</span>
             </div>
             <div class="plan-line">
-              <span class="plan-tag">💎 RUNNER (30%)</span>
-              <span class="plan-val runner">Trail with 20-Day EMA (Ride Multibagger)</span>
+              <span class="plan-tag">💎 RUNNER (25%)</span>
+              <span class="plan-val runner">Uncapped Trail on Daily/Weekly Close &lt; 20-EMA / 50-DMA</span>
             </div>
           </div>
 
@@ -1221,9 +1221,9 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
       // Apply Filters
       const filtered = data.filter(trade => {{
         // Status filter
-        if (ledgerStatusFilter === 'ACTIVE' && !['ACTIVE', 'T1_HIT'].includes(trade.status)) return false;
+        if (ledgerStatusFilter === 'ACTIVE' && !['ACTIVE', 'T1_HIT', 'RUNNER_ACTIVE'].includes(trade.status)) return false;
         if (ledgerStatusFilter === 'PENDING_TRIGGER' && trade.status !== 'PENDING_TRIGGER') return false;
-        if (ledgerStatusFilter === 'WINS' && !['T1_HIT', 'T2_HIT', 'STOPPED_OUT_BE'].includes(trade.status)) return false;
+        if (ledgerStatusFilter === 'WINS' && !['T1_HIT', 'T2_HIT', 'RUNNER_ACTIVE', 'RUNNER_EXITED', 'STOPPED_OUT_BE'].includes(trade.status)) return false;
         if (ledgerStatusFilter === 'STOPPED_OUT_BE' && trade.status !== 'STOPPED_OUT_BE') return false;
         if (ledgerStatusFilter === 'LOSSES' && trade.status !== 'STOPPED_OUT') return false;
 
@@ -1263,7 +1263,11 @@ def generate_html_dashboard(active_breakouts, pre_breakout_squeezes, benchmark_i
         }} else if (trade.status === 'PENDING_TRIGGER') {{
           statusBadge = '<span class="status-badge status-pending">🟡 PENDING TRIGGER</span>';
         }} else if (trade.status === 'T1_HIT') {{
-          statusBadge = '<span class="status-badge status-t1">🟢 T1 HIT (+2R)</span>';
+          statusBadge = '<span class="status-badge status-t1">🟢 T1 FREE-ROLL (0% HEAT)</span>';
+        }} else if (trade.status === 'RUNNER_ACTIVE') {{
+          statusBadge = '<span class="status-badge status-t2">💎 25% RUNNER (20-EMA)</span>';
+        }} else if (trade.status === 'RUNNER_EXITED') {{
+          statusBadge = '<span class="status-badge status-t2">🏁 RUNNER CLOSED</span>';
         }} else if (trade.status === 'T2_HIT') {{
           statusBadge = '<span class="status-badge status-t2">🚀 T2 HIT (+3R)</span>';
         }} else if (trade.status === 'STOPPED_OUT_BE') {{
